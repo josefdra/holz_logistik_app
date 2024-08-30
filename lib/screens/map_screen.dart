@@ -78,7 +78,7 @@ class _MapScreenState extends State<MapScreen> {
                   _isAddingMarker = false;
                   _selectedPosition = null;
                 });
-                Navigator.pop(context);
+                Navigator.pop(context); // Close the form
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Location added successfully')),
                 );

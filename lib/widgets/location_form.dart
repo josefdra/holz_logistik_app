@@ -44,8 +44,8 @@ class _LocationFormState extends State<LocationForm> {
         TextEditingController(text: widget.initialLocation?.partNumber ?? '');
     _sawmillController =
         TextEditingController(text: widget.initialLocation?.sawmill ?? '');
-    _quantityController =
-        TextEditingController(text: widget.initialLocation?.quantity ?? '');
+    _quantityController = TextEditingController(
+        text: widget.initialLocation?.quantity?.toString() ?? '');
     _pieceCountController = TextEditingController(
         text: widget.initialLocation?.pieceCount?.toString() ?? '');
     _photoUrls = widget.initialLocation?.photoUrls ?? [];
@@ -97,12 +97,13 @@ class _LocationFormState extends State<LocationForm> {
         description: _descriptionController.text,
         partNumber: _partNumberController.text,
         sawmill: _sawmillController.text,
-        quantity: _quantityController.text,
+        quantity: int.tryParse(_quantityController.text),
         pieceCount: int.tryParse(_pieceCountController.text),
         photoUrls: _photoUrls,
         newPhotos: _newPhotos,
       );
       widget.onSave(location);
+      Navigator.of(context).pop(); // Close the form after submitting
     }
   }
 
@@ -166,14 +167,6 @@ class _LocationFormState extends State<LocationForm> {
                     )),
               ],
             ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submit,
-              child: Text(widget.initialLocation == null
-                  ? 'Add Location'
-                  : 'Update Location'),
-            ),
-            SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

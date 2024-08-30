@@ -8,7 +8,7 @@ class Location {
   final String description;
   final String partNumber;
   final String sawmill;
-  final String quantity;
+  final int? quantity;
   final int? pieceCount;
   final List<String> photoUrls;
   final List<File> newPhotos;
@@ -23,7 +23,7 @@ class Location {
     required this.description,
     required this.partNumber,
     required this.sawmill,
-    required this.quantity,
+    this.quantity,
     this.pieceCount,
     this.photoUrls = const [],
     this.newPhotos = const [],
@@ -35,14 +35,14 @@ class Location {
     return Location(
       id: json['id'],
       name: json['name'],
-      latitude: json['latitude'],
-      longitude: json['longitude'],
+      latitude: json['latitude'].toDouble(),
+      longitude: json['longitude'].toDouble(),
       description: json['description'],
       partNumber: json['part_number'],
       sawmill: json['sawmill'],
       quantity: json['quantity'],
       pieceCount: json['piece_count'],
-      photoUrls: List<String>.from(json['photo_urls'] ?? []),
+      photoUrls: List<String>.from(json['photos'] ?? []),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -75,7 +75,7 @@ class Location {
     String? description,
     String? partNumber,
     String? sawmill,
-    String? quantity,
+    int? quantity,
     int? pieceCount,
     List<String>? photoUrls,
     List<File>? newPhotos,
