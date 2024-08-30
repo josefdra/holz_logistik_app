@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 class BottomNavigation extends StatelessWidget {
   final int currentIndex;
 
-  BottomNavigation({required this.currentIndex});
+  const BottomNavigation({Key? key, required this.currentIndex})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
-      items: [
+      items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
           label: 'Home',
@@ -23,7 +24,7 @@ class BottomNavigation extends StatelessWidget {
         if (index != currentIndex) {
           Navigator.pushReplacementNamed(
             context,
-            index == 0 ? '/' : '/map',
+            index == 0 ? '/home' : '/map',
           );
         }
       },

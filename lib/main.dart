@@ -1,31 +1,30 @@
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:holz_logistik/app.dart';
+import 'package:holz_logistik/services/api_service.dart';
 import 'package:holz_logistik/services/auth_service.dart';
+import 'package:holz_logistik/services/image_service.dart';
+import 'package:holz_logistik/services/location_service.dart';
+import 'package:holz_logistik/utils/offline_sync_manager.dart';
 import 'package:provider/provider.dart';
 
-import 'app.dart';
-import 'services/background_sync_service.dart';
-
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
-}
-
 void main() async {
-  HttpOverrides.global = MyHttpOverrides();
   WidgetsFlutterBinding.ensureInitialized();
-  final backgroundSyncService = BackgroundSyncService();
-  backgroundSyncService.startPeriodicSync();
+
+  final authService = AuthService();
+  final apiService = ApiService();
+  final imageService = ImageService();
+  final offlineSyncManager = OfflineSyncManager();
+  final locationService =
+      LocationService(apiService, imageService, offlineSyncManager);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthService(),
-      child: App(backgroundSyncService: backgroundSyncService),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => authService),
+        Provider(create: (_) => locationService),
+        Provider(create: (_) => offlineSyncManager),
+      ],
+      child: App(),
     ),
   );
 }

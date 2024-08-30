@@ -1,25 +1,23 @@
-import 'dart:io';
+import 'dart:convert';
 
+import 'package:holz_logistik/models/location.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
-import '../models/location.dart';
-import '../services/location_service.dart';
 
 class OfflineSyncManager {
   static Database? _database;
 
-  static Future<Database> get database async {
+  Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await initDatabase();
     return _database!;
   }
 
-  static Future<Database> initDatabase() async {
+  Future<Database> initDatabase() async {
     String path = join(await getDatabasesPath(), 'offline_locations.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (Database db, int version) async {
         await db.execute('''
           CREATE TABLE locations(
@@ -32,16 +30,40 @@ class OfflineSyncManager {
             sawmill TEXT,
             quantity TEXT,
             piece_count INTEGER,
-            photos TEXT,
-            new_photos TEXT,
+            photo_urls TEXT,
+            created_at TEXT,
+            updated_at TEXT,
             is_synced INTEGER
           )
         ''');
       },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Drop the old table and create a new one
+          await db.execute('DROP TABLE IF EXISTS locations');
+          await db.execute('''
+            CREATE TABLE locations(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT,
+              latitude REAL,
+              longitude REAL,
+              description TEXT,
+              part_number TEXT,
+              sawmill TEXT,
+              quantity TEXT,
+              piece_count INTEGER,
+              photo_urls TEXT,
+              created_at TEXT,
+              updated_at TEXT,
+              is_synced INTEGER
+            )
+          ''');
+        }
+      },
     );
   }
 
-  static Future<void> saveLocationOffline(Location location) async {
+  Future<void> saveLocation(Location location) async {
     final db = await database;
     await db.insert('locations', {
       'name': location.name,
@@ -52,13 +74,42 @@ class OfflineSyncManager {
       'sawmill': location.sawmill,
       'quantity': location.quantity,
       'piece_count': location.pieceCount,
-      'photos': location.photos.join(','),
-      'new_photos': location.newPhotos.map((file) => file.path).join(','),
-      'is_synced': 0,
+      'photo_urls': json.encode(location.photoUrls),
+      'created_at': location.createdAt?.toIso8601String(),
+      'updated_at': location.updatedAt?.toIso8601String(),
+      'is_synced': 1,
     });
   }
 
-  static Future<List<Location>> getOfflineLocations() async {
+  Future<void> updateLocation(Location location) async {
+    final db = await database;
+    await db.update(
+      'locations',
+      {
+        'data': json.encode(location.toJson()),
+        'is_synced': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [location.id],
+    );
+  }
+
+  Future<void> deleteLocation(int id) async {
+    final db = await database;
+    await db.delete('locations', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> markForDeletion(int id) async {
+    final db = await database;
+    await db.update(
+      'locations',
+      {'is_deleted': 1, 'is_synced': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<Location>> getOfflineLocations() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('locations');
     return List.generate(maps.length, (i) {
@@ -72,44 +123,35 @@ class OfflineSyncManager {
         sawmill: maps[i]['sawmill'],
         quantity: maps[i]['quantity'],
         pieceCount: maps[i]['piece_count'],
-        photos: (maps[i]['photos'] as String).split(','),
-        newPhotos: (maps[i]['new_photos'] as String)
-            .split(',')
-            .map((path) => File(path))
-            .toList(),
+        photoUrls: List<String>.from(json.decode(maps[i]['photo_urls'])),
+        createdAt: DateTime.parse(maps[i]['created_at']),
+        updatedAt: DateTime.parse(maps[i]['updated_at']),
       );
     });
   }
 
-  static Future<void> syncOfflineLocations() async {
+  Future<List<Location>> getUnsyncedLocations() async {
     final db = await database;
     final List<Map<String, dynamic>> maps =
         await db.query('locations', where: 'is_synced = 0');
+    return List.generate(maps.length, (i) {
+      return Location.fromJson(json.decode(maps[i]['data']));
+    });
+  }
 
-    for (var locationMap in maps) {
-      try {
-        Location location = Location(
-          name: locationMap['name'],
-          latitude: locationMap['latitude'],
-          longitude: locationMap['longitude'],
-          description: locationMap['description'],
-          partNumber: locationMap['part_number'],
-          sawmill: locationMap['sawmill'],
-          quantity: locationMap['quantity'],
-          pieceCount: locationMap['piece_count'],
-          newPhotos: (locationMap['new_photos'] as String)
-              .split(',')
-              .map((path) => File(path))
-              .toList(),
-        );
+  Future<void> markAsSynced(int id) async {
+    final db = await database;
+    await db.update(
+      'locations',
+      {'is_synced': 1},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 
-        await LocationService.addLocation(location);
-
-        await db.update('locations', {'is_synced': 1},
-            where: 'id = ?', whereArgs: [locationMap['id']]);
-      } catch (e) {
-        print('Error syncing location: $e');
-      }
-    }
+  Future<void> syncOfflineData() async {
+    // This method should be implemented to sync data with the server
+    // It should get unsynced locations, send them to the server,
+    // and mark them as synced if successful
   }
 }

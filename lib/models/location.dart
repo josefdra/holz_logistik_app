@@ -3,14 +3,14 @@ import 'dart:io';
 class Location {
   final int? id;
   final String name;
-  final double? latitude;
-  final double? longitude;
+  final double latitude;
+  final double longitude;
   final String description;
   final String partNumber;
   final String sawmill;
-  final dynamic quantity;
+  final String quantity;
   final int? pieceCount;
-  final List<String> photos;
+  final List<String> photoUrls;
   final List<File> newPhotos;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -18,14 +18,14 @@ class Location {
   Location({
     this.id,
     required this.name,
-    this.latitude,
-    this.longitude,
+    required this.latitude,
+    required this.longitude,
     required this.description,
     required this.partNumber,
     required this.sawmill,
     required this.quantity,
     this.pieceCount,
-    this.photos = const [],
+    this.photoUrls = const [],
     this.newPhotos = const [],
     this.createdAt,
     this.updatedAt,
@@ -34,21 +34,15 @@ class Location {
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
       id: json['id'],
-      name: json['name'] ?? '',
-      latitude: json['latitude'] != null
-          ? double.parse(json['latitude'].toString())
-          : null,
-      longitude: json['longitude'] != null
-          ? double.parse(json['longitude'].toString())
-          : null,
-      description: json['description'] ?? '',
-      partNumber: json['part_number'] ?? '',
-      sawmill: json['sawmill'] ?? '',
+      name: json['name'],
+      latitude: json['latitude'],
+      longitude: json['longitude'],
+      description: json['description'],
+      partNumber: json['part_number'],
+      sawmill: json['sawmill'],
       quantity: json['quantity'],
-      pieceCount: json['piece_count'] != null
-          ? int.parse(json['piece_count'].toString())
-          : null,
-      photos: List<String>.from(json['photos'] ?? []),
+      pieceCount: json['piece_count'],
+      photoUrls: List<String>.from(json['photo_urls'] ?? []),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -58,17 +52,20 @@ class Location {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'latitude': latitude,
-        'longitude': longitude,
-        'description': description,
-        'part_number': partNumber,
-        'sawmill': sawmill,
-        'quantity': quantity,
-        'piece_count': pieceCount,
-        'photos': photos,
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'latitude': latitude,
+      'longitude': longitude,
+      'description': description,
+      'part_number': partNumber,
+      'sawmill': sawmill,
+      'quantity': quantity,
+      'piece_count': pieceCount,
+      'photo_urls': photoUrls,
+    };
+  }
 
   Location copyWith({
     int? id,
@@ -78,9 +75,9 @@ class Location {
     String? description,
     String? partNumber,
     String? sawmill,
-    dynamic quantity,
+    String? quantity,
     int? pieceCount,
-    List<String>? photos,
+    List<String>? photoUrls,
     List<File>? newPhotos,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -95,7 +92,7 @@ class Location {
       sawmill: sawmill ?? this.sawmill,
       quantity: quantity ?? this.quantity,
       pieceCount: pieceCount ?? this.pieceCount,
-      photos: photos ?? this.photos,
+      photoUrls: photoUrls ?? this.photoUrls,
       newPhotos: newPhotos ?? this.newPhotos,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

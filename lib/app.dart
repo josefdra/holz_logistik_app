@@ -1,47 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:holz_logistik/services/background_sync_service.dart';
+import 'package:holz_logistik/screens/home_screen.dart';
+import 'package:holz_logistik/screens/login_screen.dart';
+import 'package:holz_logistik/screens/map_screen.dart';
+import 'package:holz_logistik/screens/register_screen.dart';
+import 'package:holz_logistik/screens/reset_password_screen.dart';
+import 'package:holz_logistik/screens/settings_screen.dart';
+import 'package:holz_logistik/screens/splash_screen.dart';
+import 'package:holz_logistik/services/auth_service.dart';
+import 'package:provider/provider.dart';
 
-import 'screens/home_page.dart';
-import 'screens/login_page.dart';
-import 'screens/map_page.dart';
-import 'screens/register_page.dart';
-import 'screens/reset_password_page.dart';
-import 'screens/settings_page.dart';
-import 'screens/splash_screen.dart';
-
-class App extends StatefulWidget {
-  final BackgroundSyncService backgroundSyncService;
-
-  App({required this.backgroundSyncService});
-
-  @override
-  _AppState createState() => _AppState();
-}
-
-class _AppState extends State<App> {
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Holz Logistik',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      initialRoute: '/splash',
+      home: Consumer<AuthService>(
+        builder: (context, authService, _) {
+          if (authService.isInitializing) {
+            return SplashScreen();
+          } else if (authService.isAuthenticated) {
+            return HomeScreen();
+          } else {
+            return LoginScreen();
+          }
+        },
+      ),
       routes: {
-        '/splash': (context) => SplashScreen(),
-        '/': (context) => HomePage(),
-        '/map': (context) => MapPage(),
-        '/settings': (context) => SettingsPage(),
-        '/login': (context) => LoginPage(),
-        '/register': (context) => RegisterPage(),
-        '/reset-password': (context) => ResetPasswordPage(),
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
+        '/reset-password': (context) => ResetPasswordScreen(),
+        '/home': (context) => HomeScreen(),
+        '/map': (context) => MapScreen(),
+        '/settings': (context) => SettingsScreen(),
       },
     );
-  }
-
-  @override
-  void dispose() {
-    widget.backgroundSyncService.stopPeriodicSync();
-    super.dispose();
   }
 }
