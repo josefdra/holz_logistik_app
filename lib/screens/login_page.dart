@@ -31,7 +31,8 @@ class _LoginPageState extends State<LoginPage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('accessToken', responseData['accessToken']);
         await prefs.setString('refreshToken', responseData['refreshToken']);
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed. Please try again.')),

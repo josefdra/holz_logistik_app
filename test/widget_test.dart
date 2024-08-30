@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:holz_logistik/screens/map_page.dart';
+import 'package:holz_logistik/asdfasdf.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {

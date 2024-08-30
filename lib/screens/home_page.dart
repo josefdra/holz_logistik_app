@@ -1,29 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../widgets/bottom_navigation.dart';
+import '../widgets/data_list.dart';
 
 class HomePage extends StatelessWidget {
-  Future<void> _logout(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('accessToken');
-    await prefs.remove('refreshToken');
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        automaticallyImplyLeading: false, // This removes the back arrow
+        title: Text('Holz Logistik'),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () => _logout(context),
+            icon: Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
         ],
       ),
-      body: Center(
-        child: Text('Welcome to the Home Page!'),
-      ),
+      body: DataList(),
+      bottomNavigationBar: BottomNavigation(currentIndex: 0),
     );
   }
 }
