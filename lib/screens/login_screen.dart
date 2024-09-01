@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/main');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e.toString()}')),
+          SnackBar(content: Text('Login fehlgeschlagen: ${e.toString()}')),
         );
       }
     }
@@ -49,10 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               TextFormField(
                 controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Username'),
+                decoration: InputDecoration(labelText: 'Benutzername'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your username';
+                    return 'Bitte Benutzername eingeben';
                   }
                   return null;
                 },
@@ -60,11 +60,11 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(labelText: 'Passwort'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
+                    return 'Bitte Passwort eingeben';
                   }
                   return null;
                 },
@@ -76,12 +76,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/register'),
-                child: Text('Create an account'),
+                child: Text('Account erstellen'),
               ),
               TextButton(
                 onPressed: () =>
                     Navigator.pushNamed(context, '/reset-password'),
-                child: Text('Forgot password?'),
+                child: Text('Passwort vergessen?'),
               ),
             ],
           ),

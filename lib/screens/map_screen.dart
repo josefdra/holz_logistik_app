@@ -41,7 +41,7 @@ class _MapScreenState extends State<MapScreen> {
       // Location services are not enabled don't continue
       // accessing the position and request users of the
       // App to enable the location services.
-      return Future.error('Location services are disabled.');
+      return Future.error('Standort Service ist deaktiviert');
     }
 
     permission = await Geolocator.checkPermission();
@@ -53,14 +53,14 @@ class _MapScreenState extends State<MapScreen> {
         // Android's shouldShowRequestPermissionRationale
         // returned true. According to Android guidelines
         // your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
+        return Future.error('Keine Berechtigung um auf Standort zuzugreifen');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
       return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+          'Standort-Zugriffs Erlaubnis ist dauerhaft deaktiviert');
     }
 
     // When we reach here, permissions are granted and we can
@@ -78,12 +78,12 @@ class _MapScreenState extends State<MapScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading locations: $e');
+      print('Laden der Standorte fehlgeschlagen: $e');
       setState(() {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load locations')),
+        SnackBar(content: Text('Laden der Standorte fehlgeschlagen')),
       );
     }
   }
@@ -99,9 +99,9 @@ class _MapScreenState extends State<MapScreen> {
       });
       _mapController.move(_currentPosition!, 15);
     } catch (e) {
-      print('Error getting current location: $e');
+      print('Laden der aktuellen Position fehlgeschlagen: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to get current location')),
+        SnackBar(content: Text('Laden der aktuellen Position fehlgeschlagen')),
       );
     }
   }
@@ -140,12 +140,13 @@ class _MapScreenState extends State<MapScreen> {
                 });
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Location added successfully')),
+                  SnackBar(content: Text('Standort hinzugefügt')),
                 );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text('Failed to add location: ${e.toString()}')),
+                      content: Text(
+                          'Fehler beim Hinzufügen des Standorts: ${e.toString()}')),
                 );
               }
             },

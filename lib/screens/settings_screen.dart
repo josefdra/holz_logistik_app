@@ -11,31 +11,33 @@ class SettingsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Settings'),
+        title: Text('Einstellungen'),
       ),
       body: ListView(
         children: [
           ListTile(
             leading: Icon(Icons.sync),
-            title: Text('Sync Offline Data'),
+            title: Text('Offline Daten synchronisieren'),
             onTap: () async {
               try {
                 await offlineSyncManager.syncOfflineData();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Offline data synced successfully')),
+                  SnackBar(
+                      content: Text(
+                          'Synchronisieren der offline Daten erfolgreich')),
                 );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content:
-                          Text('Failed to sync offline data: ${e.toString()}')),
+                      content: Text(
+                          'Synchronisieren der offline Daten fehlgeschlagen: ${e.toString()}')),
                 );
               }
             },
           ),
           ListTile(
             leading: Icon(Icons.logout),
-            title: Text('Logout'),
+            title: Text('Ausloggen'),
             onTap: () async {
               await authService.logout();
               Navigator.of(context).pushNamedAndRemoveUntil(

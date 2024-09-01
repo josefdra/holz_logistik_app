@@ -24,13 +24,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         await authService.resetPassword(_emailController.text);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-                  Text('Password reset email sent. Please check your inbox.')),
+              content: Text('Email zum Zurücksetzen des Passworts versandt.')),
         );
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password reset failed: ${e.toString()}')),
+          SnackBar(
+              content: Text(
+                  'Zurücksetzen des Passworts fehlgeschlagen: ${e.toString()}')),
         );
       }
     }
@@ -39,7 +40,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Reset Password')),
+      appBar: AppBar(title: Text('Passwort zurücksetzen')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -53,10 +54,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
+                    return 'Bitte Email eingeben';
                   }
                   if (!value.contains('@')) {
-                    return 'Please enter a valid email';
+                    return 'Bitte eine valide Email eingeben';
                   }
                   return null;
                 },
@@ -64,7 +65,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                child: Text('Reset Password'),
+                child: Text('Passwort zurücksetzen'),
               ),
             ],
           ),

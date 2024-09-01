@@ -41,13 +41,15 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
               });
               Navigator.of(context).pop(); // Close the form
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Location updated successfully')),
+                SnackBar(
+                    content: Text('Aktualisieren des Standorts erfolgreich')),
               );
             } catch (e) {
               Navigator.of(context).pop(); // Close the form
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Failed to update location: ${e.toString()}'),
+                  content: Text(
+                      'Aktualisieren des Standorts fehlgeschlagen: ${e.toString()}'),
                 ),
               );
             }
@@ -133,7 +135,7 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
                   Center(
                     child: ElevatedButton(
                       onPressed: () => _showUpdateForm(context),
-                      child: Text('Daten aktualisieren'),
+                      child: Text('Standort aktualisieren'),
                     ),
                   ),
                 ],

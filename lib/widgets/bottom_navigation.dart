@@ -18,11 +18,11 @@ class BottomNavigation extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
-          label: 'Home',
+          label: 'Start',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.map),
-          label: 'Map',
+          label: 'Karte',
         ),
       ],
     );

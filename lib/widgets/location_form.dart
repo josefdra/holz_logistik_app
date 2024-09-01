@@ -120,36 +120,36 @@ class _LocationFormState extends State<LocationForm> {
               decoration: InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a name';
+                  return 'Bitte einen Namen eingeben';
                 }
                 return null;
               },
             ),
             TextFormField(
               controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Description'),
+              decoration: InputDecoration(labelText: 'Beschreibung'),
             ),
             TextFormField(
               controller: _partNumberController,
-              decoration: InputDecoration(labelText: 'Part Number'),
+              decoration: InputDecoration(labelText: 'Partienummer'),
             ),
             TextFormField(
               controller: _sawmillController,
-              decoration: InputDecoration(labelText: 'Sawmill'),
+              decoration: InputDecoration(labelText: 'Sägewerk'),
             ),
             TextFormField(
               controller: _quantityController,
-              decoration: InputDecoration(labelText: 'Quantity'),
+              decoration: InputDecoration(labelText: 'Menge'),
             ),
             TextFormField(
               controller: _pieceCountController,
-              decoration: InputDecoration(labelText: 'Piece Count'),
+              decoration: InputDecoration(labelText: 'Stückzahl'),
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: _pickImage,
-              child: Text('Add Photo'),
+              child: Text('Foto hinzufügen'),
             ),
             SizedBox(height: 16),
             Wrap(
@@ -173,12 +173,12 @@ class _LocationFormState extends State<LocationForm> {
                 ElevatedButton(
                   onPressed: _submit,
                   child: Text(widget.initialLocation == null
-                      ? 'Add Location'
-                      : 'Update Location'),
+                      ? 'Standort hinzufügen'
+                      : 'Standort aktualisieren'),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Cancel'),
+                  child: Text('Abbrechen'),
                   style: ElevatedButton.styleFrom(iconColor: Colors.grey),
                 ),
               ],

@@ -31,12 +31,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           _passwordController.text,
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration successful. Please log in.')),
+          SnackBar(
+              content:
+                  Text('Registrieren erfolgreich, bitte Email bestätigen.')),
         );
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${e.toString()}')),
+          SnackBar(
+              content: Text('Registrieren fehlgeschlagen: ${e.toString()}')),
         );
       }
     }
@@ -45,7 +48,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Register')),
+      appBar: AppBar(title: Text('Registrieren')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(
@@ -55,10 +58,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               TextFormField(
                 controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Username'),
+                decoration: InputDecoration(labelText: 'Benutzername'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a username';
+                    return 'Bitte Benutzername eingeben';
                   }
                   return null;
                 },
@@ -70,10 +73,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter an email';
+                    return 'Bitte Email eingeben';
                   }
                   if (!value.contains('@')) {
-                    return 'Please enter a valid email';
+                    return 'Bitte eine valide Email eingeben';
                   }
                   return null;
                 },
@@ -81,14 +84,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(labelText: 'Passwort'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
+                    return 'Bitte Passwort eingeben';
                   }
                   if (value.length < 6) {
-                    return 'Password must be at least 6 characters long';
+                    return 'Passwort muss mindestens 6 Zeichen haben';
                   }
                   return null;
                 },
@@ -96,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                child: Text('Register'),
+                child: Text('Registrieren'),
               ),
             ],
           ),
