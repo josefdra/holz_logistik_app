@@ -74,16 +74,33 @@ class ApiService {
 
   Future<Map<String, dynamic>> put(
       String endpoint, Map<String, dynamic> body) async {
-    final response = await _client.put(
-      Uri.parse('${ApiConfig.baseUrl}$endpoint'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(body),
-    );
+    final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+    print('Sending POST request to: $url');
+    print('Request body: $body');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
 
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to update data: ${response.statusCode}');
+      final response = await _client.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: json.encode(body),
+      );
+
+      print('Response status code: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to post data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in PUT request: $e');
+      rethrow;
     }
   }
 

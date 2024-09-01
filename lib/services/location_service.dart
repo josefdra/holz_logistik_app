@@ -82,21 +82,22 @@ class LocationService {
       // Send to API
       final response =
           await _apiService.put('/locations/${location.id}', locationData);
-      final updatedLocation = Location.fromJson(response);
+      final newLocation = Location.fromJson(response);
 
-      // // Update locally
-      // await _offlineSyncManager.updateLocation(updatedLocation);
+      // // Save locally
+      // await _offlineSyncManager.saveLocation(newLocation);
 
       // // Save uploaded photos locally
       // for (var photo in location.newPhotos) {
       //   await _imageService.saveImageLocally(photo);
       // }
 
-      return updatedLocation;
+      return newLocation;
     } catch (e) {
-      // If API call fails, update offline
-      // await _offlineSyncManager.updateLocation(location);
-      return location;
+      print('Error updating location: $e');
+      // If API call fails, save offline
+      // await _offlineSyncManager.saveLocation(location);
+      throw Exception('Failed to update location: $e');
     }
   }
 

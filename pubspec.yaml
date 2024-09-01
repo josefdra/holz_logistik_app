@@ -23,6 +23,7 @@ dependencies:
   photo_view: ^0.14.0
   path_provider: ^2.0.15
   url_launcher: ^6.1.10
+  geolocator: ^9.0.0
 
 dev_dependencies:
   flutter_test:

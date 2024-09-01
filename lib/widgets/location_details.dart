@@ -3,58 +3,58 @@ import 'package:holz_logistik/models/location.dart';
 import 'package:holz_logistik/services/location_service.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-class LocationDetailsDialog extends StatelessWidget {
+class LocationDetailsDialog extends StatefulWidget {
   final Location location;
 
   const LocationDetailsDialog({Key? key, required this.location})
       : super(key: key);
 
-  void _openInGoogleMaps(BuildContext context) async {
-    final url =
-        'https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}';
-    final uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not launch $url';
-      }
-    } catch (e) {
-      print('Error launching URL: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to open Google Maps')),
-      );
-    }
+  @override
+  _LocationDetailsDialogState createState() => _LocationDetailsDialogState();
+}
+
+class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
+  late Location _currentLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentLocation = widget.location;
   }
 
   void _showUpdateForm(BuildContext context) {
     showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (BuildContext context) {
-          return LocationForm(
-              initialLocation: location,
-              onSave: (updatedLocation) async {
-                final locationService =
-                    Provider.of<LocationService>(context, listen: false);
-                try {
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return LocationForm(
+          initialLocation: _currentLocation,
+          onSave: (updatedLocation) async {
+            final locationService =
+                Provider.of<LocationService>(context, listen: false);
+            try {
+              final result =
                   await locationService.updateLocation(updatedLocation);
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Location updated successfully')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content:
-                            Text('Failed to update location: ${e.toString()}')),
-                  );
-                }
+              setState(() {
+                _currentLocation = result;
               });
-        });
+              Navigator.of(context).pop(); // Close the form
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Location updated successfully')),
+              );
+            } catch (e) {
+              Navigator.of(context).pop(); // Close the form
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to update location: ${e.toString()}'),
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -72,7 +72,7 @@ class LocationDetailsDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Location Details',
+                    'Details',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   IconButton(
@@ -87,26 +87,27 @@ class LocationDetailsDialog extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(location.name,
+                  Text(_currentLocation.name,
                       style: Theme.of(context).textTheme.titleLarge),
                   SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () => _openInGoogleMaps(context),
-                    child: Text(
-                      '${location.latitude}, ${location.longitude}',
-                      style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline),
-                    ),
+                  Text(
+                    '${_currentLocation.latitude}, ${_currentLocation.longitude}',
+                    style: TextStyle(
+                        color: Colors.blue,
+                        decoration: TextDecoration.underline),
                   ),
                   SizedBox(height: 16),
-                  Text('Description: ${location.description}'),
-                  Text('Part Number: ${location.partNumber}'),
-                  Text('Sawmill: ${location.sawmill}'),
-                  Text('Quantity: ${location.quantity ?? 'N/A'}'),
-                  Text('Piece Count: ${location.pieceCount ?? 'N/A'}'),
+                  Text('${_currentLocation.description}'),
+                  SizedBox(height: 8),
+                  Text('Partienummer: ${_currentLocation.partNumber}'),
+                  SizedBox(height: 8),
+                  Text('Sägewerk: ${_currentLocation.sawmill}'),
+                  SizedBox(height: 8),
+                  Text('Menge: ${_currentLocation.quantity} fm'),
+                  SizedBox(height: 8),
+                  Text('Stückzahl: ${_currentLocation.pieceCount}'),
                   SizedBox(height: 16),
-                  if (location.photoUrls.isNotEmpty) ...[
+                  if (_currentLocation.photoUrls.isNotEmpty) ...[
                     Text('Photos:',
                         style: Theme.of(context).textTheme.titleMedium),
                     SizedBox(height: 8),
@@ -114,12 +115,15 @@ class LocationDetailsDialog extends StatelessWidget {
                       height: 100,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
-                        itemCount: location.photoUrls.length,
+                        itemCount: _currentLocation.photoUrls.length,
                         itemBuilder: (context, index) {
                           return Padding(
                             padding: EdgeInsets.only(right: 8),
-                            child: Image.network(location.photoUrls[index],
-                                height: 100, width: 100, fit: BoxFit.cover),
+                            child: Image.network(
+                                _currentLocation.photoUrls[index],
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover),
                           );
                         },
                       ),
@@ -129,7 +133,7 @@ class LocationDetailsDialog extends StatelessWidget {
                   Center(
                     child: ElevatedButton(
                       onPressed: () => _showUpdateForm(context),
-                      child: Text('Update Location'),
+                      child: Text('Daten aktualisieren'),
                     ),
                   ),
                 ],
