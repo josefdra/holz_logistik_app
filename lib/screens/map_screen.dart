@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/models/location.dart';
 import 'package:holz_logistik/services/location_service.dart';
-import 'package:holz_logistik/widgets/bottom_navigation.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/location_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+
+import '../widgets/location_details.dart';
 
 class MapScreen extends StatefulWidget {
   @override
@@ -98,58 +99,61 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(_isAddingMarker ? 'Add Marker Mode' : 'Holz Logistik'),
-        actions: [
-          if (_isAddingMarker)
-            IconButton(
-              icon: Icon(Icons.check),
-              onPressed: _selectedPosition != null ? _showLocationForm : null,
-            ),
-        ],
-      ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                center: LatLng(51.1657, 10.4515),
-                zoom: 6.0,
-                onTap: _handleMapTap,
+    return _isLoading
+        ? Center(child: CircularProgressIndicator())
+        : Stack(
+            children: [
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: LatLng(51.1657, 10.4515),
+                  initialZoom: 6.0,
+                  onTap: _handleMapTap,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c'],
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      ..._locations.map((location) => LocationMarker(
+                            location: location,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return LocationDetailsDialog(
+                                      location: location);
+                                },
+                              );
+                            },
+                          )),
+                      if (_selectedPosition != null)
+                        Marker(
+                          width: 40.0,
+                          height: 40.0,
+                          point: _selectedPosition!,
+                          child: Icon(Icons.location_on, color: Colors.red),
+                        ),
+                    ],
+                  ),
+                ],
               ),
-              children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: ['a', 'b', 'c'],
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: FloatingActionButton(
+                  onPressed: _isAddingMarker
+                      ? _showLocationForm
+                      : _toggleAddMarkerMode,
+                  child:
+                      Icon(_isAddingMarker ? Icons.check : Icons.add_location),
+                  tooltip: _isAddingMarker ? 'Add Location' : 'Add Marker',
                 ),
-                MarkerLayer(
-                  markers: [
-                    ..._locations.map((location) => LocationMarker(
-                          location: location,
-                          onTap: () {
-                            // Show location details or edit form
-                          },
-                        )),
-                    if (_selectedPosition != null)
-                      Marker(
-                        width: 40.0,
-                        height: 40.0,
-                        point: _selectedPosition!,
-                        builder: (ctx) =>
-                            Icon(Icons.location_on, color: Colors.red),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-      bottomNavigationBar: BottomNavigation(currentIndex: 1),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _toggleAddMarkerMode,
-        child: Icon(_isAddingMarker ? Icons.close : Icons.add_location),
-        tooltip: _isAddingMarker ? 'Cancel' : 'Add Location',
-      ),
-    );
+              ),
+            ],
+          );
   }
 }

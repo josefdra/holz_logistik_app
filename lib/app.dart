@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/login_screen.dart';
-import 'package:holz_logistik/screens/map_screen.dart';
+import 'package:holz_logistik/screens/main_screen.dart';
 import 'package:holz_logistik/screens/register_screen.dart';
 import 'package:holz_logistik/screens/reset_password_screen.dart';
 import 'package:holz_logistik/screens/settings_screen.dart';
@@ -23,7 +22,7 @@ class App extends StatelessWidget {
           if (authService.isInitializing) {
             return SplashScreen();
           } else if (authService.isAuthenticated) {
-            return HomeScreen();
+            return MainScreen();
           } else {
             return LoginScreen();
           }
@@ -33,8 +32,7 @@ class App extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
         '/reset-password': (context) => ResetPasswordScreen(),
-        '/home': (context) => HomeScreen(),
-        '/map': (context) => MapScreen(),
+        '/main': (context) => MainScreen(),
         '/settings': (context) => SettingsScreen(),
       },
     );

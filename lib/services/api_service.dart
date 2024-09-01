@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   final http.Client _client;
-
   ApiService() : _client = createHttpClient(allowBadCertificates: true);
 
   Future<Map<String, dynamic>> get(String endpoint) async {

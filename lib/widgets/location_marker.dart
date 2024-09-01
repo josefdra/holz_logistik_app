@@ -11,7 +11,7 @@ class LocationMarker extends Marker {
           width: 40.0,
           height: 40.0,
           point: LatLng(location.latitude, location.longitude),
-          builder: (context) => GestureDetector(
+          child: GestureDetector(
             onTap: onTap,
             child: Icon(
               Icons.location_on,

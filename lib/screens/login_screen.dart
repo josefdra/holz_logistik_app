@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _usernameController.text,
           _passwordController.text,
         );
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/main');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: ${e.toString()}')),

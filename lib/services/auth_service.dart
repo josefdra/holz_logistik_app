@@ -78,7 +78,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> resetPassword(String email) async {
-    await _apiService.post('/auth/reset-password', {
+    await _apiService.post('/auth/reset-password-request', {
       'email': email,
     });
   }

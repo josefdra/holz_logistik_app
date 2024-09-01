@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 
 class BottomNavigation extends StatelessWidget {
   final int currentIndex;
+  final Function(int) onTap;
 
-  const BottomNavigation({Key? key, required this.currentIndex})
-      : super(key: key);
+  const BottomNavigation({
+    Key? key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
+      onTap: onTap,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
@@ -20,14 +25,6 @@ class BottomNavigation extends StatelessWidget {
           label: 'Map',
         ),
       ],
-      onTap: (index) {
-        if (index != currentIndex) {
-          Navigator.pushReplacementNamed(
-            context,
-            index == 0 ? '/home' : '/map',
-          );
-        }
-      },
     );
   }
 }

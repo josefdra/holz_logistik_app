@@ -35,8 +35,8 @@ class Location {
     return Location(
       id: json['id'],
       name: json['name'],
-      latitude: json['latitude'].toDouble(),
-      longitude: json['longitude'].toDouble(),
+      latitude: _parseDouble(json['latitude']),
+      longitude: _parseDouble(json['longitude']),
       description: json['description'],
       partNumber: json['part_number'],
       sawmill: json['sawmill'],
@@ -50,6 +50,13 @@ class Location {
           ? DateTime.parse(json['updated_at'])
           : null,
     );
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.parse(value);
+    throw FormatException('Cannot parse $value to double');
   }
 
   Map<String, dynamic> toJson() {

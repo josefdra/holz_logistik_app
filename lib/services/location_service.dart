@@ -20,10 +20,10 @@ class LocationService {
           .map((json) => Location.fromJson(json))
           .toList();
 
-      // Update local database with fetched locations
-      for (var location in locations) {
-        await _offlineSyncManager.saveLocation(location);
-      }
+      // // Update local database with fetched locations
+      // for (var location in locations) {
+      //   await _offlineSyncManager.saveLocation(location);
+      // }
 
       return locations;
     } catch (e) {
@@ -49,19 +49,19 @@ class LocationService {
       final response = await _apiService.post('/locations', locationData);
       final newLocation = Location.fromJson(response);
 
-      // Save locally
-      await _offlineSyncManager.saveLocation(newLocation);
+      // // Save locally
+      // await _offlineSyncManager.saveLocation(newLocation);
 
-      // Save uploaded photos locally
-      for (var photo in location.newPhotos) {
-        await _imageService.saveImageLocally(photo);
-      }
+      // // Save uploaded photos locally
+      // for (var photo in location.newPhotos) {
+      //   await _imageService.saveImageLocally(photo);
+      // }
 
       return newLocation;
     } catch (e) {
       print('Error adding location: $e');
       // If API call fails, save offline
-      await _offlineSyncManager.saveLocation(location);
+      // await _offlineSyncManager.saveLocation(location);
       throw Exception('Failed to add location: $e');
     }
   }
@@ -84,18 +84,18 @@ class LocationService {
           await _apiService.put('/locations/${location.id}', locationData);
       final updatedLocation = Location.fromJson(response);
 
-      // Update locally
-      await _offlineSyncManager.updateLocation(updatedLocation);
+      // // Update locally
+      // await _offlineSyncManager.updateLocation(updatedLocation);
 
-      // Save uploaded photos locally
-      for (var photo in location.newPhotos) {
-        await _imageService.saveImageLocally(photo);
-      }
+      // // Save uploaded photos locally
+      // for (var photo in location.newPhotos) {
+      //   await _imageService.saveImageLocally(photo);
+      // }
 
       return updatedLocation;
     } catch (e) {
       // If API call fails, update offline
-      await _offlineSyncManager.updateLocation(location);
+      // await _offlineSyncManager.updateLocation(location);
       return location;
     }
   }
@@ -103,10 +103,10 @@ class LocationService {
   Future<void> deleteLocation(int id) async {
     try {
       await _apiService.delete('/locations/$id');
-      await _offlineSyncManager.deleteLocation(id);
+      // await _offlineSyncManager.deleteLocation(id);
     } catch (e) {
       // If API call fails, mark for deletion offline
-      await _offlineSyncManager.markForDeletion(id);
+      // await _offlineSyncManager.markForDeletion(id);
     }
   }
 
