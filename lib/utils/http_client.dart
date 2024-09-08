@@ -4,11 +4,9 @@ import 'package:holz_logistik/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
-http.Client createHttpClient({bool allowBadCertificates = false}) {
+http.Client createHttpClient() {
   HttpClient httpClient = HttpClient()
-    ..connectionTimeout = Duration(milliseconds: ApiConfig.connectionTimeout)
-    ..badCertificateCallback =
-        ((X509Certificate cert, String host, int port) => allowBadCertificates);
+    ..connectionTimeout = Duration(milliseconds: ApiConfig.connectionTimeout);
 
   return IOClient(httpClient);
 }

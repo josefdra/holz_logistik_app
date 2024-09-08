@@ -20,6 +20,7 @@ class _MapScreenState extends State<MapScreen> {
   List<Location> _locations = [];
   bool _isLoading = true;
   bool _isAddingMarker = false;
+  bool _showMarkerInfo = false;
   LatLng? _selectedPosition;
   LatLng? _currentPosition;
   double _currentAccuracy = 0;
@@ -35,12 +36,8 @@ class _MapScreenState extends State<MapScreen> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
       return Future.error('Standort Service ist deaktiviert');
     }
 
@@ -48,23 +45,15 @@ class _MapScreenState extends State<MapScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
         return Future.error('Keine Berechtigung um auf Standort zuzugreifen');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
       return Future.error(
           'Standort-Zugriffs Erlaubnis ist dauerhaft deaktiviert');
     }
 
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
     await _getCurrentLocation();
   }
 
@@ -97,7 +86,7 @@ class _MapScreenState extends State<MapScreen> {
         _currentPosition = LatLng(position.latitude, position.longitude);
         _currentAccuracy = position.accuracy;
       });
-      _mapController.move(_currentPosition!, 15);
+      _mapController.move(_currentPosition!, 12);
     } catch (e) {
       print('Laden der aktuellen Position fehlgeschlagen: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,6 +150,12 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       _isAddingMarker = false;
       _selectedPosition = null;
+    });
+  }
+
+  void _toggleMarkerInfo() {
+    setState(() {
+      _showMarkerInfo = !_showMarkerInfo;
     });
   }
 
@@ -232,6 +227,25 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                     ],
                   ),
+                  if (_showMarkerInfo)
+                    MarkerLayer(
+                      markers: _locations
+                          .map((location) => Marker(
+                                width: 100.0,
+                                height: 40.0,
+                                point: LatLng(
+                                    location.latitude, location.longitude),
+                                child: Container(
+                                  padding: EdgeInsets.all(4),
+                                  color: Colors.white,
+                                  child: Text(
+                                    'Qty: ${location.quantity}\nOversize: ${location.oversize_quantity}',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+                    ),
                 ],
               ),
               Positioned(
@@ -263,6 +277,16 @@ class _MapScreenState extends State<MapScreen> {
                       heroTag: 'addMarkerButton',
                     ),
                   ],
+                ),
+              ),
+              Positioned(
+                bottom: 16,
+                left: 16,
+                child: FloatingActionButton(
+                  onPressed: _toggleMarkerInfo,
+                  child: Icon(Icons.info),
+                  tooltip: 'Toggle Marker Info',
+                  heroTag: 'infoButton',
                 ),
               ),
             ],

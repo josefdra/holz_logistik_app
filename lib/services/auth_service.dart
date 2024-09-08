@@ -45,7 +45,8 @@ class AuthService extends ChangeNotifier {
       await _saveToken(token);
 
       // Instead of calling _getUserData here, set a dummy user
-      _user = User(id: 1, username: username, email: 'dummy@email.com');
+      _user = User(
+          id: 1, username: username, email: 'dummy@email.com', role: 'user');
       notifyListeners();
     } catch (e) {
       print('Login error: $e');

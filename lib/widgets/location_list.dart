@@ -25,7 +25,7 @@ class LocationList extends StatelessWidget {
                   final location = snapshot.data![index];
                   return ListTile(
                     title: Text(location.name),
-                    subtitle: Text(location.description),
+                    subtitle: Text(location.additional_info),
                     trailing: IconButton(
                       icon: Icon(Icons.edit),
                       onPressed: () {

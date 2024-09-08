@@ -25,9 +25,11 @@ class LocationForm extends StatefulWidget {
 class _LocationFormState extends State<LocationForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
+  late TextEditingController _additionalInfoController;
+  late TextEditingController _accessController;
   late TextEditingController _partNumberController;
   late TextEditingController _sawmillController;
+  late TextEditingController _oversizeQuantityController;
   late TextEditingController _quantityController;
   late TextEditingController _pieceCountController;
   List<String> _photoUrls = [];
@@ -38,12 +40,16 @@ class _LocationFormState extends State<LocationForm> {
     super.initState();
     _nameController =
         TextEditingController(text: widget.initialLocation?.name ?? '');
-    _descriptionController =
-        TextEditingController(text: widget.initialLocation?.description ?? '');
+    _additionalInfoController = TextEditingController(
+        text: widget.initialLocation?.additional_info ?? '');
+    _accessController =
+        TextEditingController(text: widget.initialLocation?.access ?? '');
     _partNumberController =
         TextEditingController(text: widget.initialLocation?.partNumber ?? '');
     _sawmillController =
         TextEditingController(text: widget.initialLocation?.sawmill ?? '');
+    _oversizeQuantityController = TextEditingController(
+        text: widget.initialLocation?.oversize_quantity?.toString() ?? '');
     _quantityController = TextEditingController(
         text: widget.initialLocation?.quantity?.toString() ?? '');
     _pieceCountController = TextEditingController(
@@ -54,9 +60,11 @@ class _LocationFormState extends State<LocationForm> {
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
+    _additionalInfoController.dispose();
+    _accessController.dispose();
     _partNumberController.dispose();
     _sawmillController.dispose();
+    _oversizeQuantityController.dispose();
     _quantityController.dispose();
     _pieceCountController.dispose();
     super.dispose();
@@ -94,9 +102,11 @@ class _LocationFormState extends State<LocationForm> {
         longitude: widget.initialPosition?.longitude ??
             widget.initialLocation?.longitude ??
             0,
-        description: _descriptionController.text,
+        additional_info: _additionalInfoController.text,
+        access: _accessController.text,
         partNumber: _partNumberController.text,
         sawmill: _sawmillController.text,
+        oversize_quantity: int.tryParse(_oversizeQuantityController.text),
         quantity: int.tryParse(_quantityController.text),
         pieceCount: int.tryParse(_pieceCountController.text),
         photoUrls: _photoUrls,
@@ -126,8 +136,12 @@ class _LocationFormState extends State<LocationForm> {
               },
             ),
             TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(labelText: 'Beschreibung'),
+              controller: _additionalInfoController,
+              decoration: InputDecoration(labelText: 'Zusatzinfo'),
+            ),
+            TextFormField(
+              controller: _accessController,
+              decoration: InputDecoration(labelText: 'Anfahrt'),
             ),
             TextFormField(
               controller: _partNumberController,
@@ -136,6 +150,10 @@ class _LocationFormState extends State<LocationForm> {
             TextFormField(
               controller: _sawmillController,
               decoration: InputDecoration(labelText: 'Sägewerk'),
+            ),
+            TextFormField(
+              controller: _oversizeQuantityController,
+              decoration: InputDecoration(labelText: 'Menge ÜS'),
             ),
             TextFormField(
               controller: _quantityController,
