@@ -11,7 +11,6 @@ class ApiService {
 
   Future<Map<String, dynamic>> get(String endpoint) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    print('Sending GET request to: $url');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -25,16 +24,12 @@ class ApiService {
         },
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
         throw Exception('Failed to load data: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in GET request: $e');
       rethrow;
     }
   }
@@ -42,8 +37,6 @@ class ApiService {
   Future<Map<String, dynamic>> post(
       String endpoint, Map<String, dynamic> body) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    print('Sending POST request to: $url');
-    print('Request body: $body');
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -58,16 +51,12 @@ class ApiService {
         body: json.encode(body),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
       } else {
         throw Exception('Failed to post data: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in POST request: $e');
       rethrow;
     }
   }
@@ -75,8 +64,6 @@ class ApiService {
   Future<Map<String, dynamic>> put(
       String endpoint, Map<String, dynamic> body) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    print('Sending POST request to: $url');
-    print('Request body: $body');
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('accessToken');
@@ -90,16 +77,12 @@ class ApiService {
         body: json.encode(body),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
       } else {
         throw Exception('Failed to post data: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in PUT request: $e');
       rethrow;
     }
   }

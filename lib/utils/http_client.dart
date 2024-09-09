@@ -6,7 +6,7 @@ import 'package:http/io_client.dart';
 
 http.Client createHttpClient() {
   HttpClient httpClient = HttpClient()
-    ..connectionTimeout = Duration(milliseconds: ApiConfig.connectionTimeout);
+    ..connectionTimeout = const Duration(milliseconds: ApiConfig.connectionTimeout);
 
   return IOClient(httpClient);
 }

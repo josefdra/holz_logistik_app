@@ -9,6 +9,8 @@ import 'package:holz_logistik/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class App extends StatelessWidget {
+  const App({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -20,20 +22,20 @@ class App extends StatelessWidget {
       home: Consumer<AuthService>(
         builder: (context, authService, _) {
           if (authService.isInitializing) {
-            return SplashScreen();
+            return const SplashScreen();
           } else if (authService.isAuthenticated) {
-            return MainScreen();
+            return const MainScreen();
           } else {
-            return LoginScreen();
+            return const LoginScreen();
           }
         },
       ),
       routes: {
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/reset-password': (context) => ResetPasswordScreen(),
-        '/main': (context) => MainScreen(),
-        '/settings': (context) => SettingsScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+        '/reset-password': (context) => const ResetPasswordScreen(),
+        '/main': (context) => const MainScreen(),
+        '/settings': (context) => const SettingsScreen(),
       },
     );
   }

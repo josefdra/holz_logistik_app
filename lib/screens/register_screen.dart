@@ -3,8 +3,10 @@ import 'package:holz_logistik/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
+
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -21,36 +23,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() async {
+  void _submit() {
     if (_formKey.currentState!.validate()) {
       final authService = Provider.of<AuthService>(context, listen: false);
-      try {
-        await authService.register(
-          _usernameController.text,
-          _emailController.text,
-          _passwordController.text,
-        );
+
+      void showSuccessMessage() {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text('Registrieren erfolgreich, bitte Email bestätigen.')),
+          const SnackBar(
+            content: Text('Registrieren erfolgreich, bitte Email bestätigen.'),
+          ),
         );
         Navigator.pop(context);
-      } catch (e) {
+      }
+
+      void showErrorMessage(String error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Registrieren fehlgeschlagen: ${e.toString()}')),
+            content: Text('Registrieren fehlgeschlagen: $error'),
+          ),
         );
       }
+
+      authService
+          .register(
+        _usernameController.text,
+        _emailController.text,
+        _passwordController.text,
+      )
+          .then((_) {
+        showSuccessMessage();
+      }).catchError((error) {
+        showErrorMessage(error.toString());
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Registrieren')),
+      appBar: AppBar(title: const Text('Registrieren')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -58,7 +71,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               TextFormField(
                 controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Benutzername'),
+                decoration: const InputDecoration(labelText: 'Benutzername'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Bitte Benutzername eingeben';
@@ -66,10 +79,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -81,10 +94,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Passwort'),
+                decoration: const InputDecoration(labelText: 'Passwort'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -96,10 +109,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                child: Text('Registrieren'),
+                child: const Text('Registrieren'),
               ),
             ],
           ),

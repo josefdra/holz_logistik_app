@@ -3,8 +3,10 @@ import 'package:holz_logistik/services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -27,8 +29,10 @@ class _LoginScreenState extends State<LoginScreen> {
           _usernameController.text,
           _passwordController.text,
         );
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/main');
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login fehlgeschlagen: ${e.toString()}')),
         );
@@ -39,9 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -49,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               TextFormField(
                 controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Benutzername'),
+                decoration: const InputDecoration(labelText: 'Benutzername'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Bitte Benutzername eingeben';
@@ -57,10 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Passwort'),
+                decoration: const InputDecoration(labelText: 'Passwort'),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -69,19 +73,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                child: Text('Login'),
+                child: const Text('Login'),
               ),
               TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/register'),
-                child: Text('Account erstellen'),
+                child: const Text('Account erstellen'),
               ),
               TextButton(
                 onPressed: () =>
                     Navigator.pushNamed(context, '/reset-password'),
-                child: Text('Passwort vergessen?'),
+                child: const Text('Passwort vergessen?'),
               ),
             ],
           ),

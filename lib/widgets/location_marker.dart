@@ -13,7 +13,7 @@ class LocationMarker extends Marker {
           point: LatLng(location.latitude, location.longitude),
           child: GestureDetector(
             onTap: onTap,
-            child: Icon(
+            child: const Icon(
               Icons.location_on,
               color: Colors.red,
               size: 40.0,

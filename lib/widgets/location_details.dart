@@ -11,7 +11,7 @@ class LocationDetailsDialog extends StatefulWidget {
       : super(key: key);
 
   @override
-  _LocationDetailsDialogState createState() => _LocationDetailsDialogState();
+  State<LocationDetailsDialog> createState() => _LocationDetailsDialogState();
 }
 
 class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
@@ -30,33 +30,37 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
       builder: (BuildContext context) {
         return LocationForm(
           initialLocation: _currentLocation,
-          onSave: (updatedLocation) async {
+          onSave: (updatedLocation) {
             final locationService =
                 Provider.of<LocationService>(context, listen: false);
-            try {
-              final result =
-                  await locationService.updateLocation(updatedLocation);
-              setState(() {
-                _currentLocation = result;
-              });
-              Navigator.of(context).pop(); // Close the form
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text('Aktualisieren des Standorts erfolgreich')),
-              );
-            } catch (e) {
-              Navigator.of(context).pop(); // Close the form
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                      'Aktualisieren des Standorts fehlgeschlagen: ${e.toString()}'),
-                ),
-              );
-            }
+
+            Navigator.of(context).pop();
+
+            locationService.updateLocation(updatedLocation).then((result) {
+              if (mounted) {
+                setState(() {
+                  _currentLocation = result;
+                });
+                _showSnackBar('Aktualisieren des Standorts erfolgreich');
+              }
+            }).catchError((e) {
+              _showSnackBar(
+                  'Aktualisieren des Standorts fehlgeschlagen: ${e.toString()}');
+            });
           },
         );
       },
     );
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      });
+    }
   }
 
   @override
@@ -78,7 +82,7 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   IconButton(
-                    icon: Icon(Icons.close),
+                    icon: const Icon(Icons.close),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -91,32 +95,32 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
                 children: [
                   Text(_currentLocation.name,
                       style: Theme.of(context).textTheme.titleLarge),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     '${_currentLocation.latitude}, ${_currentLocation.longitude}',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.blue,
                         decoration: TextDecoration.underline),
                   ),
-                  SizedBox(height: 16),
-                  Text('Zusatzinfo: ${_currentLocation.additional_info}'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 16),
+                  Text('Zusatzinfo: ${_currentLocation.additionalInfo}'),
+                  const SizedBox(height: 8),
                   Text('Anfahrt: ${_currentLocation.access}'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text('Partienummer: ${_currentLocation.partNumber}'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text('Sägewerk: ${_currentLocation.sawmill}'),
-                  SizedBox(height: 8),
-                  Text('Menge ÜS: ${_currentLocation.oversize_quantity} fm'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                  Text('Menge ÜS: ${_currentLocation.oversizeQuantity} fm'),
+                  const SizedBox(height: 8),
                   Text('Menge: ${_currentLocation.quantity} fm'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text('Stückzahl: ${_currentLocation.pieceCount}'),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   if (_currentLocation.photoUrls.isNotEmpty) ...[
                     Text('Photos:',
                         style: Theme.of(context).textTheme.titleMedium),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     SizedBox(
                       height: 100,
                       child: ListView.builder(
@@ -124,7 +128,7 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
                         itemCount: _currentLocation.photoUrls.length,
                         itemBuilder: (context, index) {
                           return Padding(
-                            padding: EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.only(right: 8),
                             child: Image.network(
                                 _currentLocation.photoUrls[index],
                                 height: 100,
@@ -134,12 +138,12 @@ class _LocationDetailsDialogState extends State<LocationDetailsDialog> {
                         },
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                   ],
                   Center(
                     child: ElevatedButton(
                       onPressed: () => _showUpdateForm(context),
-                      child: Text('Standort aktualisieren'),
+                      child: const Text('Standort aktualisieren'),
                     ),
                   ),
                 ],

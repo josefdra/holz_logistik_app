@@ -49,7 +49,6 @@ class AuthService extends ChangeNotifier {
           id: 1, username: username, email: 'dummy@email.com', role: 'user');
       notifyListeners();
     } catch (e) {
-      print('Login error: $e');
       throw Exception('Login failed: $e');
     }
   }
@@ -65,7 +64,6 @@ class AuthService extends ChangeNotifier {
       _user = User.fromJson(response);
       notifyListeners();
     } catch (e) {
-      print('Error fetching user data: $e');
       // Don't throw an exception here, just log it
     }
   }

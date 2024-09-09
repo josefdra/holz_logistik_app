@@ -33,7 +33,7 @@ class PhotoPreview extends StatelessWidget {
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
-                      return Center(child: CircularProgressIndicator());
+                      return const Center(child: CircularProgressIndicator());
                     },
                   )
                 : Image.file(
@@ -46,7 +46,7 @@ class PhotoPreview extends StatelessWidget {
           top: 0,
           right: 0,
           child: IconButton(
-            icon: Icon(Icons.close, color: Colors.red),
+            icon: const Icon(Icons.close, color: Colors.red),
             onPressed: onRemove,
           ),
         ),

@@ -17,7 +17,7 @@ class PhotoGallery extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PhotoGalleryState createState() => _PhotoGalleryState();
+  State<PhotoGallery> createState() => _PhotoGalleryState();
 }
 
 class _PhotoGalleryState extends State<PhotoGallery> {
@@ -40,7 +40,7 @@ class _PhotoGalleryState extends State<PhotoGallery> {
             scrollPhysics: const BouncingScrollPhysics(),
             builder: _buildItem,
             itemCount: widget.photoUrls.length + widget.newPhotos.length,
-            loadingBuilder: (context, event) => Center(
+            loadingBuilder: (context, event) => const Center(
               child: CircularProgressIndicator(),
             ),
             pageController: pageController,
@@ -54,7 +54,7 @@ class _PhotoGalleryState extends State<PhotoGallery> {
             top: 40,
             left: 20,
             child: IconButton(
-              icon: Icon(Icons.close, color: Colors.white),
+              icon: const Icon(Icons.close, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
@@ -64,7 +64,7 @@ class _PhotoGalleryState extends State<PhotoGallery> {
             right: 0,
             child: Text(
               '${currentIndex + 1} / ${widget.photoUrls.length + widget.newPhotos.length}',
-              style: TextStyle(color: Colors.white, fontSize: 17),
+              style: const TextStyle(color: Colors.white, fontSize: 17),
               textAlign: TextAlign.center,
             ),
           ),

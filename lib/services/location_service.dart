@@ -42,7 +42,6 @@ class LocationService {
 
       return newLocation;
     } catch (e) {
-      print('Error adding location: $e');
       // If API call fails, save offline
       throw Exception('Failed to add location: $e');
     }
@@ -69,7 +68,6 @@ class LocationService {
 
       return newLocation;
     } catch (e) {
-      print('Error updating location: $e');
       // If API call fails, save offline
       throw Exception('Failed to update location: $e');
     }

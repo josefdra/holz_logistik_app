@@ -11,8 +11,10 @@ import 'package:provider/provider.dart';
 import '../widgets/location_details.dart';
 
 class MapScreen extends StatefulWidget {
+  const MapScreen({Key? key}) : super(key: key);
+
   @override
-  _MapScreenState createState() => _MapScreenState();
+  State<MapScreen> createState() => _MapScreenState();
 }
 
 class _MapScreenState extends State<MapScreen> {
@@ -30,6 +32,27 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
     _loadLocations();
     _initializeGeolocator();
+  }
+
+  Future<void> _loadLocations() async {
+    final locationService =
+        Provider.of<LocationService>(context, listen: false);
+    try {
+      final locations = await locationService.getLocations();
+      if (mounted) {
+        setState(() {
+          _locations = locations;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorSnackBar('Laden der Standorte fehlgeschlagen');
+      }
+    }
   }
 
   Future<void> _initializeGeolocator() async {
@@ -57,41 +80,22 @@ class _MapScreenState extends State<MapScreen> {
     await _getCurrentLocation();
   }
 
-  Future<void> _loadLocations() async {
-    final locationService =
-        Provider.of<LocationService>(context, listen: false);
-    try {
-      final locations = await locationService.getLocations();
-      setState(() {
-        _locations = locations;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Laden der Standorte fehlgeschlagen: $e');
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Laden der Standorte fehlgeschlagen')),
-      );
-    }
-  }
-
   Future<void> _getCurrentLocation() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      setState(() {
-        _currentPosition = LatLng(position.latitude, position.longitude);
-        _currentAccuracy = position.accuracy;
-      });
-      _mapController.move(_currentPosition!, 12);
+      if (mounted) {
+        setState(() {
+          _currentPosition = LatLng(position.latitude, position.longitude);
+          _currentAccuracy = position.accuracy;
+        });
+        _mapController.move(_currentPosition!, 12);
+      }
     } catch (e) {
-      print('Laden der aktuellen Position fehlgeschlagen: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Laden der aktuellen Position fehlgeschlagen')),
-      );
+      if (mounted) {
+        _showErrorSnackBar('Laden der aktuellen Position fehlgeschlagen');
+      }
     }
   }
 
@@ -117,32 +121,33 @@ class _MapScreenState extends State<MapScreen> {
         isScrollControlled: true,
         builder: (BuildContext context) {
           return LocationForm(
-            onSave: (Location location) async {
-              final locationService =
-                  Provider.of<LocationService>(context, listen: false);
-              try {
-                final newLocation = await locationService.addLocation(location);
-                setState(() {
-                  _locations.add(newLocation);
-                  _isAddingMarker = false;
-                  _selectedPosition = null;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Standort hinzugefügt')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text(
-                          'Fehler beim Hinzufügen des Standorts: ${e.toString()}')),
-                );
-              }
-            },
+            onSave: (Location location) => _saveLocation(location),
             initialPosition: _selectedPosition!,
           );
         },
       );
+    }
+  }
+
+  Future<void> _saveLocation(Location location) async {
+    final locationService =
+        Provider.of<LocationService>(context, listen: false);
+    try {
+      final newLocation = await locationService.addLocation(location);
+      if (mounted) {
+        setState(() {
+          _locations.add(newLocation);
+          _isAddingMarker = false;
+          _selectedPosition = null;
+        });
+        Navigator.of(context).pop();
+        _showSuccessSnackBar('Standort hinzugefügt');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showErrorSnackBar(
+            'Fehler beim Hinzufügen des Standorts: ${e.toString()}');
+      }
     }
   }
 
@@ -159,16 +164,33 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
-        ? Center(child: CircularProgressIndicator())
+        ? const Center(child: CircularProgressIndicator())
         : Stack(
             children: [
               FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
-                  initialCenter: _currentPosition ?? LatLng(47.9831, 11.9050),
+                  initialCenter:
+                      _currentPosition ?? const LatLng(47.9831, 11.9050),
                   initialZoom: 10.0,
                   onTap: _handleMapTap,
                 ),
@@ -176,7 +198,7 @@ class _MapScreenState extends State<MapScreen> {
                   TileLayer(
                     urlTemplate:
                         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    subdomains: ['a', 'b', 'c'],
+                    subdomains: const ['a', 'b', 'c'],
                   ),
                   CircleLayer(
                     circles: [
@@ -210,7 +232,8 @@ class _MapScreenState extends State<MapScreen> {
                           width: 40.0,
                           height: 40.0,
                           point: _selectedPosition!,
-                          child: Icon(Icons.location_on, color: Colors.red),
+                          child:
+                              const Icon(Icons.location_on, color: Colors.red),
                         ),
                       if (_currentPosition != null)
                         Marker(
@@ -236,11 +259,11 @@ class _MapScreenState extends State<MapScreen> {
                                 point: LatLng(
                                     location.latitude, location.longitude),
                                 child: Container(
-                                  padding: EdgeInsets.all(4),
+                                  padding: const EdgeInsets.all(4),
                                   color: Colors.white,
                                   child: Text(
-                                    'Qty: ${location.quantity}\nOversize: ${location.oversize_quantity}',
-                                    style: TextStyle(fontSize: 10),
+                                    'Qty: ${location.quantity}\nOversize: ${location.oversizeQuantity}',
+                                    style: const TextStyle(fontSize: 10),
                                   ),
                                 ),
                               ))
@@ -255,26 +278,26 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     FloatingActionButton(
                       onPressed: _getCurrentLocation,
-                      child: Icon(Icons.my_location),
                       heroTag: 'locationButton',
+                      child: const Icon(Icons.my_location),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     if (_isAddingMarker)
                       FloatingActionButton(
                         onPressed: _cancelAddMarkerMode,
-                        child: Icon(Icons.close),
                         tooltip: 'Cancel Add Marker',
                         heroTag: 'cancelAddMarkerButton',
+                        child: const Icon(Icons.close),
                       ),
-                    if (_isAddingMarker) SizedBox(height: 10),
+                    if (_isAddingMarker) const SizedBox(height: 10),
                     FloatingActionButton(
                       onPressed: _isAddingMarker
                           ? _showLocationForm
                           : _toggleAddMarkerMode,
-                      child: Icon(
-                          _isAddingMarker ? Icons.check : Icons.add_location),
                       tooltip: _isAddingMarker ? 'Add Location' : 'Add Marker',
                       heroTag: 'addMarkerButton',
+                      child: Icon(
+                          _isAddingMarker ? Icons.check : Icons.add_location),
                     ),
                   ],
                 ),
@@ -284,9 +307,9 @@ class _MapScreenState extends State<MapScreen> {
                 left: 16,
                 child: FloatingActionButton(
                   onPressed: _toggleMarkerInfo,
-                  child: Icon(Icons.info),
                   tooltip: 'Toggle Marker Info',
                   heroTag: 'infoButton',
+                  child: const Icon(Icons.info),
                 ),
               ),
             ],

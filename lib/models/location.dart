@@ -5,11 +5,11 @@ class Location {
   final String name;
   final double latitude;
   final double longitude;
-  final String additional_info;
+  final String additionalInfo;
   final String access;
   final String partNumber;
   final String sawmill;
-  final int? oversize_quantity;
+  final int? oversizeQuantity;
   final int? quantity;
   final int? pieceCount;
   final List<String> photoUrls;
@@ -22,11 +22,11 @@ class Location {
     required this.name,
     required this.latitude,
     required this.longitude,
-    required this.additional_info,
+    required this.additionalInfo,
     required this.access,
     required this.partNumber,
     required this.sawmill,
-    this.oversize_quantity,
+    this.oversizeQuantity,
     this.quantity,
     this.pieceCount,
     this.photoUrls = const [],
@@ -41,11 +41,11 @@ class Location {
       name: json['name'],
       latitude: _parseDouble(json['latitude']),
       longitude: _parseDouble(json['longitude']),
-      additional_info: json['additional_info'],
+      additionalInfo: json['additional_info'],
       access: json['access'],
       partNumber: json['part_number'],
       sawmill: json['sawmill'],
-      oversize_quantity: json['oversize_quantity'],
+      oversizeQuantity: json['oversize_quantity'],
       quantity: json['quantity'],
       pieceCount: json['piece_count'],
       photoUrls: List<String>.from(json['photos'] ?? []),
@@ -71,11 +71,11 @@ class Location {
       'name': name,
       'latitude': latitude,
       'longitude': longitude,
-      'additional_info': additional_info,
+      'additional_info': additionalInfo,
       'access': access,
       'part_number': partNumber,
       'sawmill': sawmill,
-      'oversize_quantity': oversize_quantity,
+      'oversize_quantity': oversizeQuantity,
       'quantity': quantity,
       'piece_count': pieceCount,
       'photo_urls': photoUrls,
@@ -87,11 +87,11 @@ class Location {
     String? name,
     double? latitude,
     double? longitude,
-    String? additional_info,
+    String? additionalInfo,
     String? access,
     String? partNumber,
     String? sawmill,
-    int? oversize_quantity,
+    int? oversizeQuantity,
     int? quantity,
     int? pieceCount,
     List<String>? photoUrls,
@@ -104,11 +104,11 @@ class Location {
       name: name ?? this.name,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      additional_info: additional_info ?? this.additional_info,
+      additionalInfo: additionalInfo ?? this.additionalInfo,
       access: access ?? this.access,
       partNumber: partNumber ?? this.partNumber,
       sawmill: sawmill ?? this.sawmill,
-      oversize_quantity: oversize_quantity ?? this.oversize_quantity,
+      oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
       quantity: quantity ?? this.quantity,
       pieceCount: pieceCount ?? this.pieceCount,
       photoUrls: photoUrls ?? this.photoUrls,

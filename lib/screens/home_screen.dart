@@ -5,6 +5,8 @@ import 'package:holz_logistik/widgets/location_details.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     final locationService = Provider.of<LocationService>(context);
@@ -13,11 +15,11 @@ class HomeScreen extends StatelessWidget {
       future: locationService.getLocations(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return Center(child: Text('Keine Standorte gefunden'));
+          return const Center(child: Text('Keine Standorte gefunden'));
         } else {
           return ListView.builder(
             itemCount: snapshot.data!.length,

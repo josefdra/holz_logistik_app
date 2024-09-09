@@ -18,7 +18,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => authService),
         Provider(create: (_) => locationService),
       ],
-      child: App(),
+      child: const App(),
     ),
   );
 }

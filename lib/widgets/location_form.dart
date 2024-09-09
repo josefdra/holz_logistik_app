@@ -19,7 +19,7 @@ class LocationForm extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _LocationFormState createState() => _LocationFormState();
+  State<LocationForm> createState() => _LocationFormState();
 }
 
 class _LocationFormState extends State<LocationForm> {
@@ -33,7 +33,7 @@ class _LocationFormState extends State<LocationForm> {
   late TextEditingController _quantityController;
   late TextEditingController _pieceCountController;
   List<String> _photoUrls = [];
-  List<File> _newPhotos = [];
+  final List<File> _newPhotos = [];
 
   @override
   void initState() {
@@ -41,7 +41,7 @@ class _LocationFormState extends State<LocationForm> {
     _nameController =
         TextEditingController(text: widget.initialLocation?.name ?? '');
     _additionalInfoController = TextEditingController(
-        text: widget.initialLocation?.additional_info ?? '');
+        text: widget.initialLocation?.additionalInfo ?? '');
     _accessController =
         TextEditingController(text: widget.initialLocation?.access ?? '');
     _partNumberController =
@@ -49,7 +49,7 @@ class _LocationFormState extends State<LocationForm> {
     _sawmillController =
         TextEditingController(text: widget.initialLocation?.sawmill ?? '');
     _oversizeQuantityController = TextEditingController(
-        text: widget.initialLocation?.oversize_quantity?.toString() ?? '');
+        text: widget.initialLocation?.oversizeQuantity?.toString() ?? '');
     _quantityController = TextEditingController(
         text: widget.initialLocation?.quantity?.toString() ?? '');
     _pieceCountController = TextEditingController(
@@ -71,8 +71,8 @@ class _LocationFormState extends State<LocationForm> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
       setState(() {
@@ -102,11 +102,11 @@ class _LocationFormState extends State<LocationForm> {
         longitude: widget.initialPosition?.longitude ??
             widget.initialLocation?.longitude ??
             0,
-        additional_info: _additionalInfoController.text,
+        additionalInfo: _additionalInfoController.text,
         access: _accessController.text,
         partNumber: _partNumberController.text,
         sawmill: _sawmillController.text,
-        oversize_quantity: int.tryParse(_oversizeQuantityController.text),
+        oversizeQuantity: int.tryParse(_oversizeQuantityController.text),
         quantity: int.tryParse(_quantityController.text),
         pieceCount: int.tryParse(_pieceCountController.text),
         photoUrls: _photoUrls,
@@ -120,14 +120,14 @@ class _LocationFormState extends State<LocationForm> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16.0),
       child: Form(
         key: _formKey,
         child: ListView(
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: InputDecoration(labelText: 'Name'),
+              decoration: const InputDecoration(labelText: 'Name'),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Bitte einen Namen eingeben';
@@ -137,39 +137,39 @@ class _LocationFormState extends State<LocationForm> {
             ),
             TextFormField(
               controller: _additionalInfoController,
-              decoration: InputDecoration(labelText: 'Zusatzinfo'),
+              decoration: const InputDecoration(labelText: 'Zusatzinfo'),
             ),
             TextFormField(
               controller: _accessController,
-              decoration: InputDecoration(labelText: 'Anfahrt'),
+              decoration: const InputDecoration(labelText: 'Anfahrt'),
             ),
             TextFormField(
               controller: _partNumberController,
-              decoration: InputDecoration(labelText: 'Partienummer'),
+              decoration: const InputDecoration(labelText: 'Partienummer'),
             ),
             TextFormField(
               controller: _sawmillController,
-              decoration: InputDecoration(labelText: 'Sägewerk'),
+              decoration: const InputDecoration(labelText: 'Sägewerk'),
             ),
             TextFormField(
               controller: _oversizeQuantityController,
-              decoration: InputDecoration(labelText: 'Menge ÜS'),
+              decoration: const InputDecoration(labelText: 'Menge ÜS'),
             ),
             TextFormField(
               controller: _quantityController,
-              decoration: InputDecoration(labelText: 'Menge'),
+              decoration: const InputDecoration(labelText: 'Menge'),
             ),
             TextFormField(
               controller: _pieceCountController,
-              decoration: InputDecoration(labelText: 'Stückzahl'),
+              decoration: const InputDecoration(labelText: 'Stückzahl'),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _pickImage,
-              child: Text('Foto hinzufügen'),
+              child: const Text('Foto hinzufügen'),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -196,8 +196,8 @@ class _LocationFormState extends State<LocationForm> {
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: Text('Abbrechen'),
                   style: ElevatedButton.styleFrom(iconColor: Colors.grey),
+                  child: const Text('Abbrechen'),
                 ),
               ],
             ),
