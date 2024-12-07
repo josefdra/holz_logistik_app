@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/map_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
+import 'package:provider/provider.dart';
+import 'package:holz_logistik/providers/location_provider.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({Key? key}) : super(key: key);
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -19,16 +21,19 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Load locations when the app starts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LocationProvider>().loadLocations();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holz Logistik'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
-          ),
-        ],
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigation(

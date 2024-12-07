@@ -13,7 +13,7 @@ class Location {
   final int? quantity;
   final int? pieceCount;
   final List<String> photoUrls;
-  final List<File> newPhotos;
+  final List<File> newPhotos;  // Temporary storage for new photos before saving
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -22,10 +22,10 @@ class Location {
     required this.name,
     required this.latitude,
     required this.longitude,
-    required this.additionalInfo,
-    required this.access,
-    required this.partNumber,
-    required this.sawmill,
+    this.additionalInfo = '',
+    this.access = '',
+    this.partNumber = '',
+    this.sawmill = '',
     this.oversizeQuantity,
     this.quantity,
     this.pieceCount,
@@ -34,53 +34,6 @@ class Location {
     this.createdAt,
     this.updatedAt,
   });
-
-  factory Location.fromJson(Map<String, dynamic> json) {
-    return Location(
-      id: json['id'],
-      name: json['name'],
-      latitude: _parseDouble(json['latitude']),
-      longitude: _parseDouble(json['longitude']),
-      additionalInfo: json['additional_info'],
-      access: json['access'],
-      partNumber: json['part_number'],
-      sawmill: json['sawmill'],
-      oversizeQuantity: json['oversize_quantity'],
-      quantity: json['quantity'],
-      pieceCount: json['piece_count'],
-      photoUrls: List<String>.from(json['photos'] ?? []),
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
-    );
-  }
-
-  static double _parseDouble(dynamic value) {
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.parse(value);
-    throw FormatException('Cannot parse $value to double');
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'latitude': latitude,
-      'longitude': longitude,
-      'additional_info': additionalInfo,
-      'access': access,
-      'part_number': partNumber,
-      'sawmill': sawmill,
-      'oversize_quantity': oversizeQuantity,
-      'quantity': quantity,
-      'piece_count': pieceCount,
-      'photo_urls': photoUrls,
-    };
-  }
 
   Location copyWith({
     int? id,

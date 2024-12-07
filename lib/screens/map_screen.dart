@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/services/location_service.dart';
+import 'package:holz_logistik/providers/location_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/location_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
-
-import '../widgets/location_details.dart';
+import 'package:holz_logistik/widgets/location_details.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key}) : super(key: key);
+  const MapScreen({super.key});
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -19,8 +18,6 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  List<Location> _locations = [];
-  bool _isLoading = true;
   bool _isAddingMarker = false;
   bool _showMarkerInfo = false;
   LatLng? _selectedPosition;
@@ -30,72 +27,93 @@ class _MapScreenState extends State<MapScreen> {
   @override
   void initState() {
     super.initState();
-    _loadLocations();
     _initializeGeolocator();
   }
 
-  Future<void> _loadLocations() async {
-    final locationService =
-        Provider.of<LocationService>(context, listen: false);
-    try {
-      final locations = await locationService.getLocations();
-      if (mounted) {
-        setState(() {
-          _locations = locations;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _showErrorSnackBar('Laden der Standorte fehlgeschlagen');
-      }
-    }
-  }
-
   Future<void> _initializeGeolocator() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+    try {
+      debugPrint('Starting location initialization...');
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Standort Service ist deaktiviert');
-    }
+      // First check if services are enabled
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      debugPrint('Location services enabled: $serviceEnabled');
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Bitte aktivieren Sie die Standortdienste')),
+          );
+        }
+        return;
+      }
+
+      // Check current permission status
+      var permission = await Geolocator.checkPermission();
+      debugPrint('Initial permission status: $permission');
+
+      // If denied, request permission
       if (permission == LocationPermission.denied) {
-        return Future.error('Keine Berechtigung um auf Standort zuzugreifen');
+        debugPrint('Requesting permission...');
+        permission = await Geolocator.requestPermission();
+        debugPrint('Permission after request: $permission');
+
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Standortzugriff verweigert')),
+            );
+          }
+          return;
+        }
+      }
+
+      // Handle permanently denied
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Standortzugriff ist dauerhaft deaktiviert. Bitte in den Einstellungen aktivieren.'),
+            ),
+          );
+        }
+        return;
+      }
+
+      // If we got here, we should have permission
+      debugPrint('Permission granted, getting location...');
+      await _getCurrentLocation();
+      debugPrint('Location initialization complete');
+
+    } catch (e, stackTrace) {
+      debugPrint('Error during location initialization: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Standortfehler: ${e.toString()}')),
+        );
       }
     }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Standort-Zugriffs Erlaubnis ist dauerhaft deaktiviert');
-    }
-
-    await _getCurrentLocation();
   }
 
   Future<void> _getCurrentLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
+      debugPrint('Getting current location...');
+      final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
+      debugPrint('Position received: ${position.latitude}, ${position.longitude}');
+
       if (mounted) {
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
           _currentAccuracy = position.accuracy;
         });
+
         _mapController.move(_currentPosition!, 12);
       }
     } catch (e) {
-      if (mounted) {
-        _showErrorSnackBar('Laden der aktuellen Position fehlgeschlagen');
-      }
+      debugPrint('Error getting current location: $e');
+      rethrow; // Let the parent method handle this error
     }
   }
 
@@ -121,33 +139,16 @@ class _MapScreenState extends State<MapScreen> {
         isScrollControlled: true,
         builder: (BuildContext context) {
           return LocationForm(
-            onSave: (Location location) => _saveLocation(location),
             initialPosition: _selectedPosition!,
           );
         },
-      );
-    }
-  }
-
-  Future<void> _saveLocation(Location location) async {
-    final locationService =
-        Provider.of<LocationService>(context, listen: false);
-    try {
-      final newLocation = await locationService.addLocation(location);
-      if (mounted) {
+      ).then((_) {
+        // Reset the add marker mode when the form is closed
         setState(() {
-          _locations.add(newLocation);
           _isAddingMarker = false;
           _selectedPosition = null;
         });
-        Navigator.of(context).pop();
-        _showSuccessSnackBar('Standort hinzugefügt');
-      }
-    } catch (e) {
-      if (mounted) {
-        _showErrorSnackBar(
-            'Fehler beim Hinzufügen des Standorts: ${e.toString()}');
-      }
+      });
     }
   }
 
@@ -172,147 +173,132 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _showSuccessSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Stack(
-            children: [
-              FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter:
-                      _currentPosition ?? const LatLng(47.9831, 11.9050),
-                  initialZoom: 10.0,
-                  onTap: _handleMapTap,
+    return Consumer<LocationProvider>(
+      builder: (context, locationProvider, _) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (locationProvider.locations.isNotEmpty) {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          }
+        });
+        return Stack(
+          children: [
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _currentPosition ?? const LatLng(47.9831, 11.9050),
+                initialZoom: 10.0,
+                onTap: _handleMapTap,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: const ['a', 'b', 'c'],
                 ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    subdomains: const ['a', 'b', 'c'],
-                  ),
-                  CircleLayer(
-                    circles: [
-                      if (_currentPosition != null)
-                        CircleMarker(
-                          point: _currentPosition!,
-                          radius: _currentAccuracy,
-                          useRadiusInMeter: true,
-                          color: Colors.blue.withOpacity(0.2),
-                          borderColor: Colors.blue,
-                          borderStrokeWidth: 2,
-                        ),
-                    ],
-                  ),
+                CircleLayer(
+                  circles: [
+                    if (_currentPosition != null)
+                      CircleMarker(
+                        point: _currentPosition!,
+                        radius: _currentAccuracy,
+                        useRadiusInMeter: true,
+                        color: Colors.blue.withOpacity(0.2),
+                        borderColor: Colors.blue,
+                        borderStrokeWidth: 2,
+                      ),
+                  ],
+                ),
+                MarkerLayer(
+                  markers: [
+                    ...locationProvider.locations.map((location) => LocationMarker(
+                      location: location,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => LocationDetailsDialog(location: location),
+                        );
+                      },
+                    )),
+                    if (_selectedPosition != null)
+                      Marker(
+                        width: 40.0,
+                        height: 40.0,
+                        point: _selectedPosition!,
+                        child: const Icon(Icons.location_on, color: Colors.red),
+                      ),
+                  ],
+                ),
+                if (_showMarkerInfo)
                   MarkerLayer(
-                    markers: [
-                      ..._locations.map((location) => LocationMarker(
-                            location: location,
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return LocationDetailsDialog(
-                                      location: location);
-                                },
-                              );
-                            },
-                          )),
-                      if (_selectedPosition != null)
+                    markers: locationProvider.locations.map((location) =>
                         Marker(
-                          width: 40.0,
+                          width: 120.0,
                           height: 40.0,
-                          point: _selectedPosition!,
-                          child:
-                              const Icon(Icons.location_on, color: Colors.red),
-                        ),
-                      if (_currentPosition != null)
-                        Marker(
-                          width: 20.0,
-                          height: 20.0,
-                          point: _currentPosition!,
+                          point: LatLng(location.latitude, location.longitude),
                           child: Container(
+                            padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              'Menge: ${location.quantity ?? 0} fm\nÜS: ${location.oversizeQuantity ?? 0} fm',
+                              style: const TextStyle(fontSize: 10),
                             ),
                           ),
                         ),
-                    ],
+                    ).toList(),
                   ),
-                  if (_showMarkerInfo)
-                    MarkerLayer(
-                      markers: _locations
-                          .map((location) => Marker(
-                                width: 100.0,
-                                height: 40.0,
-                                point: LatLng(
-                                    location.latitude, location.longitude),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  color: Colors.white,
-                                  child: Text(
-                                    'Qty: ${location.quantity}\nOversize: ${location.oversizeQuantity}',
-                                    style: const TextStyle(fontSize: 10),
-                                  ),
-                                ),
-                              ))
-                          .toList(),
+              ],
+            ),
+            // FAB Controls
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton(
+                    onPressed: _getCurrentLocation,
+                    heroTag: 'locationButton',
+                    child: const Icon(Icons.my_location),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_isAddingMarker)
+                    FloatingActionButton(
+                      onPressed: _cancelAddMarkerMode,
+                      heroTag: 'cancelButton',
+                      child: const Icon(Icons.close),
                     ),
+                  if (_isAddingMarker) const SizedBox(height: 8),
+                  FloatingActionButton(
+                    onPressed: _isAddingMarker ? _showLocationForm : _toggleAddMarkerMode,
+                    heroTag: 'addButton',
+                    child: Icon(_isAddingMarker ? Icons.check : Icons.add_location),
+                  ),
                 ],
               ),
-              Positioned(
-                bottom: 16,
-                right: 16,
-                child: Column(
-                  children: [
-                    FloatingActionButton(
-                      onPressed: _getCurrentLocation,
-                      heroTag: 'locationButton',
-                      child: const Icon(Icons.my_location),
-                    ),
-                    const SizedBox(height: 10),
-                    if (_isAddingMarker)
-                      FloatingActionButton(
-                        onPressed: _cancelAddMarkerMode,
-                        tooltip: 'Cancel Add Marker',
-                        heroTag: 'cancelAddMarkerButton',
-                        child: const Icon(Icons.close),
-                      ),
-                    if (_isAddingMarker) const SizedBox(height: 10),
-                    FloatingActionButton(
-                      onPressed: _isAddingMarker
-                          ? _showLocationForm
-                          : _toggleAddMarkerMode,
-                      tooltip: _isAddingMarker ? 'Add Location' : 'Add Marker',
-                      heroTag: 'addMarkerButton',
-                      child: Icon(
-                          _isAddingMarker ? Icons.check : Icons.add_location),
-                    ),
-                  ],
-                ),
+            ),
+            // Info Toggle Button
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: FloatingActionButton(
+                onPressed: _toggleMarkerInfo,
+                heroTag: 'infoButton',
+                child: Icon(_showMarkerInfo ? Icons.info_outline : Icons.info),
               ),
-              Positioned(
-                bottom: 16,
-                left: 16,
-                child: FloatingActionButton(
-                  onPressed: _toggleMarkerInfo,
-                  tooltip: 'Toggle Marker Info',
-                  heroTag: 'infoButton',
-                  child: const Icon(Icons.info),
-                ),
-              ),
-            ],
-          );
+            ),
+          ],
+        );
+      },
+    );
   }
 }

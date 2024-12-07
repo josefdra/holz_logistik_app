@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 class PhotoPreview extends StatelessWidget {
@@ -8,11 +7,11 @@ class PhotoPreview extends StatelessWidget {
   final VoidCallback onRemove;
 
   const PhotoPreview({
-    Key? key,
+    super.key,
     this.photoUrl,
     this.photoFile,
     required this.onRemove,
-  }) : super(key: key);
+  }) : assert(photoUrl != null || photoFile != null);
 
   @override
   Widget build(BuildContext context) {
@@ -28,25 +27,32 @@ class PhotoPreview extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: photoUrl != null
-                ? Image.network(
-                    photoUrl!,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                  )
+                ? Image.file(
+              File(photoUrl!),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.broken_image,
+                size: 40,
+              ),
+            )
                 : Image.file(
-                    photoFile!,
-                    fit: BoxFit.cover,
-                  ),
+              photoFile!,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         Positioned(
-          top: 0,
-          right: 0,
+          top: -12,
+          right: -12,
           child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.red),
+            icon: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, color: Colors.red, size: 20),
+            ),
             onPressed: onRemove,
           ),
         ),
