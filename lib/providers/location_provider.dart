@@ -4,6 +4,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../database/database_helper.dart';
 import '../models/location.dart';
+import '../models/shipment.dart';
 
 class LocationProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
@@ -12,6 +13,184 @@ class LocationProvider extends ChangeNotifier {
 
   List<Location> get locations => _locations;
   bool get isLoading => _isLoading;
+
+  List<Location> _archivedLocations = [];
+  Map<int, List<Shipment>> _shipmentsByLocation = {};
+
+  List<Location> get archivedLocations => _archivedLocations;
+
+  Future<void> loadArchivedLocations() async {
+    try {
+      // Load all shipments
+      final allShipments = await _db.getAllShipments();
+
+      // Group shipments by location
+      _shipmentsByLocation = {};
+      for (var shipment in allShipments) {
+        _shipmentsByLocation.putIfAbsent(shipment.locationId, () => []).add(shipment);
+      }
+
+      // Update archived status for locations
+      await loadLocations(); // This will refresh _locations
+      _updateArchivedStatus();
+    } catch (e) {
+      debugPrint('Error loading archived locations: $e');
+    }
+    notifyListeners();
+  }
+
+  List<Location> get locationsWithShipments {
+    final Set<int> locationIdsWithShipments = {};
+
+    // Build map of location IDs that have unarchived shipments
+    for (var entry in _shipmentsByLocation.entries) {
+      if (entry.value.any((s) => !s.isUndone)) {
+        locationIdsWithShipments.add(entry.key);
+      }
+    }
+
+    return _locations.where((loc) =>
+        locationIdsWithShipments.contains(loc.id)
+    ).toList();
+  }
+
+  Map<String, int> getShippedTotals(int locationId) {
+    if (!_shipmentsByLocation.containsKey(locationId)) {
+      return {'quantity': 0, 'pieceCount': 0, 'oversizeQuantity': 0};
+    }
+
+    final shipments = _shipmentsByLocation[locationId]!
+        .where((s) => !s.isUndone)
+        .toList();
+
+    int totalQuantity = 0;
+    int totalPieceCount = 0;
+    int totalOversize = 0;
+
+    for (var shipment in shipments) {
+      totalQuantity += shipment.quantity;
+      totalPieceCount += shipment.pieceCount;
+      if (shipment.oversizeQuantity != null) {
+        totalOversize += shipment.oversizeQuantity!;
+      }
+    }
+
+    return {
+      'quantity': totalQuantity,
+      'pieceCount': totalPieceCount,
+      'oversizeQuantity': totalOversize,
+    };
+  }
+
+  void _updateArchivedStatus() {
+    _archivedLocations = [];
+    for (var locationId in _shipmentsByLocation.keys) {
+      var location = _locations.firstWhere(
+            (loc) => loc.id == locationId,
+        orElse: () => Location( // Return a dummy location that won't be used
+          id: -1,
+          name: '',
+          latitude: 0,
+          longitude: 0,
+        ),
+      );
+      if (location.id != -1 && _isLocationFullyShipped(location)) {
+        _archivedLocations.add(location);
+        _locations.removeWhere((loc) => loc.id == locationId);
+      }
+    }
+  }
+
+  bool _isLocationFullyShipped(Location location) {
+    if (!_shipmentsByLocation.containsKey(location.id)) return false;
+
+    final shipments = _shipmentsByLocation[location.id]!
+        .where((s) => !s.isUndone)
+        .toList();
+
+    int totalQuantityShipped = 0;
+    int totalPieceCountShipped = 0;
+    int totalOversizeShipped = 0;
+
+    for (var shipment in shipments) {
+      totalQuantityShipped += shipment.quantity;
+      totalPieceCountShipped += shipment.pieceCount;
+      if (shipment.oversizeQuantity != null) {
+        totalOversizeShipped += shipment.oversizeQuantity!;
+      }
+    }
+
+    return totalQuantityShipped >= (location.quantity ?? 0) &&
+        totalPieceCountShipped >= (location.pieceCount ?? 0) &&
+        (location.oversizeQuantity == null ||
+            totalOversizeShipped >= location.oversizeQuantity!);
+  }
+
+  Future<List<Shipment>> getShipmentHistory(int locationId) async {
+    return await _db.getShipmentsByLocation(locationId);
+  }
+
+  Future<void> addShipment(Shipment shipment) async {
+    try {
+      // Insert the shipment
+      final id = await _db.insertShipment(shipment);
+
+      // Get the location
+      final location = _locations.firstWhere((loc) => loc.id == shipment.locationId);
+
+      // Update location quantities
+      final updatedLocation = location.copyWith(
+        quantity: (location.quantity ?? 0) - shipment.quantity,
+        pieceCount: (location.pieceCount ?? 0) - shipment.pieceCount,
+        oversizeQuantity: location.oversizeQuantity != null && shipment.oversizeQuantity != null
+            ? location.oversizeQuantity! - shipment.oversizeQuantity!
+            : location.oversizeQuantity,
+      );
+
+      // Update the location in the database
+      await updateLocation(updatedLocation);
+
+      // Refresh archived status
+      await loadArchivedLocations();
+    } catch (e) {
+      debugPrint('Error adding shipment: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> undoShipment(Shipment shipment) async {
+    try {
+      // Mark shipment as undone
+      final updatedShipment = shipment.copyWith(isUndone: true);
+      await _db.updateShipment(updatedShipment);
+
+      // Get the location (either from active or archived)
+      var location = _locations.firstWhere(
+            (loc) => loc.id == shipment.locationId,
+        orElse: () => _archivedLocations.firstWhere(
+              (loc) => loc.id == shipment.locationId,
+        ),
+      );
+
+      // Update location quantities
+      final updatedLocation = location.copyWith(
+        quantity: (location.quantity ?? 0) + shipment.quantity,
+        pieceCount: (location.pieceCount ?? 0) + shipment.pieceCount,
+        oversizeQuantity: location.oversizeQuantity != null && shipment.oversizeQuantity != null
+            ? location.oversizeQuantity! + shipment.oversizeQuantity!
+            : location.oversizeQuantity,
+      );
+
+      // Update the location in the database
+      await updateLocation(updatedLocation);
+
+      // Refresh archived status
+      await loadArchivedLocations();
+    } catch (e) {
+      debugPrint('Error undoing shipment: $e');
+      rethrow;
+    }
+  }
 
   Future<void> loadLocations() async {
     if (_isLoading) return;

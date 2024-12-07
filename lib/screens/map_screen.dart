@@ -23,97 +23,77 @@ class _MapScreenState extends State<MapScreen> {
   LatLng? _selectedPosition;
   LatLng? _currentPosition;
   double _currentAccuracy = 0;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeGeolocator();
+    _initializeLocationAndMap();
   }
 
-  Future<void> _initializeGeolocator() async {
+  Future<void> _initializeLocationAndMap() async {
     try {
-      debugPrint('Starting location initialization...');
+      await _initializeGeolocator();
+      if (!mounted) return;
 
-      // First check if services are enabled
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      debugPrint('Location services enabled: $serviceEnabled');
-
-      if (!serviceEnabled) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bitte aktivieren Sie die Standortdienste')),
-          );
-        }
-        return;
+      // Only move to current location if this is the first initialization
+      if (!_isInitialized && _currentPosition != null) {
+        _mapController.move(_currentPosition!, 15.0);
+        _isInitialized = true;
       }
-
-      // Check current permission status
-      var permission = await Geolocator.checkPermission();
-      debugPrint('Initial permission status: $permission');
-
-      // If denied, request permission
-      if (permission == LocationPermission.denied) {
-        debugPrint('Requesting permission...');
-        permission = await Geolocator.requestPermission();
-        debugPrint('Permission after request: $permission');
-
-        if (permission == LocationPermission.denied) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Standortzugriff verweigert')),
-            );
-          }
-          return;
-        }
-      }
-
-      // Handle permanently denied
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Standortzugriff ist dauerhaft deaktiviert. Bitte in den Einstellungen aktivieren.'),
-            ),
-          );
-        }
-        return;
-      }
-
-      // If we got here, we should have permission
-      debugPrint('Permission granted, getting location...');
-      await _getCurrentLocation();
-      debugPrint('Location initialization complete');
-
-    } catch (e, stackTrace) {
-      debugPrint('Error during location initialization: $e');
-      debugPrint('Stack trace: $stackTrace');
+    } catch (e) {
+      debugPrint('Error initializing location: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Standortfehler: ${e.toString()}')),
+          const SnackBar(content: Text('Fehler beim Abrufen des Standorts')),
         );
       }
     }
   }
 
+  Future<void> _initializeGeolocator() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('Location services are disabled');
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Location permissions are permanently denied');
+      }
+
+      await _getCurrentLocation();
+    } catch (e) {
+      debugPrint('Geolocator initialization error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> _getCurrentLocation() async {
     try {
-      debugPrint('Getting current location...');
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      debugPrint('Position received: ${position.latitude}, ${position.longitude}');
 
       if (mounted) {
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
           _currentAccuracy = position.accuracy;
         });
-
-        _mapController.move(_currentPosition!, 12);
       }
+
+      _mapController.move(_currentPosition!, _mapController.camera.zoom);
     } catch (e) {
       debugPrint('Error getting current location: $e');
-      rethrow; // Let the parent method handle this error
+      rethrow;
     }
   }
 
@@ -206,6 +186,33 @@ class _MapScreenState extends State<MapScreen> {
                         color: Colors.blue.withOpacity(0.2),
                         borderColor: Colors.blue,
                         borderStrokeWidth: 2,
+                      ),
+                  ],
+                ),
+                // Current location dot
+                MarkerLayer(
+                  markers: [
+                    if (_currentPosition != null)
+                      Marker(
+                        point: _currentPosition!,
+                        width: 20,
+                        height: 20,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 3,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                   ],
                 ),

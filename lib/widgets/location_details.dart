@@ -6,7 +6,10 @@ import 'package:holz_logistik/models/location.dart';
 import 'package:holz_logistik/providers/location_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/photo_gallery.dart';
+import 'package:holz_logistik/widgets/shipment_form.dart';
 import 'package:provider/provider.dart';
+
+import '../models/shipment.dart';
 
 class LocationDetailsDialog extends StatelessWidget {
   final Location location;
@@ -50,182 +53,338 @@ class LocationDetailsDialog extends StatelessWidget {
     );
   }
 
+  Future<void> _showShipmentForm(BuildContext context) async {
+    final shipment = await showDialog<Shipment>(
+      context: context,
+      builder: (context) => ShipmentForm(location: location),
+    );
+
+    if (shipment != null && context.mounted) {
+      try {
+        await context.read<LocationProvider>().addShipment(shipment);
+        Navigator.of(context).pop(); // Close the details dialog after successful shipment
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler beim Speichern der Abfuhr: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header with title and close button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    location.name,
-                    style: Theme.of(context).textTheme.titleLarge,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: SizedBox(
+        width: 600,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(28),
+                    topRight: Radius.circular(28),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-            // Location details
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _DetailItem(
-                    icon: Icons.location_on,
-                    title: 'Koordinaten',
-                    value: '${location.latitude}, ${location.longitude}',
-                  ),
-                  _DetailItem(
-                    icon: Icons.info_outline,
-                    title: 'Zusatzinfo',
-                    value: location.additionalInfo,
-                  ),
-                  _DetailItem(
-                    icon: Icons.directions,
-                    title: 'Anfahrt',
-                    value: location.access,
-                  ),
-                  _DetailItem(
-                    icon: Icons.numbers,
-                    title: 'Partienummer',
-                    value: location.partNumber,
-                  ),
-                  _DetailItem(
-                    icon: Icons.business,
-                    title: 'Sägewerk',
-                    value: location.sawmill,
-                  ),
-                  _DetailItem(
-                    icon: Icons.straighten,
-                    title: 'Menge ÜS',
-                    value: '${location.oversizeQuantity ?? 0} fm',
-                  ),
-                  _DetailItem(
-                    icon: Icons.scale,
-                    title: 'Menge',
-                    value: '${location.quantity ?? 0} fm',
-                  ),
-                  _DetailItem(
-                    icon: Icons.format_list_numbered,
-                    title: 'Stückzahl',
-                    value: '${location.pieceCount ?? 0}',
-                  ),
-                ],
-              ),
-            ),
-            // Photos section
-            if (location.photoUrls.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('Fotos'),
-              ),
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: location.photoUrls.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => PhotoGallery(
-                              photoUrls: location.photoUrls,
-                              initialIndex: index,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            location.name,
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
                             ),
-                          ));
-                        },
-                        child: Image.file(
-                          File(location.photoUrls[index]),
-                          height: 100,
-                          width: 100,
-                          fit: BoxFit.cover,
+                          ),
+                          if (location.sawmill.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              location.sawmill,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Main content
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Quantities and Shipment Button
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Aktueller Bestand',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 12),
+                                _QuantityItem(
+                                  label: 'Menge',
+                                  value: '${location.quantity ?? 0} fm',
+                                ),
+                                if (location.oversizeQuantity != null &&
+                                    location.oversizeQuantity! > 0)
+                                  _QuantityItem(
+                                    label: 'Übermaß',
+                                    value: '${location.oversizeQuantity} fm',
+                                  ),
+                                _QuantityItem(
+                                  label: 'Stückzahl',
+                                  value: '${location.pieceCount ?? 0}',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16),
+                            child: IconButton.filled(
+                              onPressed: () => _showShipmentForm(context),
+                              icon: const Icon(Icons.local_shipping),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                minimumSize: const Size(48, 48),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Info Section
+                    if (location.additionalInfo.isNotEmpty ||
+                        location.access.isNotEmpty ||
+                        location.partNumber.isNotEmpty) ...[
+                      Text(
+                        'Details',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      if (location.additionalInfo.isNotEmpty)
+                        _InfoSection(
+                          icon: Icons.info_outline,
+                          title: 'Zusatzinfo',
+                          content: location.additionalInfo,
+                        ),
+                      if (location.access.isNotEmpty)
+                        _InfoSection(
+                          icon: Icons.directions,
+                          title: 'Anfahrt',
+                          content: location.access,
+                        ),
+                      if (location.partNumber.isNotEmpty)
+                        _InfoSection(
+                          icon: Icons.numbers,
+                          title: 'Partienummer',
+                          content: location.partNumber,
+                        ),
+                    ],
+
+                    // Coordinates Button
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(
+                          text: '${location.latitude}, ${location.longitude}',
+                        ));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Koordinaten kopiert'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.location_on),
+                      label: const Text('Koordinaten kopieren'),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(0, 36),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+
+              // Photos section
+              if (location.photoUrls.isNotEmpty) ...[
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Fotos',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 100,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: location.photoUrls.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => PhotoGallery(
+                                      photoUrls: location.photoUrls,
+                                      initialIndex: index,
+                                    ),
+                                  ));
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    File(location.photoUrls[index]),
+                                    height: 100,
+                                    width: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
+                ),
+              ],
+
+              // Action buttons
+              const Divider(),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showEditForm(context),
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Bearbeiten'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showDeleteConfirmation(context),
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Löschen'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _showEditForm(context),
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Bearbeiten'),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => _showDeleteConfirmation(context),
-                    icon: const Icon(Icons.delete),
-                    label: const Text('Löschen'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _DetailItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
+class _QuantityItem extends StatelessWidget {
+  final String label;
   final String value;
-  final Location? location;
 
-  const _DetailItem({
-    required this.icon,
-    required this.title,
+  const _QuantityItem({
+    required this.label,
     required this.value,
-    this.location,
   });
-
-  Future<void> _copyCoordinates(BuildContext context, String coordinates) async {
-    await Clipboard.setData(ClipboardData(text: coordinates));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Koordinaten in die Zwischenablage kopiert'),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final isCoordinates = title == 'Koordinaten';
-
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: Colors.grey),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Text(
+            '$label: ',
+            style: const TextStyle(color: Colors.grey),
+          ),
+          Text(value),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoSection extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String content;
+
+  const _InfoSection({
+    required this.icon,
+    required this.title,
+    required this.content,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
+                Icon(icon, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
                 Text(
                   title,
                   style: const TextStyle(
@@ -233,34 +392,12 @@ class _DetailItem extends StatelessWidget {
                     color: Colors.grey,
                   ),
                 ),
-                if (isCoordinates)
-                  InkWell(
-                    onTap: () => _copyCoordinates(context, value),  // Pass context here
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            value,
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.directions,
-                          size: 16,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Text(value),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(content),
+          ],
+        ),
       ),
     );
   }

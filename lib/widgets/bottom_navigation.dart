@@ -24,6 +24,10 @@ class BottomNavigation extends StatelessWidget {
           icon: Icon(Icons.map),
           label: 'Karte',
         ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.archive),
+          label: 'Archiv',
+        ),
       ],
     );
   }

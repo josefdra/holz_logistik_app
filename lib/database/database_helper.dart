@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:holz_logistik/database/tables/shipment_table.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/location.dart';
+import '../models/shipment.dart';
 import 'tables/location_table.dart';
 
 class DatabaseHelper {
   static const _databaseName = "holz_logistik.db";
-  static const _databaseVersion = 1;
+  static const _databaseVersion = 2;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -33,6 +35,7 @@ class DatabaseHelper {
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute(LocationTable.createTable);
+    await db.execute(ShipmentTable.createTable);
   }
 
   // Location CRUD Operations
@@ -130,5 +133,37 @@ class DatabaseHelper {
       createdAt: DateTime.parse(map[LocationTable.columnCreatedAt] as String),
       updatedAt: DateTime.parse(map[LocationTable.columnUpdatedAt] as String),
     );
+  }
+
+  Future<int> insertShipment(Shipment shipment) async {
+    final db = await database;
+    return await db.insert(ShipmentTable.tableName, shipment.toMap());
+  }
+
+  Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
+    final db = await database;
+    final maps = await db.query(
+      ShipmentTable.tableName,
+      where: '${ShipmentTable.columnLocationId} = ?',
+      whereArgs: [locationId],
+      orderBy: '${ShipmentTable.columnTimestamp} DESC',
+    );
+    return maps.map((map) => Shipment.fromMap(map)).toList();
+  }
+
+  Future<int> updateShipment(Shipment shipment) async {
+    final db = await database;
+    return await db.update(
+      ShipmentTable.tableName,
+      shipment.toMap(),
+      where: '${ShipmentTable.columnId} = ?',
+      whereArgs: [shipment.id],
+    );
+  }
+
+  Future<List<Shipment>> getAllShipments() async {
+    final db = await database;
+    final maps = await db.query(ShipmentTable.tableName);
+    return maps.map((map) => Shipment.fromMap(map)).toList();
   }
 }
