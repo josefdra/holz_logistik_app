@@ -4,7 +4,6 @@ import 'package:holz_logistik/screens/map_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/providers/location_provider.dart';
-import 'package:holz_logistik/utils/demo_data_generator.dart';
 import 'archive_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -16,17 +15,20 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  bool _isDemoMode = false;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const MapScreen(),
-    const ArchiveScreen(),
-  ];
+  // Create persistent screen instances to maintain their state
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+    // Initialize screens
+    _screens = [
+      const HomeScreen(),
+      const MapScreen(),
+      const ArchiveScreen(),
+    ];
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<LocationProvider>();
       provider.loadLocations();
@@ -34,55 +36,17 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  Future<void> _toggleDemoMode() async {
-    final provider = context.read<LocationProvider>();
-
-    if (!_isDemoMode) {
-      // Generate and add demo locations
-      final demoLocations = DemoDataGenerator.generateLocations(50);
-      for (var location in demoLocations) {
-        await provider.addLocation(location);
-      }
-      setState(() => _isDemoMode = true);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Demo-Daten wurden hinzugefügt')),
-        );
-      }
-    } else {
-      // Clear all locations
-      final locations = provider.locations;
-      for (var location in locations) {
-        if (location.id != null) {
-          await provider.deleteLocation(location.id!);
-        }
-      }
-      setState(() => _isDemoMode = false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Demo-Daten wurden entfernt')),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holz Logistik'),
-        actions: [
-          // Demo mode toggle button
-          IconButton(
-            icon: Icon(_isDemoMode ? Icons.toggle_on : Icons.toggle_off),
-            onPressed: _toggleDemoMode,
-            tooltip: _isDemoMode ? 'Demo-Modus ausschalten' : 'Demo-Modus einschalten',
-          ),
-        ],
       ),
-      body: _screens[_currentIndex],
+      // Use IndexedStack to maintain the state of all screens
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
       bottomNavigationBar: BottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) {

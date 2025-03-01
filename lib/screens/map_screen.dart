@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:holz_logistik/models/location.dart';
 import 'package:holz_logistik/providers/location_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/location_marker.dart';
@@ -16,8 +15,9 @@ class MapScreen extends StatefulWidget {
   State<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
-  final MapController _mapController = MapController();
+class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixin {
+  // Map controller with listener for rotation changes
+  late final MapController _mapController;
   bool _isAddingMarker = false;
   bool _showMarkerInfo = false;
   LatLng? _selectedPosition;
@@ -25,10 +25,32 @@ class _MapScreenState extends State<MapScreen> {
   double _currentAccuracy = 0;
   bool _isInitialized = false;
 
+  // Add this to maintain the state when switching tabs
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
+
+    // Initialize map controller
+    _mapController = MapController();
+
+    // Add listener to monitor rotation changes
+    _mapController.mapEventStream.listen((event) {
+      if (event is MapEventRotate) {
+        // During rotation, update the last rotation value
+        _lastRotation = _mapController.camera.rotation;
+      }
+    });
+
     _initializeLocationAndMap();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeLocationAndMap() async {
@@ -97,6 +119,32 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  // Methods for map rotation control
+  void _resetMapRotation() {
+    _mapController.rotate(0.0);
+  }
+
+  // This will be used to keep track of the current rotation
+  double _lastRotation = 0.0;
+
+  // Method to stabilize map rotation
+  void _stabilizeMapRotation() {
+    // Get current rotation
+    double currentRotation = _mapController.camera.rotation;
+
+    // If the rotation is small (less than 10 degrees), automatically reset to north
+    if (currentRotation.abs() < 10.0) {
+      _mapController.rotate(0.0);
+    } else if ((currentRotation - _lastRotation).abs() < 5.0) {
+      // If the change in rotation is very small, keep the previous rotation
+      // This prevents small accidental rotations
+      _mapController.rotate(_lastRotation);
+    } else {
+      // Otherwise, update the last rotation value
+      _lastRotation = currentRotation;
+    }
+  }
+
   void _toggleAddMarkerMode() {
     setState(() {
       _isAddingMarker = !_isAddingMarker;
@@ -145,23 +193,12 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  void _showErrorSnackBar(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     return Consumer<LocationProvider>(
       builder: (context, locationProvider, _) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (locationProvider.locations.isNotEmpty) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          }
-        });
         return Stack(
           children: [
             FlutterMap(
@@ -170,11 +207,21 @@ class _MapScreenState extends State<MapScreen> {
                 initialCenter: _currentPosition ?? const LatLng(47.9831, 11.9050),
                 initialZoom: 10.0,
                 onTap: _handleMapTap,
+                // Add rotation stabilization
+                onMapEvent: (MapEvent event) {
+                  // Only stabilize after the user finishes a movement
+                  if (event is MapEventRotateEnd) {
+                    _stabilizeMapRotation();
+                  }
+                },
+                // Make rotations require more deliberate gestures
+                interactionOptions: const InteractionOptions(
+                  rotationThreshold: 20,
+                ) // Higher value = harder to trigger rotation
               ),
               children: [
                 TileLayer(
-                  urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: const ['a', 'b', 'c'],
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 ),
                 CircleLayer(
                   circles: [
@@ -272,6 +319,13 @@ class _MapScreenState extends State<MapScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // North orientation button
+                  FloatingActionButton(
+                    onPressed: _resetMapRotation,
+                    heroTag: 'northButton',
+                    child: const Icon(Icons.navigation),
+                  ),
+                  const SizedBox(height: 8),
                   FloatingActionButton(
                     onPressed: _getCurrentLocation,
                     heroTag: 'locationButton',
