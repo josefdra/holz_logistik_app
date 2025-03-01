@@ -54,6 +54,11 @@ class LocationDetailsDialog extends StatelessWidget {
   }
 
   Future<void> _showShipmentForm(BuildContext context) async {
+    // Capture context references before the async gap
+    final navigator = Navigator.of(context);
+    final locationProvider = context.read<LocationProvider>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     final shipment = await showDialog<Shipment>(
       context: context,
       builder: (context) => ShipmentForm(location: location),
@@ -61,11 +66,14 @@ class LocationDetailsDialog extends StatelessWidget {
 
     if (shipment != null && context.mounted) {
       try {
-        await context.read<LocationProvider>().addShipment(shipment);
-        Navigator.of(context).pop(); // Close the details dialog after successful shipment
+        await locationProvider.addShipment(shipment);
+        // Check if still mounted before using navigator
+        if (context.mounted) {
+          navigator.pop(); // Close the details dialog after successful shipment
+        }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             SnackBar(content: Text('Fehler beim Speichern der Abfuhr: $e')),
           );
         }
@@ -112,7 +120,7 @@ class LocationDetailsDialog extends StatelessWidget {
                             Text(
                               location.sawmill,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8),
+                                color: Theme.of(context).colorScheme.onPrimaryContainer.withAlpha(204),
                               ),
                             ),
                           ],
@@ -138,7 +146,7 @@ class LocationDetailsDialog extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceVariant,
+                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

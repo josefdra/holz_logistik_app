@@ -1,3 +1,5 @@
+// lib/database/tables/shipment_table.dart
+
 import 'location_table.dart';
 
 class ShipmentTable {
@@ -10,6 +12,11 @@ class ShipmentTable {
   static const String columnPieceCount = 'piece_count';
   static const String columnTimestamp = 'timestamp';
   static const String columnIsUndone = 'is_undone';
+  // New columns for sync
+  static const String columnServerId = 'server_id';
+  static const String columnLocationServerId = 'location_server_id';
+  static const String columnIsSynced = 'is_synced';
+  static const String columnIsDeleted = 'is_deleted';
 
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -20,6 +27,10 @@ class ShipmentTable {
       $columnPieceCount INTEGER NOT NULL,
       $columnTimestamp TEXT NOT NULL,
       $columnIsUndone INTEGER NOT NULL DEFAULT 0,
+      $columnServerId TEXT,
+      $columnLocationServerId TEXT,
+      $columnIsSynced INTEGER NOT NULL DEFAULT 0,
+      $columnIsDeleted INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName} (${LocationTable.columnId})
     )
   ''';

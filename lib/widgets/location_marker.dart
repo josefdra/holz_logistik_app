@@ -1,3 +1,5 @@
+// lib/widgets/location_marker.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/models/location.dart';
@@ -25,9 +27,15 @@ class LocationMarker extends Marker {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(40),
+                      blurRadius: 2,
+                    ),
+                  ],
                 ),
                 child: Text(
                   '${location.quantity ?? 0}',  // Only show quantity, not the sum
