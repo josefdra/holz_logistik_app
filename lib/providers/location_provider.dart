@@ -49,8 +49,8 @@ class LocationProvider extends ChangeNotifier {
       }
     }
 
-    return _locations.where((loc) =>
-        locationIdsWithShipments.contains(loc.id)
+    return _locations.where((location) =>
+        locationIdsWithShipments.contains(location.id)
     ).toList();
   }
 
@@ -86,7 +86,7 @@ class LocationProvider extends ChangeNotifier {
     _archivedLocations = [];
     for (var locationId in _shipmentsByLocation.keys) {
       var location = _locations.firstWhere(
-            (loc) => loc.id == locationId,
+            (location) => location.id == locationId,
         orElse: () => Location( // Return a dummy location that won't be used
           id: -1,
           name: '',
@@ -96,7 +96,7 @@ class LocationProvider extends ChangeNotifier {
       );
       if (location.id != -1 && _isLocationFullyShipped(location)) {
         _archivedLocations.add(location);
-        _locations.removeWhere((loc) => loc.id == locationId);
+        _locations.removeWhere((location) => location.id == locationId);
       }
     }
   }
@@ -133,10 +133,10 @@ class LocationProvider extends ChangeNotifier {
   Future<void> addShipment(Shipment shipment) async {
     try {
       // Insert the shipment
-      final id = await _db.insertShipment(shipment);
+      await _db.insertShipment(shipment);
 
       // Get the location
-      final location = _locations.firstWhere((loc) => loc.id == shipment.locationId);
+      final location = _locations.firstWhere((location) => location.id == shipment.locationId);
 
       // Update location quantities
       final updatedLocation = location.copyWith(
@@ -166,9 +166,9 @@ class LocationProvider extends ChangeNotifier {
 
       // Get the location (either from active or archived)
       var location = _locations.firstWhere(
-            (loc) => loc.id == shipment.locationId,
+            (location) => location.id == shipment.locationId,
         orElse: () => _archivedLocations.firstWhere(
-              (loc) => loc.id == shipment.locationId,
+              (location) => location.id == shipment.locationId,
         ),
       );
 
@@ -248,7 +248,7 @@ class LocationProvider extends ChangeNotifier {
       final result = await _db.updateLocation(locationToUpdate);
 
       if (result > 0) {
-        final index = _locations.indexWhere((loc) => loc.id == location.id);
+        final index = _locations.indexWhere((location) => location.id == location.id);
         if (index >= 0) {
           _locations[index] = locationToUpdate;
           notifyListeners();

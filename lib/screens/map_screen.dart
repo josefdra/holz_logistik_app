@@ -1,11 +1,8 @@
-// lib/screens/map_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:holz_logistik/providers/location_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
-import 'package:holz_logistik/widgets/location_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
@@ -207,8 +204,8 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
             FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _currentPosition ?? LatLng(Constants.defaultLatitude, Constants.defaultLongitude),
-                initialZoom: Constants.defaultZoom,
+                center: _currentPosition ?? const LatLng(Constants.defaultLatitude, Constants.defaultLongitude),
+                zoom: Constants.defaultZoom,
                 onTap: _handleMapTap,
                 // Add rotation stabilization
                 onMapEvent: (MapEvent event) {
@@ -218,13 +215,12 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                   }
                 },
                 // Make rotations require more deliberate gestures
-                interactionOptions: const InteractionOptions(
-                  rotationThreshold: 20.0, // Higher value = harder to trigger rotation
-                ),
+                rotationThreshold: 20.0, // Higher value = harder to trigger rotation
               ),
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.holz_logistik.app',
                 ),
                 CircleLayer(
                   circles: [
@@ -233,7 +229,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                         point: _currentPosition!,
                         radius: _currentAccuracy,
                         useRadiusInMeter: true,
-                        color: Colors.blue.withOpacity(0.2),
+                        color: Colors.blue.withAlpha(51), // 0.2 * 255 = 51
                         borderColor: Colors.blue,
                         borderStrokeWidth: 2,
                       ),
@@ -247,7 +243,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                         point: _currentPosition!,
                         width: 20,
                         height: 20,
-                        child: Container(
+                        builder: (context) => Container(
                           decoration: BoxDecoration(
                             color: Colors.blue,
                             shape: BoxShape.circle,
@@ -257,7 +253,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
+                                color: Colors.black.withAlpha(51), // 0.2 * 255 = 51
                                 blurRadius: 4,
                               ),
                             ],
@@ -268,21 +264,26 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 ),
                 MarkerLayer(
                   markers: [
-                    ...locationProvider.locations.map((location) => LocationMarker(
-                      location: location,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => LocationDetailsDialog(location: location),
-                        );
-                      },
+                    ...locationProvider.locations.map((location) => Marker(
+                      width: 40.0,
+                      height: 40.0,
+                      point: LatLng(location.latitude, location.longitude),
+                      builder: (context) => GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => LocationDetailsDialog(location: location),
+                          );
+                        },
+                        child: const Icon(Icons.location_on, color: Colors.red, size: 40.0),
+                      ),
                     )),
                     if (_selectedPosition != null)
                       Marker(
                         width: 40.0,
                         height: 40.0,
                         point: _selectedPosition!,
-                        child: const Icon(Icons.location_on, color: Colors.red),
+                        builder: (context) => const Icon(Icons.location_on, color: Colors.red),
                       ),
                   ],
                 ),
@@ -293,7 +294,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                           width: 120.0,
                           height: 40.0,
                           point: LatLng(location.latitude, location.longitude),
-                          child: Container(
+                          builder: (context) => Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               color: Colors.white.withAlpha(220),

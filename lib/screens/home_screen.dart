@@ -108,7 +108,7 @@ class LocationListItem extends StatelessWidget {
   Widget _buildLetterAvatar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+        color: Theme.of(context).colorScheme.primary.withAlpha(51), // 0.2 * 255 = 51
         borderRadius: BorderRadius.circular(4),
       ),
       alignment: Alignment.center,

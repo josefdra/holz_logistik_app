@@ -1,5 +1,3 @@
-// lib/services/sync_service.dart
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -10,12 +8,14 @@ import '../database/database_helper.dart';
 import '../utils/network_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
 
 class SyncService {
   static const String _lastSyncKey = 'last_sync_timestamp';
   final DatabaseHelper _db = DatabaseHelper.instance;
   late String _baseUrl;
   late String _apiKey;
+  final _uuid = const Uuid();
 
   // Initialize with API key or auth token
   Future<void> initialize() async {
@@ -350,9 +350,7 @@ class SyncService {
   }
 
   // Helper method to generate UUID if needed
-  String _generateUuid() {
-    // Use the uuid package to create a UUID
-    // For this example, just return a timestamp-based ID
-    return '${DateTime.now().millisecondsSinceEpoch}';
+  String generateUuid() {
+    return _uuid.v4();
   }
 }
