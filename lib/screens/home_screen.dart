@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/models/location.dart';
 import 'package:holz_logistik/providers/location_provider.dart';
+import 'package:holz_logistik/providers/sync_provider.dart'; // Add this import
 import 'package:holz_logistik/widgets/location_details.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -27,7 +28,13 @@ class HomeScreen extends StatelessWidget {
                 const Text('Keine Standorte gefunden'),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => locationProvider.loadLocations(),
+                  onPressed: () async {
+                    // Reload locations and also sync
+                    await locationProvider.loadLocations();
+                    if (context.mounted) {
+                      await context.read<SyncProvider>().sync();
+                    }
+                  },
                   child: const Text('Neu laden'),
                 ),
               ],
@@ -36,7 +43,13 @@ class HomeScreen extends StatelessWidget {
         }
 
         return RefreshIndicator(
-          onRefresh: () => locationProvider.loadLocations(),
+          onRefresh: () async {
+            // On pull-to-refresh, first sync data then reload locations
+            if (context.mounted) {
+              await context.read<SyncProvider>().sync();
+            }
+            return locationProvider.loadLocations();
+          },
           child: ListView.builder(
             itemCount: locations.length,
             itemBuilder: (context, index) {

@@ -44,7 +44,7 @@ class SyncProvider extends ChangeNotifier {
 
   void _setupAutoSync() {
     if (_autoSync) {
-      // Sync every 15 minutes
+      // Keep the periodic sync (every 15 minutes) as a failsafe
       _syncTimer?.cancel();
       _syncTimer = Timer.periodic(const Duration(minutes: 15), (_) => sync());
     } else {
@@ -114,6 +114,21 @@ class SyncProvider extends ChangeNotifier {
       _lastError = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  // NEW METHOD: Sync after data changes
+  // This method should be called whenever data is created/updated/deleted
+  Future<void> syncAfterChange() async {
+    if (_autoSync && await NetworkUtils.isConnected()) {
+      sync();
+    }
+  }
+
+  // NEW METHOD: Sync when app is reopened
+  Future<void> syncOnAppResume() async {
+    if (_autoSync && await NetworkUtils.isConnected()) {
+      sync();
     }
   }
 

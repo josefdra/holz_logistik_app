@@ -12,11 +12,13 @@ class ShipmentTable {
   static const String columnPieceCount = 'piece_count';
   static const String columnTimestamp = 'timestamp';
   static const String columnIsUndone = 'is_undone';
-  // New columns for sync
+  // Sync columns
   static const String columnServerId = 'server_id';
   static const String columnLocationServerId = 'location_server_id';
   static const String columnIsSynced = 'is_synced';
   static const String columnIsDeleted = 'is_deleted';
+  // New column for driver
+  static const String columnDriverName = 'driver_name';
 
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -31,7 +33,14 @@ class ShipmentTable {
       $columnLocationServerId TEXT,
       $columnIsSynced INTEGER NOT NULL DEFAULT 0,
       $columnIsDeleted INTEGER NOT NULL DEFAULT 0,
+      $columnDriverName TEXT,
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName} (${LocationTable.columnId})
     )
+  ''';
+
+  // Migration to add driver name column
+  static const String addDriverNameColumn = '''
+    ALTER TABLE $tableName 
+    ADD COLUMN $columnDriverName TEXT
   ''';
 }

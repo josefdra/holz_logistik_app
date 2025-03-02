@@ -12,7 +12,7 @@ import 'tables/shipment_table.dart';
 
 class DatabaseHelper {
   static const _databaseName = "holz_logistik.db";
-  static const _databaseVersion = 3;  // Increased version for migration
+  static const _databaseVersion = 4;  // Increased version for migration
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -43,7 +43,7 @@ class DatabaseHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 3) {
-      // Add new columns for sync
+      // Add sync columns (from original code)
       await db.execute('ALTER TABLE ${LocationTable.tableName} ADD COLUMN ${LocationTable.columnServerId} TEXT');
       await db.execute('ALTER TABLE ${LocationTable.tableName} ADD COLUMN ${LocationTable.columnIsSynced} INTEGER NOT NULL DEFAULT 0');
       await db.execute('ALTER TABLE ${LocationTable.tableName} ADD COLUMN ${LocationTable.columnIsDeleted} INTEGER NOT NULL DEFAULT 0');
@@ -52,6 +52,16 @@ class DatabaseHelper {
       await db.execute('ALTER TABLE ${ShipmentTable.tableName} ADD COLUMN ${ShipmentTable.columnLocationServerId} TEXT');
       await db.execute('ALTER TABLE ${ShipmentTable.tableName} ADD COLUMN ${ShipmentTable.columnIsSynced} INTEGER NOT NULL DEFAULT 0');
       await db.execute('ALTER TABLE ${ShipmentTable.tableName} ADD COLUMN ${ShipmentTable.columnIsDeleted} INTEGER NOT NULL DEFAULT 0');
+    }
+
+    if (oldVersion < 4) {
+      // Add driver name column
+      try {
+        await db.execute(ShipmentTable.addDriverNameColumn);
+      } catch (e) {
+        print('Error adding driver_name column: $e');
+        // Column might already exist, continue
+      }
     }
   }
 

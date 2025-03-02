@@ -15,6 +15,7 @@ class SyncService {
   final DatabaseHelper _db = DatabaseHelper.instance;
   late String _baseUrl;
   late String _apiKey;
+  late String _driverName;
   final _uuid = const Uuid();
 
   // Initialize with API key or auth token
@@ -24,6 +25,9 @@ class SyncService {
       // Load server URL from preferences
       _baseUrl = prefs.getString('server_url') ?? 'https://your-server.com/api';
       _apiKey = prefs.getString('api_key') ?? '';
+
+      // Also load the driver name for authorization purposes
+      _driverName = prefs.getString('driver_name') ?? '';
     } catch (e) {
       print('Error initializing SyncService: $e');
     }
@@ -108,6 +112,7 @@ class SyncService {
           headers: {
             'Content-Type': 'application/json',
             'X-API-Key': await _getApiKey(),
+            'X-Driver-Name': shipment.driverName,  // Include driver name in header
           },
           body: jsonEncode(_shipmentToJson(shipment)),
         );
@@ -330,6 +335,7 @@ class SyncService {
       'timestamp': shipment.timestamp.toIso8601String(),
       'is_undone': shipment.isUndone ? 1 : 0,
       'is_deleted': shipment.isDeleted ? 1 : 0,
+      'driver_name': shipment.driverName,  // Include driver name in JSON
     };
   }
 
@@ -346,6 +352,7 @@ class SyncService {
       isUndone: json['is_undone'] == 1,
       isSynced: true,
       isDeleted: json['is_deleted'] == 1,
+      driverName: json['driver_name'] ?? '',  // Extract driver name with fallback
     );
   }
 

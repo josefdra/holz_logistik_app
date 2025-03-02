@@ -10,6 +10,7 @@ class Shipment {
   final bool isUndone;
   final bool isSynced;          // Flag to track sync status
   final bool isDeleted;         // Soft delete flag for sync
+  final String driverName;      // NEW: Driver's name who created the shipment
 
   Shipment({
     this.id,
@@ -23,6 +24,7 @@ class Shipment {
     this.isUndone = false,
     this.isSynced = false,
     this.isDeleted = false,
+    required this.driverName,   // NEW: Required driver name
   }) : timestamp = timestamp ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -38,6 +40,7 @@ class Shipment {
       'is_undone': isUndone ? 1 : 0,
       'is_synced': isSynced ? 1 : 0,
       'is_deleted': isDeleted ? 1 : 0,
+      'driver_name': driverName,  // NEW: Adding driver name to map
     };
   }
 
@@ -54,6 +57,7 @@ class Shipment {
       isUndone: map['is_undone'] == 1,
       isSynced: map['is_synced'] == 1,
       isDeleted: map['is_deleted'] == 1,
+      driverName: map['driver_name'] ?? '',  // NEW: Extract driver name with fallback
     );
   }
 
@@ -69,6 +73,7 @@ class Shipment {
     bool? isUndone,
     bool? isSynced,
     bool? isDeleted,
+    String? driverName,  // NEW: Added to copyWith
   }) {
     return Shipment(
       id: id ?? this.id,
@@ -82,6 +87,7 @@ class Shipment {
       isUndone: isUndone ?? this.isUndone,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      driverName: driverName ?? this.driverName,  // NEW: Copy driver name
     );
   }
 }

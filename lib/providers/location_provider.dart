@@ -5,11 +5,20 @@ import 'package:path/path.dart' as path;
 import '../database/database_helper.dart';
 import '../models/location.dart';
 import '../models/shipment.dart';
+import '../providers/sync_provider.dart'; // Add this import
 
 class LocationProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
   List<Location> _locations = [];
   bool _isLoading = false;
+
+  // Reference to SyncProvider
+  SyncProvider? _syncProvider;
+
+  // Setter method to inject the SyncProvider
+  void setSyncProvider(SyncProvider syncProvider) {
+    _syncProvider = syncProvider;
+  }
 
   List<Location> get locations => _locations;
   bool get isLoading => _isLoading;
@@ -130,6 +139,13 @@ class LocationProvider extends ChangeNotifier {
     return await _db.getShipmentsByLocation(locationId);
   }
 
+  // Trigger sync after changes
+  void _triggerSync() {
+    if (_syncProvider != null) {
+      _syncProvider!.syncAfterChange();
+    }
+  }
+
   Future<void> addShipment(Shipment shipment) async {
     try {
       // Insert the shipment
@@ -152,6 +168,9 @@ class LocationProvider extends ChangeNotifier {
 
       // Refresh archived status
       await loadArchivedLocations();
+
+      // Trigger sync after adding shipment
+      _triggerSync();
     } catch (e) {
       debugPrint('Error adding shipment: $e');
       rethrow;
@@ -186,6 +205,9 @@ class LocationProvider extends ChangeNotifier {
 
       // Refresh archived status
       await loadArchivedLocations();
+
+      // Trigger sync after undoing shipment
+      _triggerSync();
     } catch (e) {
       debugPrint('Error undoing shipment: $e');
       rethrow;
@@ -225,6 +247,9 @@ class LocationProvider extends ChangeNotifier {
       if (savedLocation != null) {
         _locations.add(savedLocation);
         notifyListeners();
+
+        // Trigger sync after adding location
+        _triggerSync();
       }
 
       return savedLocation;
@@ -248,11 +273,14 @@ class LocationProvider extends ChangeNotifier {
       final result = await _db.updateLocation(locationToUpdate);
 
       if (result > 0) {
-        final index = _locations.indexWhere((location) => location.id == location.id);
+        final index = _locations.indexWhere((loc) => loc.id == location.id);
         if (index >= 0) {
           _locations[index] = locationToUpdate;
-          notifyListeners();
         }
+        notifyListeners();
+
+        // Trigger sync after updating location
+        _triggerSync();
         return true;
       }
       return false;
@@ -268,6 +296,9 @@ class LocationProvider extends ChangeNotifier {
       if (result > 0) {
         _locations.removeWhere((location) => location.id == id);
         notifyListeners();
+
+        // Trigger sync after deleting location
+        _triggerSync();
         return true;
       }
       return false;
