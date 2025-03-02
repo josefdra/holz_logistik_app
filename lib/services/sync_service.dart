@@ -22,12 +22,20 @@ class SyncService {
   Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Load server URL from preferences
-      _baseUrl = prefs.getString('server_url') ?? 'https://your-server.com/api';
-      _apiKey = prefs.getString('api_key') ?? '';
+      // Load server URL from preferences - don't add trailing slash
+      _baseUrl = prefs.getString('server_url') ?? '';
+      if (_baseUrl.endsWith('/')) {
+        _baseUrl = _baseUrl.substring(0, _baseUrl.length - 1);
+      }
 
-      // Also load the driver name for authorization purposes
+      _apiKey = prefs.getString('api_key') ?? '';
       _driverName = prefs.getString('driver_name') ?? '';
+
+      print("SyncService initialized with URL: $_baseUrl, API key: ${_apiKey.isNotEmpty ? 'present' : 'empty'}");
+
+      if (_baseUrl.isEmpty || _apiKey.isEmpty) {
+        print("Warning: Server URL or API key is empty");
+      }
     } catch (e) {
       print('Error initializing SyncService: $e');
     }
@@ -76,7 +84,7 @@ class SyncService {
     for (var location in locations) {
       try {
         final response = await http.post(
-          Uri.parse('$_baseUrl/locations'),
+          Uri.parse('$_baseUrl/locations_api.php'),
           headers: {
             'Content-Type': 'application/json',
             'X-API-Key': await _getApiKey(),
@@ -108,11 +116,11 @@ class SyncService {
     for (var shipment in shipments) {
       try {
         final response = await http.post(
-          Uri.parse('$_baseUrl/shipments'),
+          Uri.parse('$_baseUrl/shipments_api.php'),
           headers: {
             'Content-Type': 'application/json',
             'X-API-Key': await _getApiKey(),
-            'X-Driver-Name': shipment.driverName,  // Include driver name in header
+            'X-Driver-Name': shipment.driverName,
           },
           body: jsonEncode(_shipmentToJson(shipment)),
         );
@@ -137,7 +145,7 @@ class SyncService {
   Future<void> _pullLocationsFromServer(DateTime lastSync) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/locations?updated_since=${lastSync.toIso8601String()}'),
+        Uri.parse('$_baseUrl/locations_api.php?updated_since=${lastSync.toIso8601String()}'),
         headers: {'X-API-Key': await _getApiKey()},
       );
 
@@ -174,7 +182,7 @@ class SyncService {
   Future<void> _pullShipmentsFromServer(DateTime lastSync) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/shipments?updated_since=${lastSync.toIso8601String()}'),
+        Uri.parse('$_baseUrl/shipments_api.php?updated_since=${lastSync.toIso8601String()}'),
         headers: {'X-API-Key': await _getApiKey()},
       );
 
@@ -256,10 +264,11 @@ class SyncService {
   Future<String?> uploadPhoto(File photo) async {
     try {
       // Create multipart request
-      var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/upload'));
+      var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/upload_api.php'));
 
       // Set API key
       request.headers['X-API-Key'] = await _getApiKey();
+      request.headers['X-Driver-Name'] = _driverName;
 
       // Add the photo file
       request.files.add(

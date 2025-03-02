@@ -1,7 +1,10 @@
 // lib/screens/settings_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // Add this import
+import 'package:provider/provider.dart'; // Add this import
 import 'package:shared_preferences/shared_preferences.dart';
+import '../providers/sync_provider.dart'; // Add this import
 import '../widgets/sync_status.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -34,6 +37,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
+    if (!mounted) return; // Check if widget is still mounted
+
     setState(() {
       _isLoading = true;
     });
@@ -41,19 +46,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      _serverUrlController.text = prefs.getString('server_url') ?? '';
-      _apiKeyController.text = prefs.getString('api_key') ?? '';
-      _driverNameController.text = prefs.getString('driver_name') ?? '';
+      if (!mounted) return; // Check again after async operation
 
-      // Check if credentials are already set
-      _hasCredentials = _serverUrlController.text.isNotEmpty &&
-          _apiKeyController.text.isNotEmpty;
+      setState(() {
+        _serverUrlController.text = prefs.getString('server_url') ?? '';
+        _apiKeyController.text = prefs.getString('api_key') ?? '';
+        _driverNameController.text = prefs.getString('driver_name') ?? '';
+
+        // Check if credentials are already set
+        _hasCredentials = _serverUrlController.text.isNotEmpty &&
+            _apiKeyController.text.isNotEmpty;
+      });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Laden der Einstellungen: $e')),
-        );
-      }
+      if (!mounted) return; // Check again after potential exception
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Laden der Einstellungen: $e')),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -70,6 +79,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SnackBar(content: Text('Bitte geben Sie einen Fahrernamen ein')),
       );
       return;
+    }
+
+    // Validate server URL format
+    final serverUrl = _serverUrlController.text.trim();
+    if (serverUrl.isNotEmpty) {
+      try {
+        final uri = Uri.parse(serverUrl);
+        if (!uri.isAbsolute || (!uri.scheme.startsWith('http'))) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ungültige Server-URL. Beginnen Sie mit http:// oder https://')),
+          );
+          return;
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ungültige Server-URL')),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -91,83 +119,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // Always save driver name
       await prefs.setString('driver_name', _driverNameController.text.trim());
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Einstellungen gespeichert')),
-        );
+      if (!mounted) return; // Check if widget is still mounted
 
-        // Update the credentials state after saving
-        setState(() {
-          _hasCredentials = _serverUrlController.text.isNotEmpty &&
-              _apiKeyController.text.isNotEmpty;
-          _showCredentials = false; // Hide credentials after saving
-        });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Einstellungen gespeichert')),
+      );
+
+      // Update the credentials state after saving
+      setState(() {
+        _hasCredentials = _serverUrlController.text.isNotEmpty &&
+            _apiKeyController.text.isNotEmpty;
+        _showCredentials = false; // Hide credentials after saving
+      });
+
+      // Test connection after saving
+      if (serverUrl.isNotEmpty && _apiKeyController.text.trim().isNotEmpty) {
+        // Store context in a local variable
+        final syncProvider = Provider.of<SyncProvider>(context, listen: false);
+        final success = await syncProvider.sync();
+
+        if (!mounted) return; // Check if widget is still mounted
+
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Verbindung zum Server erfolgreich')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Verbindungsfehler: ${syncProvider.lastError}')),
+          );
+        }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Speichern: $e')),
-        );
-      }
+      if (!mounted) return; // Check if widget is still mounted
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Speichern: $e')),
+      );
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (!mounted) return; // Check if widget is still mounted
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  Future<void> _resetCredentials() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Zugangsdaten zurücksetzen'),
-        content: const Text(
-            'Möchten Sie die Server-URL und den API-Schlüssel wirklich zurücksetzen? '
-                'Diese Aktion kann nicht rückgängig gemacht werden.'
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Abbrechen'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Zurücksetzen'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _testConnection() async {
+    if (_serverUrlController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Server-URL erforderlich')),
+      );
+      return;
+    }
 
-    if (confirmed == true) {
-      setState(() {
-        _serverUrlController.text = '';
-        _apiKeyController.text = '';
-        _hasCredentials = false;
-        _showCredentials = true;
-      });
+    setState(() {
+      _isLoading = true;
+    });
 
-      // Clear from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('server_url');
-      await prefs.remove('api_key');
+    try {
+      String url = _serverUrlController.text.trim();
+      // Ensure URL doesn't end with a slash
+      if (url.endsWith('/')) {
+        url = url.substring(0, url.length - 1);
+      }
 
-      if (mounted) {
+      final response = await http.get(
+        Uri.parse('$url/api_status.php'),
+      ).timeout(const Duration(seconds: 10));
+
+      if (!mounted) return; // Check if widget is still mounted
+
+      if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Zugangsdaten wurden zurückgesetzt')),
+          SnackBar(content: Text('Verbindung erfolgreich: ${response.body}')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: Status ${response.statusCode}')),
         );
       }
+    } catch (e) {
+      if (!mounted) return; // Check if widget is still mounted
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Verbindungsfehler: $e')),
+      );
+    } finally {
+      if (!mounted) return; // Check if widget is still mounted
+
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Einstellungen'),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -218,8 +267,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 8),
 
+            // Server credentials section
+            // Display locked state or entry fields based on state
             if (_hasCredentials && !_showCredentials)
-            // Display locked state with summary when credentials are hidden
+            // Locked state
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -238,20 +289,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text('Server: ${_maskUrl(_serverUrlController.text)}'),
-                      const SizedBox(height: 16),
-                      OutlinedButton(
-                        onPressed: _resetCredentials,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Zugangsdaten zurücksetzen'),
-                      ),
                     ],
                   ),
                 ),
               )
             else
-            // Show credential input fields when either no credentials set or viewing is enabled
+            // Edit fields
               Column(
                 children: [
                   const SizedBox(height: 8),
@@ -277,33 +320,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // Test connection button
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saveSettings,
-                child: const Text('Speichern'),
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _testConnection,
+                icon: const Icon(Icons.wifi),
+                label: const Text('Verbindung testen'),
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
-            // App information
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Info',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('Holz Logistik App'),
-                    const Text('Version 1.1.0'),
-                  ],
-                ),
+            // Save button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _saveSettings,
+                child: const Text('Speichern'),
               ),
             ),
           ],

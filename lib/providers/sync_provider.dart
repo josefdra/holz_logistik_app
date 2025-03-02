@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:http/http.dart' as http; // Add this import
+import 'package:shared_preferences/shared_preferences.dart'; // Add this import
 import '../services/sync_service.dart';
 import '../utils/network_utils.dart';
 
@@ -22,6 +24,7 @@ class SyncProvider extends ChangeNotifier {
   bool _autoSync = true;
   Timer? _syncTimer;
   StreamSubscription? _connectivitySubscription;
+  String _baseUrl = ''; // Add this field
 
   SyncStatus get status => _status;
   String? get lastError => _lastError;
@@ -33,6 +36,7 @@ class SyncProvider extends ChangeNotifier {
   }
 
   Future<void> _initialize() async {
+    await _loadSettings(); // Load settings first
     await _syncService.initialize();
 
     // Set up periodic sync if enabled
@@ -40,6 +44,23 @@ class SyncProvider extends ChangeNotifier {
 
     // Listen for connectivity changes
     _setupConnectivityListener();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _baseUrl = prefs.getString('server_url') ?? '';
+      if (_baseUrl.endsWith('/')) {
+        _baseUrl = _baseUrl.substring(0, _baseUrl.length - 1);
+      }
+    } catch (e) {
+      debugPrint('Error loading settings: $e');
+    }
+  }
+
+  Future<String> _getApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('api_key') ?? '';
   }
 
   void _setupAutoSync() {
@@ -96,6 +117,27 @@ class SyncProvider extends ChangeNotifier {
       _status = SyncStatus.syncing;
       _lastError = null;
       notifyListeners();
+
+      // Test server connection first (if URL is set)
+      if (_baseUrl.isNotEmpty) {
+        try {
+          final testResponse = await http.get(
+            Uri.parse('$_baseUrl/api_status.php'),
+          ).timeout(const Duration(seconds: 10));
+
+          debugPrint("API status response: ${testResponse.statusCode}");
+
+          if (testResponse.statusCode != 200) {
+            throw Exception("Server returned status code: ${testResponse.statusCode}");
+          }
+        } catch (e) {
+          debugPrint("API connection test failed: $e");
+          _status = SyncStatus.error;
+          _lastError = "Cannot connect to server: $e";
+          notifyListeners();
+          return false;
+        }
+      }
 
       final success = await _syncService.syncAll();
 
