@@ -1,9 +1,12 @@
+// lib/main.dart
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/providers/location_provider.dart';
+import 'package:holz_logistik/providers/sync_provider.dart'; // New import
 import 'package:holz_logistik/screens/main_screen.dart';
 
 void main() async {
@@ -21,8 +24,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => LocationProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => SyncProvider()), // New provider
+      ],
       child: MaterialApp(
         title: 'Holz Logistik',
         theme: ThemeData(

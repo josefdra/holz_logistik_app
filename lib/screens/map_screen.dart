@@ -1,3 +1,5 @@
+// lib/screens/map_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -7,6 +9,7 @@ import 'package:holz_logistik/widgets/location_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
+import 'package:holz_logistik/config/constants.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -40,7 +43,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
     _mapController.mapEventStream.listen((event) {
       if (event is MapEventRotate) {
         // During rotation, update the last rotation value
-        _lastRotation = _mapController.camera.rotation;
+        _lastRotation = _mapController.rotation;
       }
     });
 
@@ -112,7 +115,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
         });
       }
 
-      _mapController.move(_currentPosition!, _mapController.camera.zoom);
+      _mapController.move(_currentPosition!, _mapController.zoom);
     } catch (e) {
       debugPrint('Error getting current location: $e');
       rethrow;
@@ -130,7 +133,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
   // Method to stabilize map rotation
   void _stabilizeMapRotation() {
     // Get current rotation
-    double currentRotation = _mapController.camera.rotation;
+    double currentRotation = _mapController.rotation;
 
     // If the rotation is small (less than 10 degrees), automatically reset to north
     if (currentRotation.abs() < 10.0) {
@@ -204,8 +207,8 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
             FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                initialCenter: _currentPosition ?? const LatLng(47.9831, 11.9050),
-                initialZoom: 10.0,
+                initialCenter: _currentPosition ?? LatLng(Constants.defaultLatitude, Constants.defaultLongitude),
+                initialZoom: Constants.defaultZoom,
                 onTap: _handleMapTap,
                 // Add rotation stabilization
                 onMapEvent: (MapEvent event) {
@@ -216,8 +219,8 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 },
                 // Make rotations require more deliberate gestures
                 interactionOptions: const InteractionOptions(
-                  rotationThreshold: 20,
-                ) // Higher value = harder to trigger rotation
+                  rotationThreshold: 20.0, // Higher value = harder to trigger rotation
+                ),
               ),
               children: [
                 TileLayer(
@@ -293,11 +296,11 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Colors.white.withAlpha(220),
                               borderRadius: BorderRadius.circular(4),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withAlpha(50),
                                   blurRadius: 4,
                                 ),
                               ],

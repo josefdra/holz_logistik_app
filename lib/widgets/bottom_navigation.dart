@@ -1,3 +1,5 @@
+// lib/widgets/bottom_navigation.dart
+
 import 'package:flutter/material.dart';
 
 class BottomNavigation extends StatelessWidget {
@@ -15,6 +17,7 @@ class BottomNavigation extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       onTap: onTap,
+      type: BottomNavigationBarType.fixed, // Required for more than 3 items
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
@@ -27,6 +30,10 @@ class BottomNavigation extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.archive),
           label: 'Archiv',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: 'Einstellungen',
         ),
       ],
     );

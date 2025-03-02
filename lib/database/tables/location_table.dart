@@ -1,3 +1,5 @@
+// lib/database/tables/location_table.dart
+
 class LocationTable {
   static const String tableName = 'locations';
 
@@ -15,6 +17,10 @@ class LocationTable {
   static const String columnPhotoUrls = 'photo_urls'; // Stored as JSON string
   static const String columnCreatedAt = 'created_at';
   static const String columnUpdatedAt = 'updated_at';
+  // New columns for sync
+  static const String columnServerId = 'server_id';
+  static const String columnIsSynced = 'is_synced';
+  static const String columnIsDeleted = 'is_deleted';
 
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -31,7 +37,10 @@ class LocationTable {
       $columnPieceCount INTEGER,
       $columnPhotoUrls TEXT,
       $columnCreatedAt TEXT NOT NULL,
-      $columnUpdatedAt TEXT NOT NULL
+      $columnUpdatedAt TEXT NOT NULL,
+      $columnServerId TEXT,
+      $columnIsSynced INTEGER NOT NULL DEFAULT 0,
+      $columnIsDeleted INTEGER NOT NULL DEFAULT 0
     )
   ''';
 }
