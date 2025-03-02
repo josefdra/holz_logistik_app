@@ -80,31 +80,54 @@ class SyncService {
   // Push locally updated locations to the server
   Future<void> _pushLocationsToServer(DateTime lastSync) async {
     final locations = await _db.getLocationsUpdatedSince(lastSync);
+    print('Found ${locations.length} locations to push to server');
+
+    if (locations.isEmpty) {
+      print('No locations to push. Check if isSynced flag is properly set.');
+    }
 
     for (var location in locations) {
       try {
+        print('Pushing location ${location.id} (${location.name}) to server');
+
+        // Get the full location data including server ID
+        final fullLocation = await _db.getLocation(location.id!);
+        if (fullLocation == null) {
+          print('Could not find full location data for ID ${location.id}');
+          continue;
+        }
+
+        final locationJson = _locationToJson(fullLocation);
+        print('Location data: ${jsonEncode(locationJson)}');
+
+        await _uploadPhotosForLocation(fullLocation);
+
         final response = await http.post(
           Uri.parse('$_baseUrl/locations_api.php'),
           headers: {
             'Content-Type': 'application/json',
             'X-API-Key': await _getApiKey(),
           },
-          body: jsonEncode(_locationToJson(location)),
+          body: jsonEncode(locationJson),
         );
+
+        print('Server response for location ${location.id}: ${response.statusCode} - ${response.body}');
 
         if (response.statusCode == 200) {
           final responseData = jsonDecode(response.body);
-          // Update local record with server ID if needed
+          // Update local record with server ID and mark as synced
           if (responseData['server_id'] != null) {
-            await _db.updateLocationServerId(
-                location.id!,
-                responseData['server_id']
-            );
+            print('Updating location ${location.id} with server ID ${responseData['server_id']}');
+            await _db.updateLocation(fullLocation.copyWith(
+                serverId: responseData['server_id'],
+                isSynced: true
+            ));
           }
+        } else {
+          print('Error from server: ${response.body}');
         }
       } catch (e) {
         print('Error pushing location ${location.id}: $e');
-        // Continue with next location even if one fails
       }
     }
   }
@@ -190,7 +213,7 @@ class SyncService {
         final List<dynamic> shipmentsData = jsonDecode(response.body);
 
         for (var shipmentData in shipmentsData) {
-          final shipment = _shipmentFromJson(shipmentData);
+          final shipment = await _shipmentFromJson(shipmentData);
 
           // Update or insert shipment in local DB
           final existingShipment = await _db.getShipmentByServerId(shipmentData['server_id']);
@@ -215,23 +238,34 @@ class SyncService {
 
     for (var url in photoUrls) {
       try {
-        // Download the photo
-        final response = await http.get(Uri.parse(url));
+        // Check if this is already a local file path (starts with / or contains ://)
+        if (url.toString().startsWith('/') ||
+            url.toString().contains('://') && !url.toString().startsWith('http')) {
+          print('Photo $url appears to be a local path already, skipping download');
+          localPhotoUrls.add(url.toString());
+          continue;
+        }
 
-        if (response.statusCode == 200) {
-          // Save the photo locally
-          final appDir = await getApplicationDocumentsDirectory();
-          final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(url.toString())}';
-          final photoDir = Directory('${appDir.path}/photos');
+        // Only download if it's a web URL
+        if (url.toString().startsWith('http')) {
+          // Download the photo
+          final response = await http.get(Uri.parse(url));
 
-          if (!await photoDir.exists()) {
-            await photoDir.create(recursive: true);
+          if (response.statusCode == 200) {
+            // Save the photo locally
+            final appDir = await getApplicationDocumentsDirectory();
+            final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.basename(url.toString())}';
+            final photoDir = Directory('${appDir.path}/photos');
+
+            if (!await photoDir.exists()) {
+              await photoDir.create(recursive: true);
+            }
+
+            final file = File('${photoDir.path}/$fileName');
+            await file.writeAsBytes(response.bodyBytes);
+
+            localPhotoUrls.add(file.path);
           }
-
-          final file = File('${photoDir.path}/$fileName');
-          await file.writeAsBytes(response.bodyBytes);
-
-          localPhotoUrls.add(file.path);
         }
       } catch (e) {
         print('Error downloading photo $url: $e');
@@ -349,10 +383,22 @@ class SyncService {
   }
 
   // Convert JSON from server to Shipment object
-  Shipment _shipmentFromJson(Map<String, dynamic> json) {
+  Future<Shipment> _shipmentFromJson(Map<String, dynamic> json) async {
+    // Find the local location ID based on server ID
+    int locationId = 0;
+    if (json['location_server_id'] != null) {
+      final location = await _db.getLocationByServerId(json['location_server_id']);
+      if (location != null) {
+        locationId = location.id!;
+        print('Resolved server ID ${json['location_server_id']} to local ID $locationId');
+      } else {
+        print('Could not resolve server ID ${json['location_server_id']} to a local location');
+      }
+    }
+
     return Shipment(
       serverId: json['server_id'],
-      locationId: 0, // This will be resolved from locationServerId
+      locationId: locationId,
       locationServerId: json['location_server_id'],
       oversizeQuantity: json['oversize_quantity'],
       quantity: json['quantity'],
@@ -361,12 +407,58 @@ class SyncService {
       isUndone: json['is_undone'] == 1,
       isSynced: true,
       isDeleted: json['is_deleted'] == 1,
-      driverName: json['driver_name'] ?? '',  // Extract driver name with fallback
+      driverName: json['driver_name'] ?? '',
     );
   }
 
   // Helper method to generate UUID if needed
   String generateUuid() {
     return _uuid.v4();
+  }
+
+  Future<void> _uploadPhotosForLocation(Location location) async {
+    if (location.photoUrls.isEmpty) return;
+
+    List<String> uploadedUrls = [];
+    List<String> localPaths = [];
+
+    for (var photoUrl in location.photoUrls) {
+      try {
+        // Check if this is a local file that hasn't been uploaded yet
+        if (photoUrl.startsWith('/')) {
+          final file = File(photoUrl);
+          if (await file.exists()) {
+            print('Uploading photo: $photoUrl');
+            final uploadedUrl = await uploadPhoto(file);
+            if (uploadedUrl != null) {
+              uploadedUrls.add(uploadedUrl);
+              localPaths.add(photoUrl); // Keep track of local path for removal later
+            }
+          }
+        } else if (photoUrl.startsWith('http')) {
+          // Already a web URL, keep it
+          uploadedUrls.add(photoUrl);
+        }
+      } catch (e) {
+        print('Error processing photo $photoUrl: $e');
+      }
+    }
+
+    // If we uploaded any photos, update the location
+    if (uploadedUrls.isNotEmpty) {
+      // Replace local paths with server URLs
+      List<String> updatedPhotoUrls = List.from(location.photoUrls);
+      for (int i = 0; i < localPaths.length; i++) {
+        final index = updatedPhotoUrls.indexOf(localPaths[i]);
+        if (index >= 0) {
+          updatedPhotoUrls[index] = uploadedUrls[i];
+        }
+      }
+
+      // Update the location with new photo URLs
+      await _db.updateLocation(location.copyWith(
+        photoUrls: updatedPhotoUrls,
+      ));
+    }
   }
 }

@@ -131,9 +131,15 @@ class DatabaseHelper {
     final db = await database;
     final maps = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnUpdatedAt} > ? AND ${LocationTable.columnIsSynced} = 0',
+      where: '${LocationTable.columnUpdatedAt} > ? OR ${LocationTable.columnIsSynced} = 0',
       whereArgs: [timestamp.toIso8601String()],
     );
+
+    print('Query for locations updated since ${timestamp.toIso8601String()} found ${maps.length} results');
+    for (var map in maps) {
+      print('Location ID: ${map[LocationTable.columnId]}, Name: ${map[LocationTable.columnName]}, Synced: ${map[LocationTable.columnIsSynced]}, Updated: ${map[LocationTable.columnUpdatedAt]}');
+    }
+
     return maps.map((map) => _locationFromMap(map)).toList();
   }
 
@@ -156,6 +162,8 @@ class DatabaseHelper {
       LocationTable.columnIsSynced: location.isSynced ? 1 : 0,
       LocationTable.columnIsDeleted: location.isDeleted ? 1 : 0,
     };
+
+    print('Updating location ${location.id} with isSynced=${location.isSynced}');
 
     return await db.update(
       LocationTable.tableName,

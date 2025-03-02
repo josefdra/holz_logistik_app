@@ -102,18 +102,21 @@ class SyncProvider extends ChangeNotifier {
   // Manually trigger a sync
   Future<bool> sync() async {
     if (_status == SyncStatus.syncing) {
-      return false; // Already syncing
+      debugPrint("Sync already in progress");
+      return false;
     }
 
     // Check for internet connection
     final hasConnection = await NetworkUtils.isConnected();
     if (!hasConnection) {
+      debugPrint("No internet connection");
       _status = SyncStatus.offline;
       notifyListeners();
       return false;
     }
 
     try {
+      debugPrint("Starting sync process");
       _status = SyncStatus.syncing;
       _lastError = null;
       notifyListeners();
@@ -121,11 +124,12 @@ class SyncProvider extends ChangeNotifier {
       // Test server connection first (if URL is set)
       if (_baseUrl.isNotEmpty) {
         try {
+          debugPrint("Testing connection to $_baseUrl");
           final testResponse = await http.get(
             Uri.parse('$_baseUrl/api_status.php'),
           ).timeout(const Duration(seconds: 10));
 
-          debugPrint("API status response: ${testResponse.statusCode}");
+          debugPrint("API status response: ${testResponse.statusCode} - ${testResponse.body}");
 
           if (testResponse.statusCode != 200) {
             throw Exception("Server returned status code: ${testResponse.statusCode}");
@@ -139,6 +143,7 @@ class SyncProvider extends ChangeNotifier {
         }
       }
 
+      debugPrint("Connection test succeeded, starting syncAll()");
       final success = await _syncService.syncAll();
 
       if (success) {
@@ -149,9 +154,11 @@ class SyncProvider extends ChangeNotifier {
         _lastError = "Synchronization failed";
       }
 
+      debugPrint("Sync process completed with result: $success");
       notifyListeners();
       return success;
     } catch (e) {
+      debugPrint("Sync process failed with exception: $e");
       _status = SyncStatus.error;
       _lastError = e.toString();
       notifyListeners();
