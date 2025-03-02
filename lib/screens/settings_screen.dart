@@ -132,6 +132,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _showCredentials = false; // Hide credentials after saving
       });
 
+      print("Saved server URL: ${_serverUrlController.text.trim()}");
+
       // Test connection after saving
       if (serverUrl.isNotEmpty && _apiKeyController.text.trim().isNotEmpty) {
         // Store context in a local variable

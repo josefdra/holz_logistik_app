@@ -259,14 +259,16 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
+  // In LocationProvider class, modify the updateLocation method
   Future<bool> updateLocation(Location location) async {
     try {
       // Save any new photos
       final List<String> savedPhotoUrls = await _savePhotosToLocalStorage(location.newPhotos);
 
-      // Update location with new photo URLs
+      // Update location with new photo URLs and mark as not synced
       final locationToUpdate = location.copyWith(
         photoUrls: [...location.photoUrls, ...savedPhotoUrls],
+        isSynced: false, // Mark as not synced when updated
       );
 
       // Update in database

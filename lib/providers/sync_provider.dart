@@ -101,21 +101,22 @@ class SyncProvider extends ChangeNotifier {
 
   // Manually trigger a sync
   Future<bool> sync() async {
-    if (_status == SyncStatus.syncing) {
-      debugPrint("Sync already in progress");
+    // Create a static variable to track ongoing sync
+    bool _syncInProgress = false;
+
+    if (_syncInProgress) {
+      debugPrint("Sync already in progress, ignoring duplicate request");
       return false;
     }
 
-    // Check for internet connection
-    final hasConnection = await NetworkUtils.isConnected();
-    if (!hasConnection) {
-      debugPrint("No internet connection");
-      _status = SyncStatus.offline;
-      notifyListeners();
+    // Check if we're already marked as syncing in the status
+    if (_status == SyncStatus.syncing) {
+      debugPrint("Sync already marked as in progress");
       return false;
     }
 
     try {
+      _syncInProgress = true;
       debugPrint("Starting sync process");
       _status = SyncStatus.syncing;
       _lastError = null;

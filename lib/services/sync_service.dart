@@ -22,20 +22,36 @@ class SyncService {
   Future<void> initialize() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Load server URL from preferences - don't add trailing slash
+
+      // Get the server URL
       _baseUrl = prefs.getString('server_url') ?? '';
+      print("SyncService initialize - Raw URL from prefs: '$_baseUrl'");
+
+      // Ensure URL is properly formatted without trailing slash
       if (_baseUrl.endsWith('/')) {
         _baseUrl = _baseUrl.substring(0, _baseUrl.length - 1);
+      }
+
+      // Validate URL format
+      if (_baseUrl.isNotEmpty) {
+        try {
+          final uri = Uri.parse(_baseUrl);
+          if (!uri.isAbsolute) {
+            print("SyncService initialize - URL is not absolute: '$_baseUrl'");
+            _baseUrl = ''; // Reset invalid URL
+          } else {
+            print("SyncService initialize - Valid URL: ${uri.toString()}");
+          }
+        } catch (e) {
+          print("SyncService initialize - Invalid URL format: '$_baseUrl', Error: $e");
+          _baseUrl = ''; // Reset invalid URL
+        }
       }
 
       _apiKey = prefs.getString('api_key') ?? '';
       _driverName = prefs.getString('driver_name') ?? '';
 
-      print("SyncService initialized with URL: $_baseUrl, API key: ${_apiKey.isNotEmpty ? 'present' : 'empty'}");
-
-      if (_baseUrl.isEmpty || _apiKey.isEmpty) {
-        print("Warning: Server URL or API key is empty");
-      }
+      print("SyncService initialized with URL: '$_baseUrl', API key: ${_apiKey.isNotEmpty ? 'present' : 'empty'}");
     } catch (e) {
       print('Error initializing SyncService: $e');
     }
@@ -53,7 +69,19 @@ class SyncService {
   // Synchronize all data with the server
   Future<bool> syncAll() async {
     try {
+      print("SYNC DEBUG - baseUrl: '$_baseUrl', apiKey exists: ${_apiKey.isNotEmpty}");
+
+      if (_baseUrl.isEmpty) {
+        print("SYNC ABORT - No server URL configured");
+        return false;
+      }
+
       if (!await NetworkUtils.isConnected()) {
+        return false;
+      }
+
+      if (_baseUrl.isEmpty || _apiKey.isEmpty) {
+        print("Cannot sync: Server URL or API key not configured");
         return false;
       }
 
@@ -82,12 +110,14 @@ class SyncService {
     final locations = await _db.getLocationsUpdatedSince(lastSync);
     print('Found ${locations.length} locations to push to server');
 
-    if (locations.isEmpty) {
-      print('No locations to push. Check if isSynced flag is properly set.');
-    }
-
     for (var location in locations) {
       try {
+        // Skip already synced locations
+        if (location.isSynced && location.serverId != null) {
+          print('Skipping already synced location ${location.id} (${location.name})');
+          continue;
+        }
+
         print('Pushing location ${location.id} (${location.name}) to server');
 
         // Get the full location data including server ID
@@ -134,6 +164,11 @@ class SyncService {
 
   // Push locally updated shipments to the server
   Future<void> _pushShipmentsToServer(DateTime lastSync) async {
+    if (_baseUrl.isEmpty) {
+      print("Cannot push locations - server URL not configured");
+      return;
+    }
+
     final shipments = await _db.getShipmentsUpdatedSince(lastSync);
 
     for (var shipment in shipments) {
@@ -167,6 +202,11 @@ class SyncService {
   // Pull locations from server that were updated since last sync
   Future<void> _pullLocationsFromServer(DateTime lastSync) async {
     try {
+      if (_baseUrl.isEmpty) {
+        print("Cannot push locations - server URL not configured");
+        return;
+      }
+
       final response = await http.get(
         Uri.parse('$_baseUrl/locations_api.php?updated_since=${lastSync.toIso8601String()}'),
         headers: {'X-API-Key': await _getApiKey()},
@@ -204,6 +244,11 @@ class SyncService {
   // Pull shipments from server that were updated since last sync
   Future<void> _pullShipmentsFromServer(DateTime lastSync) async {
     try {
+      if (_baseUrl.isEmpty) {
+        print("Cannot push locations - server URL not configured");
+        return;
+      }
+
       final response = await http.get(
         Uri.parse('$_baseUrl/shipments_api.php?updated_since=${lastSync.toIso8601String()}'),
         headers: {'X-API-Key': await _getApiKey()},
