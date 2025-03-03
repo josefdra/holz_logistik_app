@@ -1,8 +1,8 @@
 import 'dart:io';
 
 class Location {
-  final int? id;                // Local database ID
-  final String? serverId;       // Server-side ID for sync
+  final int? id;
+  final String? serverId;
   final String name;
   final double latitude;
   final double longitude;
@@ -14,11 +14,11 @@ class Location {
   final int? quantity;
   final int? pieceCount;
   final List<String> photoUrls;
-  final List<File> newPhotos;   // Temporary storage for new photos before saving
+  final List<File> newPhotos;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  final bool isSynced;          // Flag to track sync status
-  final bool isDeleted;         // Soft delete flag for sync
+  final bool isSynced;
+  final bool isDeleted;
 
   Location({
     this.id,

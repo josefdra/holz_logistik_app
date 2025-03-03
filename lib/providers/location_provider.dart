@@ -5,42 +5,34 @@ import 'package:path/path.dart' as path;
 import '../database/database_helper.dart';
 import '../models/location.dart';
 import '../models/shipment.dart';
-import '../providers/sync_provider.dart'; // Add this import
+import '../providers/sync_provider.dart';
 
 class LocationProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
   List<Location> _locations = [];
   bool _isLoading = false;
-
-  // Reference to SyncProvider
   SyncProvider? _syncProvider;
+  List<Location> _archivedLocations = [];
+  Map<int, List<Shipment>> _shipmentsByLocation = {};
 
-  // Setter method to inject the SyncProvider
   void setSyncProvider(SyncProvider syncProvider) {
     _syncProvider = syncProvider;
   }
 
   List<Location> get locations => _locations;
   bool get isLoading => _isLoading;
-
-  List<Location> _archivedLocations = [];
-  Map<int, List<Shipment>> _shipmentsByLocation = {};
-
   List<Location> get archivedLocations => _archivedLocations;
 
   Future<void> loadArchivedLocations() async {
     try {
-      // Load all shipments
       final allShipments = await _db.getAllShipments();
 
-      // Group shipments by location
       _shipmentsByLocation = {};
       for (var shipment in allShipments) {
         _shipmentsByLocation.putIfAbsent(shipment.locationId, () => []).add(shipment);
       }
 
-      // Update archived status for locations
-      await loadLocations(); // This will refresh _locations
+      await loadLocations();
       _updateArchivedStatus();
     } catch (e) {
       debugPrint('Error loading archived locations: $e');
@@ -51,7 +43,6 @@ class LocationProvider extends ChangeNotifier {
   List<Location> get locationsWithShipments {
     final Set<int> locationIdsWithShipments = {};
 
-    // Build map of location IDs that have unarchived shipments
     for (var entry in _shipmentsByLocation.entries) {
       if (entry.value.any((s) => !s.isUndone)) {
         locationIdsWithShipments.add(entry.key);
@@ -96,7 +87,7 @@ class LocationProvider extends ChangeNotifier {
     for (var locationId in _shipmentsByLocation.keys) {
       var location = _locations.firstWhere(
             (location) => location.id == locationId,
-        orElse: () => Location( // Return a dummy location that won't be used
+        orElse: () => Location(
           id: -1,
           name: '',
           latitude: 0,
@@ -139,7 +130,6 @@ class LocationProvider extends ChangeNotifier {
     return await _db.getShipmentsByLocation(locationId);
   }
 
-  // Trigger sync after changes
   void _triggerSync() {
     if (_syncProvider != null) {
       _syncProvider!.syncAfterChange();
@@ -148,13 +138,10 @@ class LocationProvider extends ChangeNotifier {
 
   Future<void> addShipment(Shipment shipment) async {
     try {
-      // Insert the shipment
       await _db.insertShipment(shipment);
 
-      // Get the location
       final location = _locations.firstWhere((location) => location.id == shipment.locationId);
 
-      // Update location quantities
       final updatedLocation = location.copyWith(
         quantity: (location.quantity ?? 0) - shipment.quantity,
         pieceCount: (location.pieceCount ?? 0) - shipment.pieceCount,
@@ -163,13 +150,8 @@ class LocationProvider extends ChangeNotifier {
             : location.oversizeQuantity,
       );
 
-      // Update the location in the database
       await updateLocation(updatedLocation);
-
-      // Refresh archived status
       await loadArchivedLocations();
-
-      // Trigger sync after adding shipment
       _triggerSync();
     } catch (e) {
       debugPrint('Error adding shipment: $e');
@@ -179,11 +161,9 @@ class LocationProvider extends ChangeNotifier {
 
   Future<void> undoShipment(Shipment shipment) async {
     try {
-      // Mark shipment as undone
       final updatedShipment = shipment.copyWith(isUndone: true);
       await _db.updateShipment(updatedShipment);
 
-      // Get the location (either from active or archived)
       var location = _locations.firstWhere(
             (location) => location.id == shipment.locationId,
         orElse: () => _archivedLocations.firstWhere(
@@ -191,7 +171,6 @@ class LocationProvider extends ChangeNotifier {
         ),
       );
 
-      // Update location quantities
       final updatedLocation = location.copyWith(
         quantity: (location.quantity ?? 0) + shipment.quantity,
         pieceCount: (location.pieceCount ?? 0) + shipment.pieceCount,
@@ -200,13 +179,8 @@ class LocationProvider extends ChangeNotifier {
             : location.oversizeQuantity,
       );
 
-      // Update the location in the database
       await updateLocation(updatedLocation);
-
-      // Refresh archived status
       await loadArchivedLocations();
-
-      // Trigger sync after undoing shipment
       _triggerSync();
     } catch (e) {
       debugPrint('Error undoing shipment: $e');
@@ -232,23 +206,18 @@ class LocationProvider extends ChangeNotifier {
 
   Future<Location?> addLocation(Location location) async {
     try {
-      // First, save any new photos to local storage
       final List<String> savedPhotoUrls = await _savePhotosToLocalStorage(location.newPhotos);
 
-      // Create a new location with all photo URLs
       final locationToSave = location.copyWith(
         photoUrls: [...location.photoUrls, ...savedPhotoUrls],
       );
 
-      // Insert into database
       final id = await _db.insertLocation(locationToSave);
       final savedLocation = await _db.getLocation(id);
 
       if (savedLocation != null) {
         _locations.add(savedLocation);
         notifyListeners();
-
-        // Trigger sync after adding location
         _triggerSync();
       }
 
@@ -259,19 +228,15 @@ class LocationProvider extends ChangeNotifier {
     }
   }
 
-  // In LocationProvider class, modify the updateLocation method
   Future<bool> updateLocation(Location location) async {
     try {
-      // Save any new photos
       final List<String> savedPhotoUrls = await _savePhotosToLocalStorage(location.newPhotos);
 
-      // Update location with new photo URLs and mark as not synced
       final locationToUpdate = location.copyWith(
         photoUrls: [...location.photoUrls, ...savedPhotoUrls],
-        isSynced: false, // Mark as not synced when updated
+        isSynced: false,
       );
 
-      // Update in database
       final result = await _db.updateLocation(locationToUpdate);
 
       if (result > 0) {
@@ -280,8 +245,6 @@ class LocationProvider extends ChangeNotifier {
           _locations[index] = locationToUpdate;
         }
         notifyListeners();
-
-        // Trigger sync after updating location
         _triggerSync();
         return true;
       }
@@ -298,8 +261,6 @@ class LocationProvider extends ChangeNotifier {
       if (result > 0) {
         _locations.removeWhere((location) => location.id == id);
         notifyListeners();
-
-        // Trigger sync after deleting location
         _triggerSync();
         return true;
       }
@@ -337,7 +298,6 @@ class LocationProvider extends ChangeNotifier {
 
   Future<void> deletePhotoFromLocation(Location location, String photoUrl) async {
     try {
-      // Remove from storage if it's a local file
       if (photoUrl.startsWith('/')) {
         final file = File(photoUrl);
         if (await file.exists()) {
@@ -345,7 +305,6 @@ class LocationProvider extends ChangeNotifier {
         }
       }
 
-      // Update location with removed photo
       final updatedPhotoUrls = List<String>.from(location.photoUrls)..remove(photoUrl);
       final updatedLocation = location.copyWith(photoUrls: updatedPhotoUrls);
 

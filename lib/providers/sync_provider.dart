@@ -1,10 +1,8 @@
-// lib/providers/sync_provider.dart
-
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:http/http.dart' as http; // Add this import
-import 'package:shared_preferences/shared_preferences.dart'; // Add this import
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/sync_service.dart';
 import '../utils/network_utils.dart';
 
@@ -24,7 +22,8 @@ class SyncProvider extends ChangeNotifier {
   bool _autoSync = true;
   Timer? _syncTimer;
   StreamSubscription? _connectivitySubscription;
-  String _baseUrl = ''; // Add this field
+  String _baseUrl = '';
+  bool _syncInProgress = false;
 
   SyncStatus get status => _status;
   String? get lastError => _lastError;
@@ -36,13 +35,20 @@ class SyncProvider extends ChangeNotifier {
   }
 
   Future<void> _initialize() async {
-    await _loadSettings(); // Load settings first
-    await _syncService.initialize();
+    try {
+      await _loadSettings(); // Load settings first
+      await _syncService.initialize();
 
-    // Set up periodic sync if enabled
+      // Add error handling and logging
+      print("SyncProvider initialized: BaseURL = $_baseUrl");
+    } catch (e) {
+      print("SyncProvider initialization error: $e");
+      // Ensure some default state
+      _baseUrl = '';
+    }
+
+    // Rest of your initialization code
     _setupAutoSync();
-
-    // Listen for connectivity changes
     _setupConnectivityListener();
   }
 
@@ -58,19 +64,10 @@ class SyncProvider extends ChangeNotifier {
     }
   }
 
-  Future<String> _getApiKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('api_key') ?? '';
-  }
-
   void _setupAutoSync() {
+    _syncTimer?.cancel();
     if (_autoSync) {
-      // Keep the periodic sync (every 15 minutes) as a failsafe
-      _syncTimer?.cancel();
       _syncTimer = Timer.periodic(const Duration(minutes: 15), (_) => sync());
-    } else {
-      _syncTimer?.cancel();
-      _syncTimer = null;
     }
   }
 
@@ -78,104 +75,78 @@ class SyncProvider extends ChangeNotifier {
     _connectivitySubscription?.cancel();
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
       if (result != ConnectivityResult.none) {
-        // We just got internet, try to sync
         if (_autoSync && _status != SyncStatus.syncing) {
           sync();
         }
-      } else {
-        // No internet, update status if needed
-        if (_status == SyncStatus.syncing) {
-          _status = SyncStatus.offline;
-          notifyListeners();
-        }
+      } else if (_status == SyncStatus.syncing) {
+        _status = SyncStatus.offline;
+        notifyListeners();
       }
     });
   }
 
-  // Toggle auto-sync on/off
   void setAutoSync(bool value) {
     _autoSync = value;
     _setupAutoSync();
     notifyListeners();
   }
 
-  // Manually trigger a sync
   Future<bool> sync() async {
-    // Create a static variable to track ongoing sync
-    bool _syncInProgress = false;
-
-    if (_syncInProgress) {
-      debugPrint("Sync already in progress, ignoring duplicate request");
-      return false;
-    }
-
-    // Check if we're already marked as syncing in the status
-    if (_status == SyncStatus.syncing) {
-      debugPrint("Sync already marked as in progress");
+    if (_syncInProgress || _status == SyncStatus.syncing) {
       return false;
     }
 
     try {
       _syncInProgress = true;
-      debugPrint("Starting sync process");
       _status = SyncStatus.syncing;
       _lastError = null;
       notifyListeners();
 
-      // Test server connection first (if URL is set)
       if (_baseUrl.isNotEmpty) {
         try {
-          debugPrint("Testing connection to $_baseUrl");
           final testResponse = await http.get(
             Uri.parse('$_baseUrl/api_status.php'),
           ).timeout(const Duration(seconds: 10));
-
-          debugPrint("API status response: ${testResponse.statusCode} - ${testResponse.body}");
 
           if (testResponse.statusCode != 200) {
             throw Exception("Server returned status code: ${testResponse.statusCode}");
           }
         } catch (e) {
-          debugPrint("API connection test failed: $e");
           _status = SyncStatus.error;
           _lastError = "Cannot connect to server: $e";
           notifyListeners();
+          _syncInProgress = false;
           return false;
         }
       }
 
-      debugPrint("Connection test succeeded, starting syncAll()");
       final success = await _syncService.syncAll();
 
+      _status = success ? SyncStatus.complete : SyncStatus.error;
       if (success) {
-        _status = SyncStatus.complete;
         _lastSyncTime = DateTime.now();
       } else {
-        _status = SyncStatus.error;
         _lastError = "Synchronization failed";
       }
 
-      debugPrint("Sync process completed with result: $success");
       notifyListeners();
+      _syncInProgress = false;
       return success;
     } catch (e) {
-      debugPrint("Sync process failed with exception: $e");
       _status = SyncStatus.error;
       _lastError = e.toString();
       notifyListeners();
+      _syncInProgress = false;
       return false;
     }
   }
 
-  // NEW METHOD: Sync after data changes
-  // This method should be called whenever data is created/updated/deleted
   Future<void> syncAfterChange() async {
     if (_autoSync && await NetworkUtils.isConnected()) {
       sync();
     }
   }
 
-  // NEW METHOD: Sync when app is reopened
   Future<void> syncOnAppResume() async {
     if (_autoSync && await NetworkUtils.isConnected()) {
       sync();

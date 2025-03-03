@@ -1,16 +1,16 @@
 class Shipment {
-  final int? id;                // Local database ID
-  final String? serverId;       // Server-side ID for sync
-  final int locationId;         // Local database location ID
-  final String? locationServerId; // Server-side location ID
+  final int? id;
+  final String? serverId;
+  final int locationId;
+  final String? locationServerId;
   final int? oversizeQuantity;
   final int quantity;
   final int pieceCount;
   final DateTime timestamp;
   final bool isUndone;
-  final bool isSynced;          // Flag to track sync status
-  final bool isDeleted;         // Soft delete flag for sync
-  final String driverName;      // NEW: Driver's name who created the shipment
+  final bool isSynced;
+  final bool isDeleted;
+  final String driverName;
 
   Shipment({
     this.id,
@@ -24,7 +24,7 @@ class Shipment {
     this.isUndone = false,
     this.isSynced = false,
     this.isDeleted = false,
-    required this.driverName,   // NEW: Required driver name
+    required this.driverName,
   }) : timestamp = timestamp ?? DateTime.now();
 
   Map<String, dynamic> toMap() {
@@ -40,7 +40,7 @@ class Shipment {
       'is_undone': isUndone ? 1 : 0,
       'is_synced': isSynced ? 1 : 0,
       'is_deleted': isDeleted ? 1 : 0,
-      'driver_name': driverName,  // NEW: Adding driver name to map
+      'driver_name': driverName,
     };
   }
 
@@ -57,7 +57,7 @@ class Shipment {
       isUndone: map['is_undone'] == 1,
       isSynced: map['is_synced'] == 1,
       isDeleted: map['is_deleted'] == 1,
-      driverName: map['driver_name'] ?? '',  // NEW: Extract driver name with fallback
+      driverName: map['driver_name'] ?? '',
     );
   }
 
@@ -73,7 +73,7 @@ class Shipment {
     bool? isUndone,
     bool? isSynced,
     bool? isDeleted,
-    String? driverName,  // NEW: Added to copyWith
+    String? driverName,
   }) {
     return Shipment(
       id: id ?? this.id,
@@ -87,7 +87,7 @@ class Shipment {
       isUndone: isUndone ?? this.isUndone,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
-      driverName: driverName ?? this.driverName,  // NEW: Copy driver name
+      driverName: driverName ?? this.driverName,
     );
   }
 }

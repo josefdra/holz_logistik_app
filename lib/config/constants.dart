@@ -5,7 +5,7 @@ class Constants {
   static const double defaultZoom = 10.0;
 
   // Photo settings
-  static const int maxPhotoSize = 1920;  // Maximum photo dimension
+  static const int maxPhotoSize = 1920;
   static const double thumbnailSize = 100.0;
   static const String photoDirectory = 'photos';
 

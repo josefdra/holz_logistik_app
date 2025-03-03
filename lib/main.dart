@@ -1,7 +1,4 @@
-// lib/main.dart
-
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +16,6 @@ void main() async {
   runApp(const MyApp());
 }
 
-// This class observes app lifecycle events
 class AppLifecycleObserver extends WidgetsBindingObserver {
   final SyncProvider syncProvider;
 
@@ -28,7 +24,6 @@ class AppLifecycleObserver extends WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // App has come to the foreground
       syncProvider.syncOnAppResume();
     }
   }
@@ -50,21 +45,16 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    // Initialize providers
     _syncProvider = SyncProvider();
     _locationProvider = LocationProvider();
-
-    // Connect providers
     _locationProvider.setSyncProvider(_syncProvider);
 
-    // Create and register the lifecycle observer
     _lifecycleObserver = AppLifecycleObserver(_syncProvider);
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
   }
 
   @override
   void dispose() {
-    // Remove the lifecycle observer
     WidgetsBinding.instance.removeObserver(_lifecycleObserver);
     super.dispose();
   }

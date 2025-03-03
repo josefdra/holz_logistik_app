@@ -1,5 +1,3 @@
-// lib/database/database_helper.dart
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:path/path.dart';
@@ -12,7 +10,7 @@ import 'tables/shipment_table.dart';
 
 class DatabaseHelper {
   static const _databaseName = "holz_logistik.db";
-  static const _databaseVersion = 4;  // Increased version for migration
+  static const _databaseVersion = 4;
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -20,9 +18,7 @@ class DatabaseHelper {
   static Database? _database;
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    return _database ??= await _initDatabase();
   }
 
   Future<Database> _initDatabase() async {
@@ -43,7 +39,6 @@ class DatabaseHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 3) {
-      // Add sync columns (from original code)
       await db.execute('ALTER TABLE ${LocationTable.tableName} ADD COLUMN ${LocationTable.columnServerId} TEXT');
       await db.execute('ALTER TABLE ${LocationTable.tableName} ADD COLUMN ${LocationTable.columnIsSynced} INTEGER NOT NULL DEFAULT 0');
       await db.execute('ALTER TABLE ${LocationTable.tableName} ADD COLUMN ${LocationTable.columnIsDeleted} INTEGER NOT NULL DEFAULT 0');
@@ -55,17 +50,15 @@ class DatabaseHelper {
     }
 
     if (oldVersion < 4) {
-      // Add driver name column
       try {
         await db.execute(ShipmentTable.addDriverNameColumn);
       } catch (e) {
-        print('Error adding driver_name column: $e');
         // Column might already exist, continue
       }
     }
   }
 
-  // Location CRUD Operations with sync support
+  // Location CRUD Operations
   Future<int> insertLocation(Location location) async {
     final db = await database;
     final now = DateTime.now().toIso8601String();
@@ -122,12 +115,11 @@ class DatabaseHelper {
     final db = await database;
     final maps = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnIsDeleted} = 0', // Only non-deleted items
+      where: '${LocationTable.columnIsDeleted} = 0',
     );
     return maps.map((map) => _locationFromMap(map)).toList();
   }
 
-  // In DatabaseHelper class, modify getLocationsUpdatedSince method
   Future<List<Location>> getLocationsUpdatedSince(DateTime timestamp) async {
     final db = await database;
     final maps = await db.query(
@@ -135,8 +127,6 @@ class DatabaseHelper {
       where: '(${LocationTable.columnUpdatedAt} > ? AND ${LocationTable.columnIsSynced} = 0) OR ${LocationTable.columnIsSynced} = 0',
       whereArgs: [timestamp.toIso8601String()],
     );
-
-    print('Query for locations updated since ${timestamp.toIso8601String()} found ${maps.length} results');
     return maps.map((map) => _locationFromMap(map)).toList();
   }
 
@@ -159,8 +149,6 @@ class DatabaseHelper {
       LocationTable.columnIsSynced: location.isSynced ? 1 : 0,
       LocationTable.columnIsDeleted: location.isDeleted ? 1 : 0,
     };
-
-    print('Updating location ${location.id} with isSynced=${location.isSynced}');
 
     return await db.update(
       LocationTable.tableName,
@@ -185,7 +173,6 @@ class DatabaseHelper {
 
   Future<int> deleteLocation(int id) async {
     final db = await database;
-    // Soft delete - mark as deleted and pending sync
     return await db.update(
       LocationTable.tableName,
       {
@@ -193,16 +180,6 @@ class DatabaseHelper {
         LocationTable.columnIsSynced: 0,
         LocationTable.columnUpdatedAt: DateTime.now().toIso8601String(),
       },
-      where: '${LocationTable.columnId} = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // Hard delete - only used after confirming server sync
-  Future<int> purgeDeletedLocation(int id) async {
-    final db = await database;
-    return await db.delete(
-      LocationTable.tableName,
       where: '${LocationTable.columnId} = ?',
       whereArgs: [id],
     );
@@ -232,7 +209,7 @@ class DatabaseHelper {
     );
   }
 
-  // Shipment CRUD Operations with sync support
+  // Shipment CRUD Operations
   Future<int> insertShipment(Shipment shipment) async {
     final db = await database;
     return await db.insert(ShipmentTable.tableName, shipment.toMap());
