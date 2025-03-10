@@ -30,8 +30,8 @@ class BottomNavigation extends StatelessWidget {
           label: 'Archiv',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
-          label: 'Einstellungen',
+          icon: Icon(Icons.analytics),
+          label: 'Analyse',
         ),
       ],
     );

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,7 +7,6 @@ import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
-import 'package:holz_logistik/config/constants.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -223,8 +221,8 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
             FlutterMap(
               mapController: _mapController,
               options: MapOptions(
-                center: _currentPosition ?? const LatLng(Constants.defaultLatitude, Constants.defaultLongitude),
-                zoom: Constants.defaultZoom,
+                center: _currentPosition ?? const LatLng(47.9831, 11.9050),
+                zoom: 10.0,
                 onTap: _handleMapTap,
                 onMapEvent: (MapEvent event) {
                   if (event is MapEventRotateEnd) {

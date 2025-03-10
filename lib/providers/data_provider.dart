@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_helper.dart';
@@ -7,8 +6,9 @@ import '../models/shipment.dart';
 
 class User {
   String name = 'Test Nutzer';
-  int id = 0xFF;
-  String apiKey = '';
+  String username = 'TestN';
+  int apiKey = 0;
+  bool hasCredentials = false;
 
   Future<void> initializeUser() async {
     final prefs = await SharedPreferences.getInstance();
@@ -18,8 +18,9 @@ class User {
     }
 
     name = prefs.getString('name')!;
-    id = prefs.getInt('id')!;
-    apiKey = prefs.getString('apiKey')!;
+    username = prefs.getString('id')!;
+    apiKey = prefs.getInt('apiKey')!;
+    hasCredentials = true;
   }
 }
 
@@ -29,7 +30,6 @@ class DataProvider extends ChangeNotifier {
   List<Location> _locations = [];
   List<Location> _archivedLocations = [];
   bool _isLoading = false;
-  // SyncProvider? _syncProvider;
   Map<int, List<Shipment>> _shipmentsByLocation = {};
 
   void printTables() {
@@ -37,19 +37,16 @@ class DataProvider extends ChangeNotifier {
     _db.printAllShipments();
   }
 
-  /*
-  void init(SyncProvider syncProvider) {
-    _syncProvider = syncProvider;
-  }
-  */
-
   void init() {
     _user.initializeUser();
   }
 
   List<Location> get locations => _locations;
+
   List<Location> get archivedLocations => _archivedLocations;
+
   bool get isLoading => _isLoading;
+
   User get user => _user;
 
   Future<void> loadArchivedLocations() async {
@@ -116,7 +113,7 @@ class DataProvider extends ChangeNotifier {
     _archivedLocations = [];
     for (var locationId in _shipmentsByLocation.keys) {
       var location =
-          _locations.firstWhere((location) => location.id == locationId);
+      _locations.firstWhere((location) => location.id == locationId);
       if (location.id != -1 && _isLocationFullyShipped(location)) {
         _archivedLocations.add(location);
         _locations.removeWhere((location) => location.id == locationId);
@@ -155,14 +152,6 @@ class DataProvider extends ChangeNotifier {
     return await _db.getShipmentsByLocation(locationId);
   }
 
-  /*
-  void _triggerSync() {
-    if (_syncProvider != null) {
-      _syncProvider!.syncAfterChange();
-    }
-  }
-   */
-
   Future<void> addShipment(Shipment shipment) async {
     try {
       await _db.insertShipment(shipment);
@@ -170,8 +159,10 @@ class DataProvider extends ChangeNotifier {
       final location = _locations
           .firstWhere((location) => location.id == shipment.locationId);
 
-      double? newNormalQuantity = ((location.normalQuantity! - shipment.normalQuantity!) * 10).round() / 10;
-      double? newOversizeQuantity = ((location.oversizeQuantity! - shipment.oversizeQuantity!) * 10).round() / 10;
+      double? newNormalQuantity = ((location.normalQuantity! -
+          shipment.normalQuantity!) * 10).round() / 10;
+      double? newOversizeQuantity = ((location.oversizeQuantity! -
+          shipment.oversizeQuantity!) * 10).round() / 10;
       final newPieceCount = location.pieceCount - shipment.pieceCount;
 
       final updatedLocation = location.copyWith(
@@ -193,18 +184,19 @@ class DataProvider extends ChangeNotifier {
       await _db.deleteShipment(shipment.id);
 
       var location = _locations.firstWhere(
-        (location) => location.id == shipment.locationId,
-        orElse: () => _archivedLocations.firstWhere(
-          (location) => location.id == shipment.locationId,
-        ),
+            (location) => location.id == shipment.locationId,
+        orElse: () =>
+            _archivedLocations.firstWhere(
+                  (location) => location.id == shipment.locationId,
+            ),
       );
 
       final updatedLocation = location.copyWith(
         normalQuantity:
-            (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0),
+        (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0),
         pieceCount: location.pieceCount + shipment.pieceCount,
         oversizeQuantity: location.oversizeQuantity != null &&
-                shipment.oversizeQuantity != null
+            shipment.oversizeQuantity != null
             ? location.oversizeQuantity! + shipment.oversizeQuantity!
             : location.oversizeQuantity,
       );
@@ -282,26 +274,6 @@ class DataProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error deleting location: $e');
       return false;
-    }
-  }
-
-  Future<void> deletePhotoFromLocation(
-      Location location, String photoUrl) async {
-    try {
-      if (photoUrl.startsWith('/')) {
-        final file = File(photoUrl);
-        if (await file.exists()) {
-          await file.delete();
-        }
-      }
-
-      final updatedPhotoUrls = List<String>.from(location.photoUrls ?? [])
-        ..remove(photoUrl);
-      final updatedLocation = location.copyWith(photoUrls: updatedPhotoUrls);
-
-      await updateLocation(updatedLocation);
-    } catch (e) {
-      debugPrint('Error deleting photo: $e');
     }
   }
 }

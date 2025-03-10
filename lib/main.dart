@@ -18,14 +18,10 @@ void main() async {
 }
 
 class AppLifecycleObserver extends WidgetsBindingObserver {
-  // final SyncProvider syncProvider;
-
-  // AppLifecycleObserver(this.syncProvider);
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // syncProvider.syncOnAppResume();
     }
   }
 }
@@ -38,7 +34,6 @@ class HolzLogistik extends StatefulWidget {
 }
 
 class _HolzLogistikState extends State<HolzLogistik> {
-  // late SyncProvider _syncProvider;
   late DataProvider _dataProvider;
   late AppLifecycleObserver _lifecycleObserver;
 
@@ -46,11 +41,8 @@ class _HolzLogistikState extends State<HolzLogistik> {
   void initState() {
     super.initState();
 
-    // _syncProvider = SyncProvider();
     _dataProvider = DataProvider();
     _dataProvider.init();
-    // _dataProvider.printTables();
-    // _locationProvider.setSyncProvider(_syncProvider);
     _lifecycleObserver = AppLifecycleObserver();
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
   }
@@ -66,7 +58,6 @@ class _HolzLogistikState extends State<HolzLogistik> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: _dataProvider),
-        // ChangeNotifierProvider.value(value: _syncProvider),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

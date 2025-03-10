@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:holz_logistik/screens/analytics_screen.dart';
 import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/map_screen.dart';
-import 'package:holz_logistik/screens/settings_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/providers/data_provider.dart';
-import 'package:holz_logistik/providers/sync_provider.dart';
 import 'archive_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -27,15 +26,13 @@ class _MainScreenState extends State<MainScreen> {
       const HomeScreen(),
       const MapScreen(),
       const ArchiveScreen(),
-      const SettingsScreen(),
+      const AnalyticsScreen()
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dataProvider = context.read<DataProvider>();
       dataProvider.loadLocations();
       dataProvider.loadArchivedLocations();
-      // final syncProvider = context.read<SyncProvider>();
-      // syncProvider.sync();
     });
   }
 
@@ -44,49 +41,13 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holz Logistik'),
-        actions: const [
-          /*
-          Consumer<SyncProvider>(
-            builder: (context, syncProvider, child) {
-              Widget icon;
-
-              switch (syncProvider.status) {
-                case SyncStatus.syncing:
-                  icon = const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  );
-                  break;
-                case SyncStatus.error:
-                  icon = const Icon(Icons.sync_problem, color: Colors.amber);
-                  break;
-                case SyncStatus.offline:
-                  icon = const Icon(Icons.cloud_off, color: Colors.grey);
-                  break;
-                case SyncStatus.complete:
-                  icon = const Icon(Icons.cloud_done, color: Colors.white);
-                  break;
-                case SyncStatus.idle:
-                  icon = const Icon(Icons.cloud_queue, color: Colors.white);
-                  break;
-              }
-
-              return IconButton(
-                icon: icon,
-                onPressed: () {
-                  setState(() {
-                    _currentIndex = 3;
-                  });
-                },
-                tooltip: 'Synchronisierungsstatus',
-              );
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // TODO: Navigate to settings screen
             },
-          ),
-           */
+          )
         ],
       ),
       body: IndexedStack(
