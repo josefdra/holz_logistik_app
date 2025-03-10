@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/sync_service.dart';
 import '../utils/network_utils.dart';
 
@@ -15,15 +16,15 @@ enum SyncStatus {
 }
 
 class SyncProvider extends ChangeNotifier {
-  final SyncService _syncService = SyncService();
+  // final SyncService _syncService = SyncService();
   SyncStatus _status = SyncStatus.idle;
   String? _lastError;
   DateTime? _lastSyncTime;
   bool _autoSync = true;
   Timer? _syncTimer;
   StreamSubscription? _connectivitySubscription;
-  String _baseUrl = '';
   bool _syncInProgress = false;
+  String _baseUrl = '${dotenv.env['VAR_NAME']}';
 
   SyncStatus get status => _status;
   String? get lastError => _lastError;
@@ -35,19 +36,9 @@ class SyncProvider extends ChangeNotifier {
   }
 
   Future<void> _initialize() async {
-    try {
-      await _loadSettings(); // Load settings first
-      await _syncService.initialize();
+    await _loadSettings();
+    // await _syncService.initialize();
 
-      // Add error handling and logging
-      print("SyncProvider initialized: BaseURL = $_baseUrl");
-    } catch (e) {
-      print("SyncProvider initialization error: $e");
-      // Ensure some default state
-      _baseUrl = '';
-    }
-
-    // Rest of your initialization code
     _setupAutoSync();
     _setupConnectivityListener();
   }
@@ -120,7 +111,7 @@ class SyncProvider extends ChangeNotifier {
         }
       }
 
-      final success = await _syncService.syncAll();
+      final success = null; // await _syncService.syncAll();
 
       _status = success ? SyncStatus.complete : SyncStatus.error;
       if (success) {
@@ -142,13 +133,13 @@ class SyncProvider extends ChangeNotifier {
   }
 
   Future<void> syncAfterChange() async {
-    if (_autoSync && await NetworkUtils.isConnected()) {
+    if (_autoSync){ // && await NetworkUtils.isConnected()) {
       sync();
     }
   }
 
   Future<void> syncOnAppResume() async {
-    if (_autoSync && await NetworkUtils.isConnected()) {
+    if (_autoSync){ // && await NetworkUtils.isConnected()) {
       sync();
     }
   }

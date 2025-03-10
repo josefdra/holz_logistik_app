@@ -26,7 +26,7 @@ class LocationMarker {
               color: Colors.red,
               size: 40.0,
             ),
-            if (location.quantity != null || location.oversizeQuantity != null)
+            if (location.normalQuantity != null || location.oversizeQuantity != null)
               Positioned(
                 right: 0,
                 child: Container(
@@ -42,7 +42,7 @@ class LocationMarker {
                     ],
                   ),
                   child: Text(
-                    '${location.quantity ?? 0}',
+                    '${location.normalQuantity! + location.oversizeQuantity!}',
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

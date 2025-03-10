@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:holz_logistik/providers/location_provider.dart';
-import 'package:holz_logistik/providers/sync_provider.dart';
+import 'package:holz_logistik/providers/data_provider.dart';
 import 'package:holz_logistik/screens/main_screen.dart';
 
 void main() async {
@@ -13,43 +13,45 @@ void main() async {
     await Geolocator.requestPermission();
   }
 
-  runApp(const MyApp());
+  await dotenv.load();
+  runApp(const HolzLogistik());
 }
 
 class AppLifecycleObserver extends WidgetsBindingObserver {
-  final SyncProvider syncProvider;
+  // final SyncProvider syncProvider;
 
-  AppLifecycleObserver(this.syncProvider);
+  // AppLifecycleObserver(this.syncProvider);
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      syncProvider.syncOnAppResume();
+      // syncProvider.syncOnAppResume();
     }
   }
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class HolzLogistik extends StatefulWidget {
+  const HolzLogistik({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<HolzLogistik> createState() => _HolzLogistikState();
 }
 
-class _MyAppState extends State<MyApp> {
-  late SyncProvider _syncProvider;
-  late LocationProvider _locationProvider;
+class _HolzLogistikState extends State<HolzLogistik> {
+  // late SyncProvider _syncProvider;
+  late DataProvider _dataProvider;
   late AppLifecycleObserver _lifecycleObserver;
 
   @override
   void initState() {
     super.initState();
 
-    _syncProvider = SyncProvider();
-    _locationProvider = LocationProvider();
-    _locationProvider.setSyncProvider(_syncProvider);
-
-    _lifecycleObserver = AppLifecycleObserver(_syncProvider);
+    // _syncProvider = SyncProvider();
+    _dataProvider = DataProvider();
+    _dataProvider.init();
+    // _dataProvider.printTables();
+    // _locationProvider.setSyncProvider(_syncProvider);
+    _lifecycleObserver = AppLifecycleObserver();
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
   }
 
@@ -63,10 +65,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: _locationProvider),
-        ChangeNotifierProvider.value(value: _syncProvider),
+        ChangeNotifierProvider.value(value: _dataProvider),
+        // ChangeNotifierProvider.value(value: _syncProvider),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Holz Logistik',
         theme: ThemeData(
           useMaterial3: true,

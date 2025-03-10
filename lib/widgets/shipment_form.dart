@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:holz_logistik/models/location.dart';
 import 'package:holz_logistik/models/shipment.dart';
 
@@ -18,98 +16,71 @@ class ShipmentForm extends StatefulWidget {
 
 class _ShipmentFormState extends State<ShipmentForm> {
   final _formKey = GlobalKey<FormState>();
-  final _oversizeController = TextEditingController();
-  final _quantityController = TextEditingController();
+  late final TextEditingController _contractController;
+  final _additionalInfoController = TextEditingController();
+  final _sawmillController = TextEditingController();
+  final _normalQuantityController = TextEditingController();
+  final _oversizeQuantityController = TextEditingController();
   final _pieceCountController = TextEditingController();
-
-  String _driverName = "";  // To store the driver name
-  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadDriverName();
-  }
-
-  Future<void> _loadDriverName() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final driverName = prefs.getString('driver_name') ?? '';
-
-      setState(() {
-        _driverName = driverName;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading driver name: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    _contractController = TextEditingController(text: widget.location.contract);
   }
 
   @override
   void dispose() {
-    _oversizeController.dispose();
-    _quantityController.dispose();
+    _contractController.dispose();
+    _additionalInfoController.dispose();
+    _sawmillController.dispose();
+    _normalQuantityController.dispose();
+    _oversizeQuantityController.dispose();
     _pieceCountController.dispose();
     super.dispose();
   }
 
-  String? _validateQuantity(String? value, int? maxQuantity) {
+  String? _validateQuantity<T extends num>(String? value, T? maxQuantity) {
     if (value == null || value.isEmpty) {
       return 'Dieses Feld ist erforderlich';
     }
-    final quantity = int.tryParse(value);
-    if (quantity == null || quantity <= 0) {
-      return 'Bitte geben Sie eine gültige Zahl ein';
-    }
-    if (maxQuantity != null && quantity > maxQuantity) {
+
+    final quantity = double.tryParse(value);
+    if (maxQuantity != null && quantity! > maxQuantity) {
       return 'Wert kann nicht größer als $maxQuantity sein';
     }
+
     return null;
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Check if driver name is set
-    if (_driverName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fehler: Fahrername nicht konfiguriert. Bitte legen Sie Ihren Namen in den Einstellungen fest.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
+    final id = DateTime.now().microsecondsSinceEpoch;
+    if (_normalQuantityController.text.isEmpty) {
+      _normalQuantityController.text = '0.0';
+    }
+    if (_oversizeQuantityController.text.isEmpty) {
+      _oversizeQuantityController.text = '0.0';
     }
 
     final shipment = Shipment(
-      locationId: widget.location.id!,
-      oversizeQuantity: int.tryParse(_oversizeController.text),
-      quantity: int.parse(_quantityController.text),
-      pieceCount: int.parse(_pieceCountController.text),
-      driverName: _driverName,  // Include the driver name in the shipment
-    );
+        id: id,
+        userId: "asdf",
+        locationId: widget.location.id,
+        date: DateTime.now(),
+        contract: _contractController.text,
+        additionalInfo: _additionalInfoController.text,
+        sawmill: _sawmillController.text,
+        normalQuantity: double.tryParse(_normalQuantityController.text),
+        oversizeQuantity: double.tryParse(_oversizeQuantityController.text),
+        pieceCount: int.parse(_pieceCountController.text));
 
     Navigator.of(context).pop(shipment);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Dialog(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-
     return Dialog(
       child: SingleChildScrollView(
         child: Padding(
@@ -130,7 +101,10 @@ class _ShipmentFormState extends State<ShipmentForm> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withAlpha(77),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -140,20 +114,17 @@ class _ShipmentFormState extends State<ShipmentForm> {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
+                      const Expanded(
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Fahrer:',
-                              style: TextStyle(fontSize: 12),
+                            Text(
+                              'Fahrer: ',
+                              style: TextStyle(fontSize: 14),
                             ),
                             Text(
-                              _driverName.isNotEmpty ? _driverName : 'Nicht konfiguriert',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _driverName.isEmpty ? Colors.red : null,
-                              ),
+                              "asdf",
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -164,40 +135,39 @@ class _ShipmentFormState extends State<ShipmentForm> {
 
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _oversizeController,
-                  decoration: const InputDecoration(
-                    labelText: 'Menge ÜS (fm)',
-                    helperText: 'Optional',
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) return null;
-                    return _validateQuantity(value, widget.location.oversizeQuantity);
-                  },
+                  controller: _contractController,
+                  decoration: const InputDecoration(labelText: 'Vertrag *'),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Bitte Vertrag eingeben' : null,
                 ),
-                const SizedBox(height: 16),
                 TextFormField(
-                  controller: _quantityController,
-                  decoration: const InputDecoration(
-                    labelText: 'Menge (fm)',
-                    helperText: 'Erforderlich',
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) => _validateQuantity(value, widget.location.quantity),
+                  controller: _additionalInfoController,
+                  decoration: const InputDecoration(labelText: 'Zusatzinfo'),
                 ),
-                const SizedBox(height: 16),
                 TextFormField(
-                  controller: _pieceCountController,
-                  decoration: const InputDecoration(
-                    labelText: 'Stückzahl',
-                    helperText: 'Erforderlich',
-                  ),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) => _validateQuantity(value, widget.location.pieceCount),
+                  controller: _sawmillController,
+                  decoration: const InputDecoration(labelText: 'Sägewerk *'),
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Bitte Sägewerk eingeben' : null,
                 ),
+                TextFormField(
+                  controller: _normalQuantityController,
+                  decoration: const InputDecoration(labelText: 'Normal (fm)'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                ),
+                TextFormField(
+                  controller: _oversizeQuantityController,
+                  decoration: const InputDecoration(labelText: 'ÜS (fm)'),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                ),
+                TextFormField(
+                    controller: _pieceCountController,
+                    decoration: const InputDecoration(labelText: 'Stückzahl *'),
+                    keyboardType: TextInputType.number,
+                    validator: (value) =>
+                        _validateQuantity(value, widget.location.pieceCount)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -208,7 +178,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: _driverName.isEmpty ? null : _submit,
+                      onPressed: _submit,
                       child: const Text('Bestätigen'),
                     ),
                   ],

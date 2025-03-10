@@ -1,10 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/providers/location_provider.dart';
-import 'package:holz_logistik/providers/sync_provider.dart'; // Add this import
+import 'package:holz_logistik/providers/data_provider.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -12,13 +10,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LocationProvider>(
-      builder: (context, locationProvider, child) {
-        if (locationProvider.isLoading) {
+    return Consumer<DataProvider>(
+      builder: (context, dataProvider, child) {
+        if (dataProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final locations = locationProvider.locations;
+        final locations = dataProvider.locations;
 
         if (locations.isEmpty) {
           return Center(
@@ -29,10 +27,9 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () async {
-                    // Reload locations and also sync
-                    await locationProvider.loadLocations();
+                    await dataProvider.loadLocations();
                     if (context.mounted) {
-                      await context.read<SyncProvider>().sync();
+                      // await context.read<SyncProvider>().sync();
                     }
                   },
                   child: const Text('Neu laden'),
@@ -44,11 +41,10 @@ class HomeScreen extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: () async {
-            // On pull-to-refresh, first sync data then reload locations
             if (context.mounted) {
-              await context.read<SyncProvider>().sync();
+              // await context.read<SyncProvider>().sync();
             }
-            return locationProvider.loadLocations();
+            return dataProvider.loadLocations();
           },
           child: ListView.builder(
             itemCount: locations.length,
@@ -85,24 +81,24 @@ class LocationListItem extends StatelessWidget {
         leading: SizedBox(
           width: 50,
           height: 50,
-          child: location.photoUrls.isNotEmpty
+          child: location.photoUrls!.isNotEmpty
               ? ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Image.file(
-              File(location.photoUrls.first),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _buildLetterAvatar(context),
-            ),
-          )
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.file(
+                    File(location.photoUrls!.first),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildLetterAvatar(context),
+                  ),
+                )
               : _buildLetterAvatar(context),
         ),
-        title: Text(location.name),
+        title: Text(location.partieNr),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (location.sawmill.isNotEmpty)
-              Text('Sägewerk: ${location.sawmill}'),
-            Text('Menge: ${location.quantity ?? 0} fm'),
+            Text('Normal: ${location.normalQuantity ?? 0} fm'),
+            Text('ÜS: ${location.oversizeQuantity ?? 0} fm'),
           ],
         ),
         trailing: Row(
@@ -121,12 +117,15 @@ class LocationListItem extends StatelessWidget {
   Widget _buildLetterAvatar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withAlpha(51), // 0.2 * 255 = 51
+        color: Theme.of(context)
+            .colorScheme
+            .primary
+            .withAlpha(51),
         borderRadius: BorderRadius.circular(4),
       ),
       alignment: Alignment.center,
       child: Text(
-        location.name.isNotEmpty ? location.name[0].toUpperCase() : '?',
+        location.sawmill!.isNotEmpty ? location.sawmill![0].toUpperCase() : '?',
         style: TextStyle(
           color: Theme.of(context).colorScheme.primary,
           fontSize: 24,
@@ -149,7 +148,7 @@ class LocationListItem extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              context.read<LocationProvider>().deleteLocation(location.id!);
+              context.read<DataProvider>().deleteLocation(location.id);
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(

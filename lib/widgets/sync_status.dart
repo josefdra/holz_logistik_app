@@ -1,5 +1,4 @@
-// lib/widgets/sync_status.dart
-
+/*
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -115,3 +114,4 @@ class SyncStatusWidget extends StatelessWidget {
     }
   }
 }
+ */

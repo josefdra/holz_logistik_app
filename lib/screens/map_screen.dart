@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:holz_logistik/providers/location_provider.dart';
+import 'package:holz_logistik/providers/data_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +18,9 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixin {
-  // Map controller with listener for rotation changes
   late final MapController _mapController;
+  Timer? _positionUpdateTimer;
+  bool _followPosition = true;
   bool _isAddingMarker = false;
   bool _showMarkerInfo = false;
   LatLng? _selectedPosition;
@@ -25,7 +28,6 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
   double _currentAccuracy = 0;
   bool _isInitialized = false;
 
-  // Add this to maintain the state when switching tabs
   @override
   bool get wantKeepAlive => true;
 
@@ -33,14 +35,13 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
   void initState() {
     super.initState();
 
-    // Initialize map controller
     _mapController = MapController();
 
-    // Add listener to monitor rotation changes
     _mapController.mapEventStream.listen((event) {
       if (event is MapEventRotate) {
-        // During rotation, update the last rotation value
         _lastRotation = _mapController.rotation;
+      } else if (event is MapEventMoveStart) {
+        _followPosition = false;
       }
     });
 
@@ -49,6 +50,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
 
   @override
   void dispose() {
+    _positionUpdateTimer?.cancel();
     _mapController.dispose();
     super.dispose();
   }
@@ -58,11 +60,12 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
       await _initializeGeolocator();
       if (!mounted) return;
 
-      // Only move to current location if this is the first initialization
       if (!_isInitialized && _currentPosition != null) {
         _mapController.move(_currentPosition!, 15.0);
         _isInitialized = true;
       }
+
+      _startPositionUpdates();
     } catch (e) {
       debugPrint('Error initializing location: $e');
       if (mounted) {
@@ -70,6 +73,32 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
           const SnackBar(content: Text('Fehler beim Abrufen des Standorts')),
         );
       }
+    }
+  }
+
+  void _startPositionUpdates() {
+    _positionUpdateTimer?.cancel();
+    _positionUpdateTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _updateCurrentLocation();
+    });
+  }
+
+  Future<void> _updateCurrentLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition();
+
+      if(mounted) {
+        setState(() {
+          _currentAccuracy = position.accuracy;
+          _currentPosition = LatLng(position.latitude, position.longitude);
+        });
+
+        if(_followPosition) {
+          _mapController.move(_currentPosition!, _mapController.zoom);
+        }
+      }
+    } catch(e) {
+      debugPrint('Error updating current location: $e');
     }
   }
 
@@ -101,14 +130,13 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
 
   Future<void> _getCurrentLocation() async {
     try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      final position = await Geolocator.getCurrentPosition();
 
       if (mounted) {
         setState(() {
           _currentPosition = LatLng(position.latitude, position.longitude);
           _currentAccuracy = position.accuracy;
+          _followPosition = true;
         });
       }
 
@@ -119,28 +147,20 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
     }
   }
 
-  // Methods for map rotation control
   void _resetMapRotation() {
     _mapController.rotate(0.0);
   }
 
-  // This will be used to keep track of the current rotation
   double _lastRotation = 0.0;
 
-  // Method to stabilize map rotation
   void _stabilizeMapRotation() {
-    // Get current rotation
     double currentRotation = _mapController.rotation;
 
-    // If the rotation is small (less than 10 degrees), automatically reset to north
-    if (currentRotation.abs() < 10.0) {
+    if (currentRotation.abs() < 20.0) {
       _mapController.rotate(0.0);
-    } else if ((currentRotation - _lastRotation).abs() < 5.0) {
-      // If the change in rotation is very small, keep the previous rotation
-      // This prevents small accidental rotations
+    } else if ((currentRotation - _lastRotation).abs() < 10.0) {
       _mapController.rotate(_lastRotation);
     } else {
-      // Otherwise, update the last rotation value
       _lastRotation = currentRotation;
     }
   }
@@ -171,7 +191,6 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
           );
         },
       ).then((_) {
-        // Reset the add marker mode when the form is closed
         setState(() {
           _isAddingMarker = false;
           _selectedPosition = null;
@@ -195,10 +214,10 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
 
-    return Consumer<LocationProvider>(
-      builder: (context, locationProvider, _) {
+    return Consumer<DataProvider>(
+      builder: (context, dataProvider, _) {
         return Stack(
           children: [
             FlutterMap(
@@ -207,20 +226,17 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 center: _currentPosition ?? const LatLng(Constants.defaultLatitude, Constants.defaultLongitude),
                 zoom: Constants.defaultZoom,
                 onTap: _handleMapTap,
-                // Add rotation stabilization
                 onMapEvent: (MapEvent event) {
-                  // Only stabilize after the user finishes a movement
                   if (event is MapEventRotateEnd) {
                     _stabilizeMapRotation();
                   }
                 },
-                // Make rotations require more deliberate gestures
-                rotationThreshold: 20.0, // Higher value = harder to trigger rotation
+                rotationThreshold: 20.0,
               ),
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.holz_logistik.app',
+                  userAgentPackageName: 'com.draexl_it.holz_logistik',
                 ),
                 CircleLayer(
                   circles: [
@@ -229,13 +245,12 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                         point: _currentPosition!,
                         radius: _currentAccuracy,
                         useRadiusInMeter: true,
-                        color: Colors.blue.withAlpha(51), // 0.2 * 255 = 51
+                        color: Colors.blue.withAlpha(51),
                         borderColor: Colors.blue,
                         borderStrokeWidth: 2,
                       ),
                   ],
                 ),
-                // Current location dot
                 MarkerLayer(
                   markers: [
                     if (_currentPosition != null)
@@ -253,7 +268,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withAlpha(51), // 0.2 * 255 = 51
+                                color: Colors.black.withAlpha(51),
                                 blurRadius: 4,
                               ),
                             ],
@@ -264,7 +279,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 ),
                 MarkerLayer(
                   markers: [
-                    ...locationProvider.locations.map((location) => Marker(
+                    ...dataProvider.locations.map((location) => Marker(
                       width: 40.0,
                       height: 40.0,
                       point: LatLng(location.latitude, location.longitude),
@@ -289,7 +304,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 ),
                 if (_showMarkerInfo)
                   MarkerLayer(
-                    markers: locationProvider.locations.map((location) =>
+                    markers: dataProvider.locations.map((location) =>
                         Marker(
                           width: 120.0,
                           height: 40.0,
@@ -307,7 +322,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                               ],
                             ),
                             child: Text(
-                              'Menge: ${location.quantity ?? 0} fm\nÜS: ${location.oversizeQuantity ?? 0} fm',
+                              'Normal: ${location.normalQuantity ?? 0} fm\nÜS: ${location.oversizeQuantity ?? 0} fm',
                               style: const TextStyle(fontSize: 10),
                             ),
                           ),

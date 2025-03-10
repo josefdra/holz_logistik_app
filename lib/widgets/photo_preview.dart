@@ -28,17 +28,17 @@ class PhotoPreview extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             child: photoUrl != null
                 ? Image.file(
-              File(photoUrl!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.broken_image,
-                size: 40,
-              ),
-            )
+                    File(photoUrl!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.broken_image,
+                      size: 40,
+                    ),
+                  )
                 : Image.file(
-              photoFile!,
-              fit: BoxFit.cover,
-            ),
+                    photoFile!,
+                    fit: BoxFit.cover,
+                  ),
           ),
         ),
         Positioned(

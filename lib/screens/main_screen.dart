@@ -1,13 +1,11 @@
-// lib/screens/main_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/map_screen.dart';
-import 'package:holz_logistik/screens/settings_screen.dart'; // New import
+import 'package:holz_logistik/screens/settings_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
 import 'package:provider/provider.dart';
-import 'package:holz_logistik/providers/location_provider.dart';
-import 'package:holz_logistik/providers/sync_provider.dart'; // New import
+import 'package:holz_logistik/providers/data_provider.dart';
+import 'package:holz_logistik/providers/sync_provider.dart';
 import 'archive_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -20,28 +18,24 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // Create persistent screen instances to maintain their state
   late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    // Initialize screens
     _screens = [
       const HomeScreen(),
       const MapScreen(),
       const ArchiveScreen(),
-      const SettingsScreen(), // New settings screen
+      const SettingsScreen(),
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final locationProvider = context.read<LocationProvider>();
-      locationProvider.loadLocations();
-      locationProvider.loadArchivedLocations();
-
-      // Initial sync when app starts
-      final syncProvider = context.read<SyncProvider>();
-      syncProvider.sync();
+      final dataProvider = context.read<DataProvider>();
+      dataProvider.loadLocations();
+      dataProvider.loadArchivedLocations();
+      // final syncProvider = context.read<SyncProvider>();
+      // syncProvider.sync();
     });
   }
 
@@ -50,8 +44,8 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holz Logistik'),
-        actions: [
-          // Show sync status indicator in app bar
+        actions: const [
+          /*
           Consumer<SyncProvider>(
             builder: (context, syncProvider, child) {
               Widget icon;
@@ -77,25 +71,24 @@ class _MainScreenState extends State<MainScreen> {
                   icon = const Icon(Icons.cloud_done, color: Colors.white);
                   break;
                 case SyncStatus.idle:
-                icon = const Icon(Icons.cloud_queue, color: Colors.white);
+                  icon = const Icon(Icons.cloud_queue, color: Colors.white);
                   break;
               }
 
               return IconButton(
                 icon: icon,
                 onPressed: () {
-                  // Navigate to settings screen when sync icon is pressed
                   setState(() {
-                    _currentIndex = 3; // Index of settings screen
+                    _currentIndex = 3;
                   });
                 },
                 tooltip: 'Synchronisierungsstatus',
               );
             },
           ),
+           */
         ],
       ),
-      // Use IndexedStack to maintain the state of all screens
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,

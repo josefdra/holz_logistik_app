@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/location.dart';
 import '../models/shipment.dart';
-import '../providers/location_provider.dart';
+import '../providers/data_provider.dart';
 import '../widgets/location_details.dart';
 
 class ArchiveScreen extends StatelessWidget {
@@ -12,7 +12,7 @@ class ArchiveScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LocationProvider>(
+    return Consumer<DataProvider>(
       builder: (context, provider, child) {
         final archivedLocations = provider.archivedLocations;
         final locationsWithShipments = provider.locationsWithShipments;
@@ -60,8 +60,8 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
 
   @override
   Widget build(BuildContext context) {
-    final totals = context.read<LocationProvider>()
-        .getShippedTotals(widget.location.id!);
+    final totals =
+        context.read<DataProvider>().getShippedTotals(widget.location.id);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -71,11 +71,12 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
             title: Row(
               children: [
                 Expanded(
-                  child: Text(widget.location.name),
+                  child: Text(widget.location.partieNr),
                 ),
                 if (widget.isArchived)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(12),
@@ -90,16 +91,16 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sägewerk: ${widget.location.sawmill}'),
-                if (!widget.isArchived) Text(
-                  'Noch am Standort: ${widget.location.quantity ?? 0} fm, ${widget.location.pieceCount ?? 0} Stück',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                if (!widget.isArchived)
+                  Text(
+                    'Noch am Standort: ${widget.location.normalQuantity ?? 0} fm, \nÜS: ${widget.location.oversizeQuantity ?? 0} fm, ${widget.location.pieceCount} Stück',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
                 Text(
-                  'Bereits abgefahren: ${totals['quantity']} fm, ${totals['pieceCount']} Stück',
+                  'Bereits abgefahren: ${totals['normalQuantity']} fm, \nÜS: ${totals['oversizeQuantity']} fm, ${totals['pieceCount']} Stück',
                   style: const TextStyle(fontStyle: FontStyle.italic),
                 ),
               ],
@@ -112,7 +113,8 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
                   onPressed: () => _showLocationDetails(context),
                 ),
                 IconButton(
-                  icon: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+                  icon:
+                      Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
                   onPressed: () {
                     setState(() {
                       _isExpanded = !_isExpanded;
@@ -125,8 +127,8 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
           if (_isExpanded)
             FutureBuilder<List<Shipment>>(
               future: context
-                  .read<LocationProvider>()
-                  .getShipmentHistory(widget.location.id!),
+                  .read<DataProvider>()
+                  .getShipmentHistory(widget.location.id),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -171,14 +173,15 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
     );
   }
 
-  Future<void> _handleUndoShipment(BuildContext context, Shipment shipment) async {
+  Future<void> _handleUndoShipment(
+      BuildContext context, Shipment shipment) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Abfuhr rückgängig machen'),
         content: const Text(
           'Möchten Sie diese Abfuhr wirklich rückgängig machen? '
-              'Die Mengen werden zum Standort zurückgebucht.',
+          'Die Mengen werden zum Standort zurückgebucht.',
         ),
         actions: [
           TextButton(
@@ -195,7 +198,7 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
 
     if (confirmed == true && context.mounted) {
       try {
-        await context.read<LocationProvider>().undoShipment(shipment);
+        await context.read<DataProvider>().undoShipment(shipment);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Abfuhr wurde rückgängig gemacht')),
@@ -238,25 +241,26 @@ class ShipmentListItem extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        dateFormat.format(shipment.timestamp),
+                        dateFormat.format(shipment.date),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    if (shipment.driverName.isNotEmpty)
+                    if (shipment.userId.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.person, size: 14),
-                            const SizedBox(width: 4),
+                            Icon(Icons.person, size: 14),
+                            SizedBox(width: 4),
                             Text(
-                              shipment.driverName,
-                              style: const TextStyle(fontSize: 12),
+                              "asdf",
+                              style: TextStyle(fontSize: 12),
                             ),
                           ],
                         ),
@@ -264,19 +268,23 @@ class ShipmentListItem extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('Menge: ${shipment.quantity} fm'),
+                Row(children: [
+                  Expanded(
+                    child: Text('Normal: ${shipment.normalQuantity} fm'),
+                  ),
+                  Text('Sägewerk: ${shipment.sawmill}'),
+                ]),
                 if (shipment.oversizeQuantity != null)
-                  Text('Übermaß: ${shipment.oversizeQuantity} fm'),
+                  Text('ÜS: ${shipment.oversizeQuantity} fm'),
                 Text('Stückzahl: ${shipment.pieceCount}'),
               ],
             ),
           ),
-          if (!shipment.isUndone)
-            IconButton(
-              icon: const Icon(Icons.undo),
-              onPressed: onUndo,
-              tooltip: 'Rückgängig machen',
-            ),
+          IconButton(
+            icon: const Icon(Icons.undo),
+            onPressed: onUndo,
+            tooltip: 'Rückgängig machen',
+          ),
         ],
       ),
     );

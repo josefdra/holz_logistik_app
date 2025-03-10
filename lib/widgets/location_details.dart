@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/providers/location_provider.dart';
+import 'package:holz_logistik/providers/data_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/photo_gallery.dart';
 import 'package:holz_logistik/widgets/shipment_form.dart';
@@ -41,7 +41,7 @@ class LocationDetailsDialog extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              context.read<LocationProvider>().deleteLocation(location.id!);
+              context.read<DataProvider>().deleteLocation(location.id);
               Navigator.of(context).pop(); // Close confirmation dialog
               Navigator.of(context).pop(); // Close details dialog
             },
@@ -54,9 +54,8 @@ class LocationDetailsDialog extends StatelessWidget {
   }
 
   Future<void> _showShipmentForm(BuildContext context) async {
-    // Capture context references before the async gap
     final navigator = Navigator.of(context);
-    final locationProvider = context.read<LocationProvider>();
+    final dataProvider = context.read<DataProvider>();
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final shipment = await showDialog<Shipment>(
@@ -66,10 +65,9 @@ class LocationDetailsDialog extends StatelessWidget {
 
     if (shipment != null && context.mounted) {
       try {
-        await locationProvider.addShipment(shipment);
-        // Check if still mounted before using navigator
+        await dataProvider.addShipment(shipment);
         if (context.mounted) {
-          navigator.pop(); // Close the details dialog after successful shipment
+          navigator.pop(); // Close the details dialog
         }
       } catch (e) {
         if (context.mounted) {
@@ -110,15 +108,15 @@ class LocationDetailsDialog extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            location.name,
+                            location.partieNr,
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               color: Theme.of(context).colorScheme.onPrimaryContainer,
                             ),
                           ),
-                          if (location.sawmill.isNotEmpty) ...[
+                          if (location.sawmill != null && location.sawmill!.isNotEmpty) ...[
                             const SizedBox(height: 4),
                             Text(
-                              location.sawmill,
+                              location.sawmill!,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.onPrimaryContainer.withAlpha(204),
                               ),
@@ -162,18 +160,18 @@ class LocationDetailsDialog extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 12),
                                 _QuantityItem(
-                                  label: 'Menge',
-                                  value: '${location.quantity ?? 0} fm',
+                                  label: 'Normal',
+                                  value: '${location.normalQuantity ?? 0} fm',
                                 ),
                                 if (location.oversizeQuantity != null &&
                                     location.oversizeQuantity! > 0)
                                   _QuantityItem(
-                                    label: 'Übermaß',
+                                    label: 'ÜS',
                                     value: '${location.oversizeQuantity} fm',
                                   ),
                                 _QuantityItem(
                                   label: 'Stückzahl',
-                                  value: '${location.pieceCount ?? 0}',
+                                  value: '${location.pieceCount}',
                                 ),
                               ],
                             ),
@@ -196,33 +194,26 @@ class LocationDetailsDialog extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Info Section
-                    if (location.additionalInfo.isNotEmpty ||
-                        location.access.isNotEmpty ||
-                        location.partNumber.isNotEmpty) ...[
+                    if (location.additionalInfo != null && location.additionalInfo!.isNotEmpty ||
+                        location.access != null && location.access!.isNotEmpty ||
+                        location.partieNr.isNotEmpty) ...[
                       Text(
                         'Details',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
-                      if (location.additionalInfo.isNotEmpty)
+                      if (location.additionalInfo!.isNotEmpty)
                         _InfoSection(
                           icon: Icons.info_outline,
                           title: 'Zusatzinfo',
-                          content: location.additionalInfo,
+                          content: location.additionalInfo!,
                         ),
-                      if (location.access.isNotEmpty)
+                      if (location.access!.isNotEmpty)
                         _InfoSection(
                           icon: Icons.directions,
                           title: 'Anfahrt',
-                          content: location.access,
-                        ),
-                      if (location.partNumber.isNotEmpty)
-                        _InfoSection(
-                          icon: Icons.numbers,
-                          title: 'Partienummer',
-                          content: location.partNumber,
-                        ),
+                          content: location.access!,
+                        )
                     ],
 
                     // Coordinates Button
@@ -251,7 +242,7 @@ class LocationDetailsDialog extends StatelessWidget {
               ),
 
               // Photos section
-              if (location.photoUrls.isNotEmpty) ...[
+              if (location.photoUrls != null && location.photoUrls!.isNotEmpty) ...[
                 const Divider(),
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -267,7 +258,7 @@ class LocationDetailsDialog extends StatelessWidget {
                         height: 100,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: location.photoUrls.length,
+                          itemCount: location.photoUrls!.length,
                           itemBuilder: (context, index) {
                             return Padding(
                               padding: const EdgeInsets.only(right: 8),
@@ -275,7 +266,7 @@ class LocationDetailsDialog extends StatelessWidget {
                                 onTap: () {
                                   Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => PhotoGallery(
-                                      photoUrls: location.photoUrls,
+                                      photoUrls: location.photoUrls!,
                                       initialIndex: index,
                                     ),
                                   ));
@@ -283,7 +274,7 @@ class LocationDetailsDialog extends StatelessWidget {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.file(
-                                    File(location.photoUrls[index]),
+                                    File(location.photoUrls![index]),
                                     height: 100,
                                     width: 100,
                                     fit: BoxFit.cover,
@@ -308,20 +299,20 @@ class LocationDetailsDialog extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showEditForm(context),
-                        icon: const Icon(Icons.edit),
-                        label: const Text('Bearbeiten'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
                         onPressed: () => _showDeleteConfirmation(context),
                         icon: const Icon(Icons.delete),
                         label: const Text('Löschen'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Theme.of(context).colorScheme.error,
                         ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showEditForm(context),
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Bearbeiten'),
                       ),
                     ),
                   ],
