@@ -180,7 +180,7 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> addShipment(Shipment shipment) async {
     try {
-      await _db.insertShipment(shipment);
+      await _db.insertOrUpdateShipment(shipment);
       await SyncService.syncChanges();
 
       final location = _locations
@@ -217,27 +217,28 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> undoShipment(Shipment shipment) async {
     try {
-      await _db.deleteShipment(shipment.id);
-      await SyncService.syncChanges();
+      await _db.createReversalShipment(shipment);
 
       var location = _locations.firstWhere(
-        (location) => location.id == shipment.locationId,
+            (location) => location.id == shipment.locationId,
         orElse: () => _archivedLocations.firstWhere(
-          (location) => location.id == shipment.locationId,
+              (location) => location.id == shipment.locationId,
         ),
       );
 
+      final newNormalQuantity = (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0);
+      final newOversizeQuantity = (location.oversizeQuantity ?? 0) + (shipment.oversizeQuantity ?? 0);
+      final newPieceCount = location.pieceCount + shipment.pieceCount;
+
       final updatedLocation = location.copyWith(
-        normalQuantity:
-            (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0),
-        pieceCount: location.pieceCount + shipment.pieceCount,
-        oversizeQuantity: location.oversizeQuantity != null &&
-                shipment.oversizeQuantity != null
-            ? location.oversizeQuantity! + shipment.oversizeQuantity!
-            : location.oversizeQuantity,
+        normalQuantity: newNormalQuantity,
+        oversizeQuantity: newOversizeQuantity,
+        pieceCount: newPieceCount,
+        lastEdited: DateTime.now(),
       );
 
       await updateLocation(updatedLocation);
+      await SyncService.syncChanges();
       await loadArchivedLocations();
     } catch (e) {
       debugPrint('Error undoing shipment: $e');

@@ -151,7 +151,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertShipment(Shipment shipment) async {
+  Future<int> insertOrUpdateShipment(Shipment shipment) async {
     final db = await database;
 
     final values = {
@@ -168,7 +168,23 @@ class DatabaseHelper {
       ShipmentTable.columnPieceCount: shipment.pieceCount,
     };
 
-    return await db.insert(ShipmentTable.tableName, values);
+    final List<Map<String, dynamic>> result = await db.query(
+      ShipmentTable.tableName,
+      where: '${ShipmentTable.columnId} = ?',
+      whereArgs: [shipment.id],
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return await db.update(
+        ShipmentTable.tableName,
+        values,
+        where: '${ShipmentTable.columnId} = ?',
+        whereArgs: [shipment.id],
+      );
+    } else {
+      return await db.insert(ShipmentTable.tableName, values);
+    }
   }
 
   Future<List<Shipment>> getAllShipments() async {
@@ -210,8 +226,7 @@ class DatabaseHelper {
 
     final List<Map<String, dynamic>> result = await db.query(
       ShipmentTable.tableName,
-      where:
-          '${ShipmentTable.columnLocationId} = ?',
+      where: '${ShipmentTable.columnLocationId} = ?',
       whereArgs: [locationId],
     );
 
@@ -231,31 +246,38 @@ class DatabaseHelper {
     return false;
   }
 
-  Future<bool> deleteShipment(int id) async {
+  Future<int> createReversalShipment(Shipment originalShipment) async {
     final db = await database;
 
-    final List<Map<String, dynamic>> result = await db.query(
-      ShipmentTable.tableName,
-      where:
-          '${ShipmentTable.columnId} = ?',
-      whereArgs: [id],
-      limit: 1,
+    final reversalShipment = Shipment(
+      id: DateTime.now().microsecondsSinceEpoch,
+      userId: originalShipment.userId,
+      locationId: originalShipment.locationId,
+      date: DateTime.now(),
+      name: originalShipment.name,
+      contract: originalShipment.contract,
+      additionalInfo: "Reversal of shipment #${originalShipment.id}",
+      sawmill: originalShipment.sawmill,
+      normalQuantity: -(originalShipment.normalQuantity ?? 0),  // Negative value
+      oversizeQuantity: -(originalShipment.oversizeQuantity ?? 0),  // Negative value
+      pieceCount: -(originalShipment.pieceCount),  // Negative value
     );
 
-    if (result.isNotEmpty) {
-      await db.update(
-        ShipmentTable.tableName,
-        {
-          ShipmentTable.columnDeleted: 1,
-          ShipmentTable.columnDate: DateTime.now().millisecondsSinceEpoch
-        },
-        where: '${ShipmentTable.columnId} = ?',
-        whereArgs: [id],
-      );
-      return true;
-    }
+    final values = {
+      ShipmentTable.columnId: reversalShipment.id,
+      ShipmentTable.columnUserId: reversalShipment.userId,
+      ShipmentTable.columnLocationId: reversalShipment.locationId,
+      ShipmentTable.columnDate: reversalShipment.date.millisecondsSinceEpoch,
+      ShipmentTable.columnDeleted: reversalShipment.deleted,
+      ShipmentTable.columnContract: reversalShipment.contract,
+      ShipmentTable.columnAdditionalInfo: reversalShipment.additionalInfo,
+      ShipmentTable.columnSawmill: reversalShipment.sawmill,
+      ShipmentTable.columnNormalQuantity: reversalShipment.normalQuantity,
+      ShipmentTable.columnOversizeQuantity: reversalShipment.oversizeQuantity,
+      ShipmentTable.columnPieceCount: reversalShipment.pieceCount,
+    };
 
-    return false;
+    return await db.insert(ShipmentTable.tableName, values);
   }
 
   Shipment _shipmentFromMap(Map<String, dynamic> map) {
