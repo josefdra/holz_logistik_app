@@ -34,7 +34,9 @@ class _MainScreenState extends State<MainScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dataProvider = context.read<DataProvider>();
-      dataProvider.syncData();
+      dataProvider.loadLocations(); 
+      dataProvider.loadArchivedLocations();
+      dataProvider.syncData(); 
       dataProvider.startAutoSync();
     });
   }

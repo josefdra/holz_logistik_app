@@ -45,22 +45,11 @@ class DataProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
-      SyncService.syncChanges();
 
-      final locationsData = _db.getAllLocations();
-      final shipmentsData = _db.getAllShipments();
+      await SyncService.syncChanges();
 
-      List<dynamic> results = await Future.wait([locationsData, shipmentsData]);
-
-      _locations = results[0];
-
-      final allShipments = results[1];
-      _shipmentsByLocation = {};
-      for (var shipment in allShipments) {
-        _shipmentsByLocation
-            .putIfAbsent(shipment.locationId, () => [])
-            .add(shipment);
-      }
+      await loadLocations();
+      await loadArchivedLocations();
 
       _isLoading = false;
       notifyListeners();
@@ -153,6 +142,13 @@ class DataProvider extends ChangeNotifier {
 
     try {
       _locations = await _db.getAllLocations();
+      final allShipments = await _db.getAllShipments();
+      _shipmentsByLocation = {};
+      for (var shipment in allShipments) {
+        _shipmentsByLocation
+            .putIfAbsent(shipment.locationId, () => [])
+            .add(shipment);
+      }
     } catch (e) {
       debugPrint('Error loading locations: $e');
     }
