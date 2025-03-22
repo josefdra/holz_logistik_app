@@ -166,7 +166,7 @@ class DatabaseHelper {
         throw Exception('Location not found for ID: ${shipment.locationId}');
       }
 
-      final location = Location.fromMap(locationResult.first);
+      final location = _locationFromMap(locationResult.first);
 
       location.pieceCount -= shipment.pieceCount;
       location.normalQuantity -= shipment.normalQuantity;

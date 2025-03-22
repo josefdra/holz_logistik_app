@@ -78,6 +78,7 @@ class Location {
   }
 
   factory Location.fromMap(Map<String, dynamic> map) {
+    print('shipment.locationId: ${map['lastEdited']}, type: ${map['lastEdited'].runtimeType}');
     return Location(
       id: map['id'],
       userId: map['userId'],
