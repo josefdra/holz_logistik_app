@@ -8,7 +8,6 @@ import 'package:holz_logistik/database/database_helper.dart';
 
 class DataProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
-  bool isLoading = true;
   static final _activeLocationsStreamController =
       StreamController<List<Location>>.broadcast();
   static final _archiveLocationsStreamController =
@@ -47,6 +46,7 @@ class DataProvider extends ChangeNotifier {
   }
 
   Future<void> _updateStreams() async {
+    await SyncService.syncChanges();
     final locations = await getActiveLocations();
     if (!_activeLocationsStreamController.isClosed) {
       _activeLocationsStreamController.add(locations);

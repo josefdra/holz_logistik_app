@@ -89,10 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<DataProvider>(builder: (context, dataProvider, child) {
-      if (dataProvider.isLoading) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
       return _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
