@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
 
+import 'package:holz_logistik/database/database_helper.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 import 'package:holz_logistik/screens/analytics_screen.dart';
 import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/map_screen.dart';
@@ -53,6 +54,21 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holz Logistik'),
+        leading: IconButton(
+          icon: const Icon(Icons.bug_report),
+          onPressed: () async {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Printing database contents to console...')),
+            );
+            await DatabaseHelper.instance.printDatabaseContents();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Database contents printed to console')),
+              );
+            }
+          },
+          tooltip: 'Print Database',
+        ),
         actions: [
           IconButton(
             icon: Icon(_showSettings ? Icons.close : Icons.settings),

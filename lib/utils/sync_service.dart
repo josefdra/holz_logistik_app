@@ -39,7 +39,7 @@ class SyncService {
 
   static void updateLastSync() async {
     final prefs = await SharedPreferences.getInstance();
-    lastSync = DateTime.now().millisecondsSinceEpoch;
+    lastSync = DateTime.now().millisecondsSinceEpoch - 5000;
     await prefs.setInt('lastSync', SyncService.lastSync);
   }
 

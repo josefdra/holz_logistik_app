@@ -89,6 +89,10 @@ class DataProvider extends ChangeNotifier {
       rethrow;
     }
   }
+
+  Future<void> printAllData() async {
+    _db.printDatabaseContents();
+  }
 }
 
 /*

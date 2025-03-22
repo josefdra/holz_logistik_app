@@ -169,6 +169,17 @@ class DatabaseHelper {
     final db = await database;
 
     return await db.transaction((txn) async {
+      final List<Map<String, dynamic>> existingShipment = await txn.query(
+        ShipmentTable.tableName,
+        where: '${ShipmentTable.columnId} = ?',
+        whereArgs: [shipment.id],
+        limit: 1,
+      );
+
+      if (existingShipment.isNotEmpty) {
+        return shipment.id;
+      }
+
       final List<Map<String, dynamic>> locationResult = await txn.query(
         LocationTable.tableName,
         where: '${LocationTable.columnId} = ?',
@@ -418,11 +429,55 @@ class DatabaseHelper {
     };
   }
 
-  Future<void> debugRestoreValues() async {
-    final db = await database;
+  Future<void> printDatabaseContents() async {
+    final db = await DatabaseHelper.instance.database;
 
-    await db.update(LocationTable.tableName, {LocationTable.columnDeleted: 0});
+    final shipments = await db.query(ShipmentTable.tableName);
 
-    await db.update(ShipmentTable.tableName, {ShipmentTable.columnDeleted: 0});
+    print('=================== SHIPMENTS TABLE ===================');
+    print('Total shipments found: ${shipments.length}');
+
+    for (var shipment in shipments) {
+      print('-----------------------------------------------');
+      print('ID: ${shipment[ShipmentTable.columnId]}');
+      print('UserID: ${shipment[ShipmentTable.columnUserId]}');
+      print('LocationID: ${shipment[ShipmentTable.columnLocationId]}');
+      print('Date: ${DateTime.fromMillisecondsSinceEpoch(shipment[ShipmentTable.columnDate] as int)}');
+      print('Deleted: ${shipment[ShipmentTable.columnDeleted]}');
+      print('Contract: ${shipment[ShipmentTable.columnContract]}');
+      print('AdditionalInfo: ${shipment[ShipmentTable.columnAdditionalInfo]}');
+      print('Sawmill: ${shipment[ShipmentTable.columnSawmill]}');
+      print('NormalQuantity: ${shipment[ShipmentTable.columnNormalQuantity]}');
+      print('OversizeQuantity: ${shipment[ShipmentTable.columnOversizeQuantity]}');
+      print('PieceCount: ${shipment[ShipmentTable.columnPieceCount]}');
+    }
+    print('=================== END SHIPMENTS ===================\n');
+
+    final locations = await db.query(LocationTable.tableName);
+
+    print('=================== LOCATIONS TABLE ===================');
+    print('Total locations found: ${locations.length}');
+
+    for (var location in locations) {
+      print('-----------------------------------------------');
+      print('ID: ${location[LocationTable.columnId]}');
+      print('UserID: ${location[LocationTable.columnUserId]}');
+      print('LastEdited: ${DateTime.fromMillisecondsSinceEpoch(location[LocationTable.columnLastEdited] as int)}');
+      print('Deleted: ${location[LocationTable.columnDeleted]}');
+      print('Latitude: ${location[LocationTable.columnLatitude]}');
+      print('Longitude: ${location[LocationTable.columnLongitude]}');
+      print('PartieNr: ${location[LocationTable.columnPartieNr]}');
+      print('Contract: ${location[LocationTable.columnContract]}');
+      print('AdditionalInfo: ${location[LocationTable.columnAdditionalInfo]}');
+      print('Access: ${location[LocationTable.columnAccess]}');
+      print('Sawmill: ${location[LocationTable.columnSawmill]}');
+      print('OversizeSawmill: ${location[LocationTable.columnOversizeSawmill]}');
+      print('NormalQuantity: ${location[LocationTable.columnNormalQuantity]}');
+      print('OversizeQuantity: ${location[LocationTable.columnOversizeQuantity]}');
+      print('PieceCount: ${location[LocationTable.columnPieceCount]}');
+      print('PhotoIds: ${location[LocationTable.columnPhotoIds]}');
+      print('PhotoUrls: ${location[LocationTable.columnPhotoUrls]}');
+    }
+    print('=================== END LOCATIONS ===================');
   }
 }
