@@ -139,11 +139,7 @@ class _LocationFormState extends State<LocationForm> {
         photoUrls: _photoUrls);
 
     try {
-      if (widget.initialLocation != null) {
-        await dataProvider.updateLocation(location);
-      } else {
-        await dataProvider.addLocation(location);
-      }
+      await dataProvider.addOrUpdateLocation(location);
       if (mounted) {
         Navigator.of(context).pop();
       }

@@ -5,59 +5,44 @@ import 'package:provider/provider.dart';
 import 'package:holz_logistik/utils/models.dart';
 import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final DataProvider _provider = DataProvider();
+
+  @override
+  void initState() {
+    super.initState();
+    _provider.startObservingLocations();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer<DataProvider>(
-      builder: (context, dataProvider, child) {
-        if (dataProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return StreamBuilder<List<Location>>(
+        stream: DataProvider.activeLocationsStream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('Keine Standorte gefunden'));
+          }
 
-        final locations = dataProvider.locations;
-
-        if (locations.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text('Keine Standorte gefunden'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    await dataProvider.loadLocations();
-                    if (context.mounted) {
-                      await dataProvider.syncData();
-                    }
-                  },
-                  child: const Text('Neu laden'),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () async {
-            if (context.mounted) {
-              dataProvider.syncData();
-            }
-            return dataProvider.loadLocations();
-          },
-          child: ListView.builder(
+          final locations = snapshot.data!;
+          return ListView.builder(
             itemCount: locations.length,
             itemBuilder: (context, index) {
               final location = locations[index];
               return LocationListItem(location: location);
             },
-          ),
-        );
-      },
-    );
+          );
+        });
   }
 }
 
@@ -99,8 +84,8 @@ class LocationListItem extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Normal: ${location.normalQuantity ?? 0} fm'),
-            Text('ÜS: ${location.oversizeQuantity ?? 0} fm'),
+            Text('Normal: ${location.normalQuantity} fm'),
+            Text('ÜS: ${location.oversizeQuantity} fm'),
           ],
         ),
         trailing: Row(
@@ -148,7 +133,6 @@ class LocationListItem extends StatelessWidget {
           TextButton(
             onPressed: () {
               context.read<DataProvider>().deleteLocation(location.id);
-              context.read<DataProvider>().syncData();
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(

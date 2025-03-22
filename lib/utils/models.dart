@@ -78,7 +78,6 @@ class Location {
   }
 
   factory Location.fromMap(Map<String, dynamic> map) {
-    print('shipment.locationId: ${map['lastEdited']}, type: ${map['lastEdited'].runtimeType}');
     return Location(
       id: map['id'],
       userId: map['userId'],
@@ -98,6 +97,10 @@ class Location {
       photoIds: List<int>.from(map['photoIds'] ?? []),
       photoUrls: List<String>.from(map['photoUrls'] ?? []),
     );
+  }
+
+  bool isDone() {
+    return (pieceCount == 0 && normalQuantity == 0 && oversizeQuantity == 0);
   }
 }
 

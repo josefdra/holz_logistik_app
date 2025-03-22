@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:holz_logistik/utils/models.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:provider/provider.dart';
 
 import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
@@ -215,8 +215,11 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Consumer<DataProvider>(
-      builder: (context, dataProvider, _) {
+    return StreamBuilder<List<Location>>(
+      stream: DataProvider.activeLocationsStream,
+      builder: (context, snapshot) {
+        final locations = snapshot.hasData ? snapshot.data! : [];
+
         return Stack(
           children: [
             FlutterMap(
@@ -278,7 +281,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 ),
                 MarkerLayer(
                   markers: [
-                    ...dataProvider.locations.map((location) => Marker(
+                    ...locations.map((location) => Marker(
                       width: 40.0,
                       height: 40.0,
                       point: LatLng(location.latitude, location.longitude),
@@ -303,7 +306,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
                 ),
                 if (_showMarkerInfo)
                   MarkerLayer(
-                    markers: dataProvider.locations.map((location) =>
+                    markers: locations.map((location) =>
                         Marker(
                           width: 120.0,
                           height: 40.0,

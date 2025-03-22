@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 
 import 'package:holz_logistik/screens/analytics_screen.dart';
 import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/map_screen.dart';
 import 'package:holz_logistik/screens/settings_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
-import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/screens/archive_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -33,17 +32,13 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final dataProvider = context.read<DataProvider>();
-      dataProvider.loadLocations(); 
-      dataProvider.loadArchivedLocations();
-      dataProvider.syncData(); 
-      dataProvider.startAutoSync();
+      SyncService.initializeUser();
+      SyncService.syncChanges();
     });
   }
 
   @override
   void dispose() {
-    context.read<DataProvider>().stopAutoSync();
     super.dispose();
   }
 

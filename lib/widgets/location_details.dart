@@ -9,7 +9,6 @@ import 'package:holz_logistik/utils/models.dart';
 import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/shipment_form.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
 
 class LocationDetailsDialog extends StatelessWidget {
   final Location location;
@@ -157,10 +156,9 @@ class LocationDetailsDialog extends StatelessWidget {
                                 const SizedBox(height: 12),
                                 _QuantityItem(
                                   label: 'Normal',
-                                  value: '${location.normalQuantity ?? 0} fm',
+                                  value: '${location.normalQuantity} fm',
                                 ),
-                                if (location.oversizeQuantity != null &&
-                                    location.oversizeQuantity! > 0)
+                                if (location.oversizeQuantity > 0)
                                   _QuantityItem(
                                     label: 'ÜS',
                                     value: '${location.oversizeQuantity} fm',

@@ -41,14 +41,28 @@ class DatabaseHelper {
     // Handle future migrations here
   }
 
-  Future<List<Location>> getAllLocations() async {
+  Future<List<Location>> getActiveLocations() async {
     final db = await database;
 
     final maps = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnDeleted} = ?',
+      where:
+          '${LocationTable.columnDeleted} = ? AND ${LocationTable.columnPieceCount} > 0',
       whereArgs: [0],
     );
+
+    return maps.map((map) => _locationFromMap(map)).toList();
+  }
+
+  Future<List<Location>> getArchivedLocations() async {
+    final db = await database;
+
+    final maps = await db.rawQuery('''
+      SELECT DISTINCT l.* 
+      FROM ${LocationTable.tableName} l
+      INNER JOIN ${ShipmentTable.tableName} s ON l.${LocationTable.columnId} = s.${ShipmentTable.columnLocationId}
+      WHERE l.${LocationTable.columnDeleted} = ?
+    ''', [0]);
 
     return maps.map((map) => _locationFromMap(map)).toList();
   }

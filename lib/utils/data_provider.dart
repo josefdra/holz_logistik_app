@@ -8,16 +8,16 @@ import 'package:holz_logistik/database/database_helper.dart';
 
 class DataProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
-  List<Location> _locations = [];
-  List<Location> _archivedLocations = [];
-  bool _isLoading = false;
-  Map<int, List<Shipment>> _shipmentsByLocation = {};
-  Timer? _syncTimer;
+  bool isLoading = true;
+  static final _activeLocationsStreamController =
+      StreamController<List<Location>>.broadcast();
+  static final _archiveLocationsStreamController =
+      StreamController<List<Location>>.broadcast();
 
-  List<Location> get locations => _locations;
-  List<Location> get archivedLocations => _archivedLocations;
-  Map<int, List<Shipment>> get shipmentsByLocation => _shipmentsByLocation;
-  bool get isLoading => _isLoading;
+  static Stream<List<Location>> get activeLocationsStream =>
+      _activeLocationsStreamController.stream;
+  static Stream<List<Location>> get archivedLocationsStream =>
+      _archiveLocationsStreamController.stream;
 
   void init() {
     SyncService.initializeUser();
@@ -25,11 +25,80 @@ class DataProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    super.dispose();
+    _activeLocationsStreamController.close();
+    _archiveLocationsStreamController.close();
+  }
+
+  Future<List<Location>> getActiveLocations() async {
+    return _db.getActiveLocations();
+  }
+
+  Future<List<Location>> getArchivedLocations() async {
+    return _db.getArchivedLocations();
+  }
+
+  Future<void> startObservingLocations() async {
+    _updateStreams();
+
+    Timer.periodic(const Duration(seconds: 1), (_) async {
+      _updateStreams();
+    });
+  }
+
+  Future<void> _updateStreams() async {
+    final locations = await getActiveLocations();
+    if (!_activeLocationsStreamController.isClosed) {
+      _activeLocationsStreamController.add(locations);
+    }
+
+    final archiveLocations = await getArchivedLocations();
+    if (!_archiveLocationsStreamController.isClosed) {
+      _archiveLocationsStreamController.add(archiveLocations);
+    }
+  }
+
+  Future<int> addOrUpdateLocation(Location location) async {
+    try {
+      final id = await _db.insertOrUpdateLocation(location);
+      await _updateStreams();
+
+      return id;
+    } catch (e) {
+      debugPrint('Error adding/ updating location: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteLocation(int id) async {
+    try {
+      await _db.deleteLocation(id);
+      await _updateStreams();
+    } catch (e) {
+      debugPrint('Error deleting location: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> addShipment(Shipment shipment) async {
+    try {
+      await _db.insertShipment(shipment);
+      await _updateStreams();
+    } catch (e) {
+      debugPrint('Error adding shipment: $e');
+      rethrow;
+    }
+  }
+}
+
+/*
+  @override
+  void dispose() {
     stopAutoSync();
     super.dispose();
   }
 
-  void startAutoSync({Duration interval = const Duration(seconds: 1)}) {
+  void startAutoSync({Duration interval = const Duration(seconds: 10)}) {
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(interval, (_) {
       syncData();
@@ -157,56 +226,4 @@ class DataProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Location?> addLocation(Location location) async {
-    try {
-      final id = await _db.insertOrUpdateLocation(location);
-      await syncData();
-
-      if (id > 0) {
-        _locations.add(location);
-        notifyListeners();
-      }
-
-      return location;
-    } catch (e) {
-      debugPrint('Error adding location: $e');
-      return null;
-    }
-  }
-
-  Future<bool> updateLocation(Location location) async {
-    try {
-      await _db.insertOrUpdateLocation(location);
-      await syncData();
-
-      if (location.id > 0) {
-        final index = _locations.indexWhere((loc) => loc.id == location.id);
-        if (index >= 0) {
-          _locations[index] = location;
-        }
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Error updating location: $e');
-      return false;
-    }
-  }
-
-  Future<bool> deleteLocation(int id) async {
-    try {
-      final result = await _db.deleteLocation(id);
-      await syncData();
-      if (result == true) {
-        _locations.removeWhere((location) => location.id == id);
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      debugPrint('Error deleting location: $e');
-      return false;
-    }
-  }
-}
+  */
