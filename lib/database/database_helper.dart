@@ -141,8 +141,8 @@ class DatabaseHelper {
       access: map[LocationTable.columnAccess] as String?,
       sawmill: map[LocationTable.columnSawmill] as String?,
       oversizeSawmill: map[LocationTable.columnOversizeSawmill] as String?,
-      normalQuantity: map[LocationTable.columnNormalQuantity] as double?,
-      oversizeQuantity: map[LocationTable.columnOversizeQuantity] as double?,
+      normalQuantity: map[LocationTable.columnNormalQuantity] as double,
+      oversizeQuantity: map[LocationTable.columnOversizeQuantity] as double,
       pieceCount: map[LocationTable.columnPieceCount] as int,
       photoUrls: List<String>.from(
           jsonDecode(map[LocationTable.columnPhotoUrls] ?? '[]')),
@@ -151,40 +151,55 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertOrUpdateShipment(Shipment shipment) async {
+  Future<int> insertShipment(Shipment shipment) async {
     final db = await database;
 
-    final values = {
-      ShipmentTable.columnId: shipment.id,
-      ShipmentTable.columnUserId: shipment.userId,
-      ShipmentTable.columnLocationId: shipment.locationId,
-      ShipmentTable.columnDate: shipment.date.millisecondsSinceEpoch,
-      ShipmentTable.columnDeleted: shipment.deleted,
-      ShipmentTable.columnContract: shipment.contract,
-      ShipmentTable.columnAdditionalInfo: shipment.additionalInfo,
-      ShipmentTable.columnSawmill: shipment.sawmill,
-      ShipmentTable.columnNormalQuantity: shipment.normalQuantity,
-      ShipmentTable.columnOversizeQuantity: shipment.oversizeQuantity,
-      ShipmentTable.columnPieceCount: shipment.pieceCount,
-    };
-
-    final List<Map<String, dynamic>> result = await db.query(
-      ShipmentTable.tableName,
-      where: '${ShipmentTable.columnId} = ?',
-      whereArgs: [shipment.id],
-      limit: 1,
-    );
-
-    if (result.isNotEmpty) {
-      return await db.update(
-        ShipmentTable.tableName,
-        values,
-        where: '${ShipmentTable.columnId} = ?',
-        whereArgs: [shipment.id],
+    return await db.transaction((txn) async {
+      final List<Map<String, dynamic>> locationResult = await txn.query(
+        LocationTable.tableName,
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [shipment.locationId],
+        limit: 1,
       );
-    } else {
-      return await db.insert(ShipmentTable.tableName, values);
-    }
+
+      if (locationResult.isEmpty) {
+        throw Exception('Location not found for ID: ${shipment.locationId}');
+      }
+
+      final location = Location.fromMap(locationResult.first);
+
+      location.pieceCount -= shipment.pieceCount;
+      location.normalQuantity -= shipment.normalQuantity;
+      location.oversizeQuantity -= shipment.oversizeQuantity;
+
+      await txn.update(
+        LocationTable.tableName,
+        {
+          LocationTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
+          LocationTable.columnPieceCount: location.pieceCount,
+          LocationTable.columnNormalQuantity: location.normalQuantity,
+          LocationTable.columnOversizeQuantity: location.oversizeQuantity,
+        },
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [location.id],
+      );
+
+      final values = {
+        ShipmentTable.columnId: shipment.id,
+        ShipmentTable.columnUserId: shipment.userId,
+        ShipmentTable.columnLocationId: shipment.locationId,
+        ShipmentTable.columnDate: shipment.date.millisecondsSinceEpoch,
+        ShipmentTable.columnDeleted: shipment.deleted,
+        ShipmentTable.columnContract: shipment.contract,
+        ShipmentTable.columnAdditionalInfo: shipment.additionalInfo,
+        ShipmentTable.columnSawmill: shipment.sawmill,
+        ShipmentTable.columnNormalQuantity: shipment.normalQuantity,
+        ShipmentTable.columnOversizeQuantity: shipment.oversizeQuantity,
+        ShipmentTable.columnPieceCount: shipment.pieceCount,
+      };
+
+      return await txn.insert(ShipmentTable.tableName, values);
+    });
   }
 
   Future<List<Shipment>> getAllShipments() async {
@@ -199,24 +214,6 @@ class DatabaseHelper {
       ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
     WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
   ''', [0]);
-
-    return maps.map((map) => _shipmentFromMap(map)).toList();
-  }
-
-  Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
-    final db = await database;
-
-    final maps = await db.rawQuery('''
-    SELECT 
-      ${ShipmentTable.tableName}.*, 
-      ${UserTable.tableName}.${UserTable.columnName} AS name
-    FROM ${ShipmentTable.tableName}
-    LEFT JOIN ${UserTable.tableName} 
-      ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
-    WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnLocationId} = ? 
-      AND ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
-    ORDER BY ${ShipmentTable.tableName}.${ShipmentTable.columnDate} DESC
-  ''', [locationId, 0]);
 
     return maps.map((map) => _shipmentFromMap(map)).toList();
   }
@@ -246,38 +243,68 @@ class DatabaseHelper {
     return false;
   }
 
-  Future<int> createReversalShipment(Shipment originalShipment) async {
+  Future<bool> deleteShipment(int id) async {
     final db = await database;
 
-    final reversalShipment = Shipment(
-      id: DateTime.now().microsecondsSinceEpoch,
-      userId: originalShipment.userId,
-      locationId: originalShipment.locationId,
-      date: DateTime.now(),
-      name: originalShipment.name,
-      contract: originalShipment.contract,
-      additionalInfo: "Reversal of shipment #${originalShipment.id}",
-      sawmill: originalShipment.sawmill,
-      normalQuantity: -(originalShipment.normalQuantity ?? 0),  // Negative value
-      oversizeQuantity: -(originalShipment.oversizeQuantity ?? 0),  // Negative value
-      pieceCount: -(originalShipment.pieceCount),  // Negative value
-    );
+    return await db.transaction((txn) async {
+      final List<Map<String, dynamic>> shipmentResult = await txn.query(
+        ShipmentTable.tableName,
+        where: '${ShipmentTable.columnId} = ?',
+        whereArgs: [id],
+        limit: 1,
+      );
 
-    final values = {
-      ShipmentTable.columnId: reversalShipment.id,
-      ShipmentTable.columnUserId: reversalShipment.userId,
-      ShipmentTable.columnLocationId: reversalShipment.locationId,
-      ShipmentTable.columnDate: reversalShipment.date.millisecondsSinceEpoch,
-      ShipmentTable.columnDeleted: reversalShipment.deleted,
-      ShipmentTable.columnContract: reversalShipment.contract,
-      ShipmentTable.columnAdditionalInfo: reversalShipment.additionalInfo,
-      ShipmentTable.columnSawmill: reversalShipment.sawmill,
-      ShipmentTable.columnNormalQuantity: reversalShipment.normalQuantity,
-      ShipmentTable.columnOversizeQuantity: reversalShipment.oversizeQuantity,
-      ShipmentTable.columnPieceCount: reversalShipment.pieceCount,
-    };
+      if (shipmentResult.isEmpty) {
+        return false;
+      }
 
-    return await db.insert(ShipmentTable.tableName, values);
+      final shipment = Shipment.fromMap(shipmentResult.first);
+
+      if (shipment.deleted == 1) {
+        return true;
+      }
+
+      final List<Map<String, dynamic>> locationResult = await txn.query(
+        LocationTable.tableName,
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [shipment.locationId],
+        limit: 1,
+      );
+
+      if (locationResult.isEmpty) {
+        throw Exception('Location not found for ID: ${shipment.locationId}');
+      }
+
+      final location = Location.fromMap(locationResult.first);
+
+      location.pieceCount += shipment.pieceCount;
+      location.normalQuantity += shipment.normalQuantity;
+      location.oversizeQuantity += shipment.oversizeQuantity;
+
+      await txn.update(
+        LocationTable.tableName,
+        {
+          LocationTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
+          LocationTable.columnPieceCount: location.pieceCount,
+          LocationTable.columnNormalQuantity: location.normalQuantity,
+          LocationTable.columnOversizeQuantity: location.oversizeQuantity,
+        },
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [location.id],
+      );
+
+      await txn.update(
+        ShipmentTable.tableName,
+        {
+          ShipmentTable.columnDeleted: 1,
+          ShipmentTable.columnDate: DateTime.now().millisecondsSinceEpoch
+        },
+        where: '${ShipmentTable.columnId} = ?',
+        whereArgs: [id],
+      );
+
+      return true;
+    });
   }
 
   Shipment _shipmentFromMap(Map<String, dynamic> map) {
@@ -292,8 +319,8 @@ class DatabaseHelper {
       contract: map[ShipmentTable.columnContract] as String?,
       additionalInfo: map[ShipmentTable.columnAdditionalInfo] as String?,
       sawmill: map[ShipmentTable.columnSawmill] as String,
-      normalQuantity: map[ShipmentTable.columnNormalQuantity] as double?,
-      oversizeQuantity: map[ShipmentTable.columnOversizeQuantity] as double?,
+      normalQuantity: map[ShipmentTable.columnNormalQuantity] as double,
+      oversizeQuantity: map[ShipmentTable.columnOversizeQuantity] as double,
       pieceCount: map[ShipmentTable.columnPieceCount] as int,
     );
   }

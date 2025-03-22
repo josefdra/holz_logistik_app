@@ -75,8 +75,8 @@ class _ShipmentFormState extends State<ShipmentForm> {
         contract: _contractController.text,
         additionalInfo: _additionalInfoController.text,
         sawmill: _sawmillController.text,
-        normalQuantity: double.tryParse(_normalQuantityController.text),
-        oversizeQuantity: double.tryParse(_oversizeQuantityController.text),
+        normalQuantity: double.tryParse(_normalQuantityController.text)!,
+        oversizeQuantity: double.tryParse(_oversizeQuantityController.text)!,
         pieceCount: int.parse(_pieceCountController.text));
 
     Navigator.of(context).pop(shipment);

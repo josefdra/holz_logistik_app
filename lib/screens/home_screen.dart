@@ -31,8 +31,7 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () async {
                     await dataProvider.loadLocations();
                     if (context.mounted) {
-                      await SyncService.syncChanges();
-                      dataProvider.updateArchivedStatus();
+                      await dataProvider.syncData();
                     }
                   },
                   child: const Text('Neu laden'),
@@ -45,8 +44,7 @@ class HomeScreen extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: () async {
             if (context.mounted) {
-              await SyncService.syncChanges();
-              dataProvider.updateArchivedStatus();
+              dataProvider.syncData();
             }
             return dataProvider.loadLocations();
           },
@@ -150,7 +148,7 @@ class LocationListItem extends StatelessWidget {
           TextButton(
             onPressed: () {
               context.read<DataProvider>().deleteLocation(location.id);
-              SyncService.syncChanges();
+              context.read<DataProvider>().syncData();
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(

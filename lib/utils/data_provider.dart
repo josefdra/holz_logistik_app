@@ -29,7 +29,7 @@ class DataProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  void startAutoSync({Duration interval = const Duration(seconds: 10)}) {
+  void startAutoSync({Duration interval = const Duration(seconds: 1)}) {
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(interval, (_) {
       syncData();
@@ -62,8 +62,6 @@ class DataProvider extends ChangeNotifier {
             .add(shipment);
       }
 
-      updateArchivedStatus();
-
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -75,7 +73,6 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> loadArchivedLocations() async {
     try {
-      await SyncService.syncChanges();
       final allShipments = await _db.getAllShipments();
 
       _shipmentsByLocation = {};
@@ -86,7 +83,6 @@ class DataProvider extends ChangeNotifier {
       }
 
       await loadLocations();
-      updateArchivedStatus();
     } catch (e) {
       debugPrint('Error loading archived locations: $e');
     }
@@ -117,13 +113,8 @@ class DataProvider extends ChangeNotifier {
     int totalPieceCount = 0;
 
     for (var shipment in shipments) {
-      if (shipment.normalQuantity != null) {
-        totalNormalQuantity += shipment.normalQuantity!;
-      }
-      if (shipment.oversizeQuantity != null) {
-        totalOversizeQuantity += shipment.oversizeQuantity!;
-      }
-
+      totalNormalQuantity += shipment.normalQuantity;
+      totalOversizeQuantity += shipment.oversizeQuantity;
       totalPieceCount += shipment.pieceCount;
     }
 
@@ -134,81 +125,10 @@ class DataProvider extends ChangeNotifier {
     };
   }
 
-  void updateArchivedStatus() {
-    _archivedLocations = [];
-    for (var locationId in _shipmentsByLocation.keys) {
-      var location =
-          _locations.firstWhere((location) => location.id == locationId);
-      if (location.id != -1 && _isLocationFullyShipped(location)) {
-        _archivedLocations.add(location);
-        _locations.removeWhere((location) => location.id == locationId);
-      }
-    }
-  }
-
-  bool _isLocationFullyShipped(Location location) {
-    if (!_shipmentsByLocation.containsKey(location.id)) return false;
-
-    final shipments = _shipmentsByLocation[location.id]!.toList();
-
-    double totalNormalQuantityShipped = 0;
-    int totalPieceCountShipped = 0;
-    double totalOversizeShipped = 0;
-
-    for (var shipment in shipments) {
-      if (shipment.normalQuantity != null) {
-        totalNormalQuantityShipped += shipment.normalQuantity!;
-      }
-
-      if (shipment.oversizeQuantity != null) {
-        totalOversizeShipped += shipment.oversizeQuantity!;
-      }
-
-      totalPieceCountShipped += shipment.pieceCount;
-    }
-
-    return totalNormalQuantityShipped >= (location.normalQuantity ?? 0) &&
-        (totalPieceCountShipped >= location.pieceCount) &&
-        (location.oversizeQuantity == null ||
-            totalOversizeShipped >= location.oversizeQuantity!);
-  }
-
-  Future<List<Shipment>> getShipmentHistory(int locationId) async {
-    await SyncService.syncChanges();
-    return await _db.getShipmentsByLocation(locationId);
-  }
-
   Future<void> addShipment(Shipment shipment) async {
     try {
-      await _db.insertOrUpdateShipment(shipment);
-      await SyncService.syncChanges();
-
-      final location = _locations
-          .firstWhere((location) => location.id == shipment.locationId);
-
-      double? newNormalQuantity =
-          ((location.normalQuantity! - shipment.normalQuantity!) * 10).round() /
-              10;
-      double? newOversizeQuantity =
-          ((location.oversizeQuantity! - shipment.oversizeQuantity!) * 10)
-                  .round() /
-              10;
-      final newPieceCount = location.pieceCount - shipment.pieceCount;
-
-      final updatedLocation = location.copyWith(
-        normalQuantity: newNormalQuantity,
-        oversizeQuantity: newOversizeQuantity,
-        pieceCount: newPieceCount,
-      );
-
-      await updateLocation(updatedLocation);
-
-      _shipmentsByLocation
-          .putIfAbsent(shipment.locationId, () => [])
-          .add(shipment);
-
-      updateArchivedStatus();
-      notifyListeners();
+      await _db.insertShipment(shipment);
+      await syncData();
     } catch (e) {
       debugPrint('Error adding shipment: $e');
       rethrow;
@@ -217,29 +137,8 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> undoShipment(Shipment shipment) async {
     try {
-      await _db.createReversalShipment(shipment);
-
-      var location = _locations.firstWhere(
-            (location) => location.id == shipment.locationId,
-        orElse: () => _archivedLocations.firstWhere(
-              (location) => location.id == shipment.locationId,
-        ),
-      );
-
-      final newNormalQuantity = (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0);
-      final newOversizeQuantity = (location.oversizeQuantity ?? 0) + (shipment.oversizeQuantity ?? 0);
-      final newPieceCount = location.pieceCount + shipment.pieceCount;
-
-      final updatedLocation = location.copyWith(
-        normalQuantity: newNormalQuantity,
-        oversizeQuantity: newOversizeQuantity,
-        pieceCount: newPieceCount,
-        lastEdited: DateTime.now(),
-      );
-
-      await updateLocation(updatedLocation);
-      await SyncService.syncChanges();
-      await loadArchivedLocations();
+      await _db.deleteShipment(shipment.id);
+      await syncData();
     } catch (e) {
       debugPrint('Error undoing shipment: $e');
       rethrow;
@@ -253,7 +152,6 @@ class DataProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await SyncService.syncChanges();
       _locations = await _db.getAllLocations();
     } catch (e) {
       debugPrint('Error loading locations: $e');
@@ -266,7 +164,7 @@ class DataProvider extends ChangeNotifier {
   Future<Location?> addLocation(Location location) async {
     try {
       final id = await _db.insertOrUpdateLocation(location);
-      await SyncService.syncChanges();
+      await syncData();
 
       if (id > 0) {
         _locations.add(location);
@@ -283,7 +181,7 @@ class DataProvider extends ChangeNotifier {
   Future<bool> updateLocation(Location location) async {
     try {
       await _db.insertOrUpdateLocation(location);
-      await SyncService.syncChanges();
+      await syncData();
 
       if (location.id > 0) {
         final index = _locations.indexWhere((loc) => loc.id == location.id);
@@ -303,7 +201,7 @@ class DataProvider extends ChangeNotifier {
   Future<bool> deleteLocation(int id) async {
     try {
       final result = await _db.deleteLocation(id);
-      await SyncService.syncChanges();
+      await syncData();
       if (result == true) {
         _locations.removeWhere((location) => location.id == id);
         notifyListeners();

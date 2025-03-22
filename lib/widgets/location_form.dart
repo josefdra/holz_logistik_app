@@ -47,10 +47,8 @@ class _LocationFormState extends State<LocationForm> {
       _accessController.text = location.access!;
       _sawmillController.text = location.sawmill!;
       _oversizeSawmillController.text = location.oversizeSawmill!;
-      _normalQuantityController.text =
-          location.normalQuantity?.toString() ?? '';
-      _oversizeQuantityController.text =
-          location.oversizeQuantity?.toString() ?? '';
+      _normalQuantityController.text = location.normalQuantity.toString();
+      _oversizeQuantityController.text = location.oversizeQuantity.toString();
       _pieceCountController.text = location.pieceCount.toString();
       _photoIds = List.from(location.photoIds as Iterable);
       _photoUrls = List.from(location.photoUrls as Iterable);
@@ -134,8 +132,8 @@ class _LocationFormState extends State<LocationForm> {
         access: _accessController.text,
         sawmill: _sawmillController.text,
         oversizeSawmill: _oversizeSawmillController.text,
-        normalQuantity: double.tryParse(_normalQuantityController.text),
-        oversizeQuantity: double.tryParse(_oversizeQuantityController.text),
+        normalQuantity: double.tryParse(_normalQuantityController.text)!,
+        oversizeQuantity: double.tryParse(_oversizeQuantityController.text)!,
         pieceCount: int.tryParse(_pieceCountController.text)!,
         photoIds: _photoIds,
         photoUrls: _photoUrls);

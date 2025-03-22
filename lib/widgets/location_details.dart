@@ -42,7 +42,6 @@ class LocationDetailsDialog extends StatelessWidget {
           TextButton(
             onPressed: () {
               context.read<DataProvider>().deleteLocation(location.id);
-              SyncService.syncChanges();
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },

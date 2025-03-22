@@ -11,9 +11,9 @@ class Location {
   final String? access;
   final String? sawmill;
   final String? oversizeSawmill;
-  final double? normalQuantity;
-  final double? oversizeQuantity;
-  final int pieceCount;
+  double normalQuantity;
+  double oversizeQuantity;
+  int pieceCount;
   final List<int>? photoIds;
   final List<String>? photoUrls;
 
@@ -30,8 +30,8 @@ class Location {
     this.access,
     this.sawmill,
     this.oversizeSawmill,
-    this.normalQuantity,
-    this.oversizeQuantity,
+    this.normalQuantity = 0.0,
+    this.oversizeQuantity = 0.0,
     required this.pieceCount,
     this.photoIds,
     this.photoUrls,
@@ -110,9 +110,9 @@ class Shipment {
   final String? contract;
   final String? additionalInfo;
   final String sawmill;
-  final double? normalQuantity;
-  final double? oversizeQuantity;
-  final int pieceCount;
+  double normalQuantity;
+  double oversizeQuantity;
+  int pieceCount;
 
   Shipment({
     required this.id,
@@ -124,8 +124,8 @@ class Shipment {
     this.contract,
     this.additionalInfo,
     required this.sawmill,
-    this.normalQuantity,
-    this.oversizeQuantity,
+    this.normalQuantity = 0.0,
+    this.oversizeQuantity = 0.0,
     required this.pieceCount,
   });
 
