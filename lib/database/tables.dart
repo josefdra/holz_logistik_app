@@ -74,3 +74,17 @@ class ShipmentTable {
     )
   ''';
 }
+
+class UserTable {
+  static const String tableName = 'users';
+
+  static const String columnId = 'id';
+  static const String columnName = 'name';
+
+  static const String createTable = '''
+    CREATE TABLE $tableName (
+      $columnId TEXT PRIMARY KEY NOT NULL,
+      $columnName TEXT NOT NULL
+    )
+  ''';
+}

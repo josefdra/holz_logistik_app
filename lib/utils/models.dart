@@ -105,6 +105,7 @@ class Shipment {
   final String userId;
   final int locationId;
   late DateTime date;
+  late String? name;
   final int deleted;
   final String? contract;
   final String? additionalInfo;
@@ -118,6 +119,7 @@ class Shipment {
     required this.userId,
     required this.locationId,
     required this.date,
+    this.name,
     this.deleted = 0,
     this.contract,
     this.additionalInfo,
@@ -169,6 +171,23 @@ class Shipment {
       normalQuantity: normalQuantity ?? this.normalQuantity,
       oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
       pieceCount: pieceCount ?? this.pieceCount,
+    );
+  }
+}
+
+class User {
+  final String id;
+  final String name;
+
+  User({
+    required this.id,
+    required this.name,
+  });
+
+  factory User.fromMap(Map<String, dynamic> map) {
+    return User(
+      id: map['id'],
+      name: map['name']
     );
   }
 }

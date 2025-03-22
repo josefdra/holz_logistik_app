@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import 'package:holz_logistik/utils/models.dart';
 import 'package:holz_logistik/utils/data_provider.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
 
 class ArchiveScreen extends StatefulWidget {
@@ -262,7 +261,7 @@ class ShipmentListItem extends StatelessWidget {
                             const Icon(Icons.person, size: 14),
                             const SizedBox(width: 4),
                             Text(
-                              SyncService.name,
+                              shipment.name!,
                               style: const TextStyle(fontSize: 12),
                             ),
                           ],

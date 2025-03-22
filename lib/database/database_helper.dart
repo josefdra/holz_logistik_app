@@ -34,6 +34,7 @@ class DatabaseHelper {
   Future<void> _onCreate(Database db, int version) async {
     await db.execute(LocationTable.createTable);
     await db.execute(ShipmentTable.createTable);
+    await db.execute(UserTable.createTable);
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -78,9 +79,8 @@ class DatabaseHelper {
 
     final List<Map<String, dynamic>> result = await db.query(
       LocationTable.tableName,
-      where:
-          '${LocationTable.columnId} = ? AND ${LocationTable.columnDeleted} = ?',
-      whereArgs: [location.id, 0],
+      where: '${LocationTable.columnId} = ?',
+      whereArgs: [location.id],
       limit: 1,
     );
 
@@ -119,7 +119,7 @@ class DatabaseHelper {
       );
 
       deleteShipmentsByLocation(id);
-      
+
       return true;
     }
 
@@ -173,21 +173,34 @@ class DatabaseHelper {
 
   Future<List<Shipment>> getAllShipments() async {
     final db = await database;
-    final maps = await db.query(ShipmentTable.tableName,
-        where: '${ShipmentTable.columnDeleted} = ?', whereArgs: [0]);
+
+    final maps = await db.rawQuery('''
+    SELECT 
+      ${ShipmentTable.tableName}.*, 
+      ${UserTable.tableName}.${UserTable.columnName} AS name
+    FROM ${ShipmentTable.tableName}
+    LEFT JOIN ${UserTable.tableName} 
+      ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
+    WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
+  ''', [0]);
+
     return maps.map((map) => _shipmentFromMap(map)).toList();
   }
 
   Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
     final db = await database;
 
-    final maps = await db.query(
-      ShipmentTable.tableName,
-      where:
-          '${ShipmentTable.columnLocationId} = ? AND ${ShipmentTable.columnDeleted} = ?',
-      whereArgs: [locationId, 0],
-      orderBy: '${ShipmentTable.columnDate} DESC',
-    );
+    final maps = await db.rawQuery('''
+    SELECT 
+      ${ShipmentTable.tableName}.*, 
+      ${UserTable.tableName}.${UserTable.columnName} AS name
+    FROM ${ShipmentTable.tableName}
+    LEFT JOIN ${UserTable.tableName} 
+      ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
+    WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnLocationId} = ? 
+      AND ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
+    ORDER BY ${ShipmentTable.tableName}.${ShipmentTable.columnDate} DESC
+  ''', [locationId, 0]);
 
     return maps.map((map) => _shipmentFromMap(map)).toList();
   }
@@ -198,8 +211,8 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       ShipmentTable.tableName,
       where:
-          '${ShipmentTable.columnLocationId} = ? AND ${ShipmentTable.columnDeleted} = ?',
-      whereArgs: [locationId, 0],
+          '${ShipmentTable.columnLocationId} = ?',
+      whereArgs: [locationId],
     );
 
     if (result.isNotEmpty) {
@@ -224,8 +237,8 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> result = await db.query(
       ShipmentTable.tableName,
       where:
-          '${ShipmentTable.columnId} = ? AND ${ShipmentTable.columnDeleted} = ?',
-      whereArgs: [id, 0],
+          '${ShipmentTable.columnId} = ?',
+      whereArgs: [id],
       limit: 1,
     );
 
@@ -252,6 +265,7 @@ class DatabaseHelper {
       locationId: map[ShipmentTable.columnLocationId] as int,
       date: DateTime.fromMillisecondsSinceEpoch(
           map[ShipmentTable.columnDate] as int),
+      name: map['name'] as String,
       deleted: map[ShipmentTable.columnDeleted] as int,
       contract: map[ShipmentTable.columnContract] as String?,
       additionalInfo: map[ShipmentTable.columnAdditionalInfo] as String?,
@@ -260,6 +274,45 @@ class DatabaseHelper {
       oversizeQuantity: map[ShipmentTable.columnOversizeQuantity] as double?,
       pieceCount: map[ShipmentTable.columnPieceCount] as int,
     );
+  }
+
+  Future<String> getUserNameById(int userId) async {
+    final db = await database;
+
+    final maps = await db.query(
+      UserTable.tableName,
+      where: '${UserTable.columnId} = ?',
+      whereArgs: [userId],
+    );
+
+    return maps.first[UserTable.columnName] as String;
+  }
+
+  Future<int> insertOrUpdateUser(User user) async {
+    final db = await database;
+
+    final values = {
+      UserTable.columnId: user.id,
+      UserTable.columnName: user.name,
+    };
+
+    final List<Map<String, dynamic>> result = await db.query(
+      UserTable.tableName,
+      where: '${UserTable.columnId} = ?',
+      whereArgs: [user.id],
+      limit: 1,
+    );
+
+    if (result.isNotEmpty) {
+      return await db.update(
+        UserTable.tableName,
+        values,
+        where: '${UserTable.columnId} = ?',
+        whereArgs: [user.id],
+      );
+    } else {
+      return await db.insert(UserTable.tableName, values);
+    }
   }
 
   Future<void> updateDB(String apiKey) async {
@@ -305,14 +358,8 @@ class DatabaseHelper {
   Future<void> debugRestoreValues() async {
     final db = await database;
 
-    await db.update(
-      LocationTable.tableName,
-      {LocationTable.columnDeleted: 0}
-    );
+    await db.update(LocationTable.tableName, {LocationTable.columnDeleted: 0});
 
-    await db.update(
-      ShipmentTable.tableName,
-      {ShipmentTable.columnDeleted: 0}
-    );
+    await db.update(ShipmentTable.tableName, {ShipmentTable.columnDeleted: 0});
   }
 }

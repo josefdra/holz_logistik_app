@@ -75,8 +75,6 @@ class SyncService {
       'shipments': unSyncedChanges["shipments"],
     };
 
-    final shipments = await _db.getAllShipments();
-
     try {
       final response = await http.post(Uri.parse(url),
           headers: getAuthHeaders(), body: jsonEncode(requestBody));
@@ -100,6 +98,15 @@ class SyncService {
             json['id'] = json['_id'];
             final shipment = Shipment.fromMap(json);
             await _db.insertShipment(shipment);
+          }
+        }
+
+        if (responseData['newUsers'] != null &&
+            responseData['newUsers'] is List) {
+          for (var json in responseData['newUsers']) {
+            json['id'] = json['_id'];
+            final user = User.fromMap(json);
+            await _db.insertOrUpdateUser(user);
           }
         }
       } else {

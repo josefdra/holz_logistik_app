@@ -7,7 +7,6 @@ import 'package:holz_logistik/screens/map_screen.dart';
 import 'package:holz_logistik/screens/settings_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
 import 'package:holz_logistik/utils/data_provider.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
 import 'package:holz_logistik/screens/archive_screen.dart';
 
 class MainScreen extends StatefulWidget {

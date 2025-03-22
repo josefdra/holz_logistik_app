@@ -71,6 +71,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
         userId: SyncService.apiKey,
         locationId: widget.location.id,
         date: DateTime.now(),
+        name: SyncService.name,
         contract: _contractController.text,
         additionalInfo: _additionalInfoController.text,
         sawmill: _sawmillController.text,
