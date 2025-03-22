@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'package:holz_logistik/screens/analytics_screen.dart';
 import 'package:holz_logistik/screens/home_screen.dart';
 import 'package:holz_logistik/screens/map_screen.dart';
+import 'package:holz_logistik/screens/settings_screen.dart';
 import 'package:holz_logistik/widgets/bottom_navigation.dart';
-import 'package:provider/provider.dart';
-import 'package:holz_logistik/providers/data_provider.dart';
-import 'archive_screen.dart';
+import 'package:holz_logistik/utils/data_provider.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
+import 'package:holz_logistik/screens/archive_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -16,6 +19,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  bool _showSettings = false;
 
   late final List<Widget> _screens;
 
@@ -31,8 +35,20 @@ class _MainScreenState extends State<MainScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final dataProvider = context.read<DataProvider>();
-      dataProvider.loadLocations();
-      dataProvider.loadArchivedLocations();
+      dataProvider.syncData();
+      dataProvider.startAutoSync();
+    });
+  }
+
+  @override
+  void dispose() {
+    context.read<DataProvider>().stopAutoSync();
+    super.dispose();
+  }
+
+  void _toggleSettings() {
+    setState(() {
+      _showSettings = !_showSettings;
     });
   }
 
@@ -43,21 +59,22 @@ class _MainScreenState extends State<MainScreen> {
         title: const Text('Holz Logistik'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // TODO: Navigate to settings screen
-            },
+            icon: Icon(_showSettings ? Icons.close : Icons.settings),
+            onPressed: _toggleSettings,
           )
         ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: _showSettings
+          ? const SettingsScreen()
+          : IndexedStack(
+              index: _currentIndex,
+              children: _screens,
+            ),
       bottomNavigationBar: BottomNavigation(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
+            _showSettings = false;
             _currentIndex = index;
           });
         },

@@ -1,56 +1,81 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../database/database_helper.dart';
-import '../models/location.dart';
-import '../models/shipment.dart';
 
-class User {
-  String name = 'Test Nutzer';
-  String username = 'TestN';
-  int apiKey = 0;
-  bool hasCredentials = false;
-
-  Future<void> initializeUser() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    if (!prefs.containsKey('apiKey')) {
-      return;
-    }
-
-    name = prefs.getString('name')!;
-    username = prefs.getString('id')!;
-    apiKey = prefs.getInt('apiKey')!;
-    hasCredentials = true;
-  }
-}
+import 'package:holz_logistik/utils/sync_service.dart';
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/database/database_helper.dart';
 
 class DataProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
-  final User _user = User();
   List<Location> _locations = [];
   List<Location> _archivedLocations = [];
   bool _isLoading = false;
   Map<int, List<Shipment>> _shipmentsByLocation = {};
-
-  void printTables() {
-    _db.printAllLocations();
-    _db.printAllShipments();
-  }
-
-  void init() {
-    _user.initializeUser();
-  }
+  Timer? _syncTimer;
 
   List<Location> get locations => _locations;
-
   List<Location> get archivedLocations => _archivedLocations;
-
+  Map<int, List<Shipment>> get shipmentsByLocation => _shipmentsByLocation;
   bool get isLoading => _isLoading;
 
-  User get user => _user;
+  void init() {
+    SyncService.initializeUser();
+  }
+
+  @override
+  void dispose() {
+    stopAutoSync();
+    super.dispose();
+  }
+
+  void startAutoSync({Duration interval = const Duration(seconds: 10)}) {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(interval, (_) {
+      syncData();
+    });
+  }
+
+  void stopAutoSync() {
+    _syncTimer?.cancel();
+    _syncTimer = null;
+  }
+
+  Future<void> syncData() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      SyncService.syncChanges();
+
+      final locationsData = _db.getAllLocations();
+      final shipmentsData = _db.getAllShipments();
+
+      List<dynamic> results = await Future.wait([locationsData, shipmentsData]);
+
+      _locations = results[0];
+
+      final allShipments = results[1];
+      _shipmentsByLocation = {};
+      for (var shipment in allShipments) {
+        _shipmentsByLocation
+            .putIfAbsent(shipment.locationId, () => [])
+            .add(shipment);
+      }
+
+      updateArchivedStatus();
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error syncing data: $e');
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> loadArchivedLocations() async {
     try {
+      await SyncService.syncChanges();
       final allShipments = await _db.getAllShipments();
 
       _shipmentsByLocation = {};
@@ -61,7 +86,7 @@ class DataProvider extends ChangeNotifier {
       }
 
       await loadLocations();
-      _updateArchivedStatus();
+      updateArchivedStatus();
     } catch (e) {
       debugPrint('Error loading archived locations: $e');
     }
@@ -109,11 +134,11 @@ class DataProvider extends ChangeNotifier {
     };
   }
 
-  void _updateArchivedStatus() {
+  void updateArchivedStatus() {
     _archivedLocations = [];
     for (var locationId in _shipmentsByLocation.keys) {
       var location =
-      _locations.firstWhere((location) => location.id == locationId);
+          _locations.firstWhere((location) => location.id == locationId);
       if (location.id != -1 && _isLocationFullyShipped(location)) {
         _archivedLocations.add(location);
         _locations.removeWhere((location) => location.id == locationId);
@@ -149,20 +174,25 @@ class DataProvider extends ChangeNotifier {
   }
 
   Future<List<Shipment>> getShipmentHistory(int locationId) async {
+    await SyncService.syncChanges();
     return await _db.getShipmentsByLocation(locationId);
   }
 
   Future<void> addShipment(Shipment shipment) async {
     try {
       await _db.insertShipment(shipment);
+      await SyncService.syncChanges();
 
       final location = _locations
           .firstWhere((location) => location.id == shipment.locationId);
 
-      double? newNormalQuantity = ((location.normalQuantity! -
-          shipment.normalQuantity!) * 10).round() / 10;
-      double? newOversizeQuantity = ((location.oversizeQuantity! -
-          shipment.oversizeQuantity!) * 10).round() / 10;
+      double? newNormalQuantity =
+          ((location.normalQuantity! - shipment.normalQuantity!) * 10).round() /
+              10;
+      double? newOversizeQuantity =
+          ((location.oversizeQuantity! - shipment.oversizeQuantity!) * 10)
+                  .round() /
+              10;
       final newPieceCount = location.pieceCount - shipment.pieceCount;
 
       final updatedLocation = location.copyWith(
@@ -172,7 +202,13 @@ class DataProvider extends ChangeNotifier {
       );
 
       await updateLocation(updatedLocation);
-      await loadArchivedLocations();
+
+      _shipmentsByLocation
+          .putIfAbsent(shipment.locationId, () => [])
+          .add(shipment);
+
+      updateArchivedStatus();
+      notifyListeners();
     } catch (e) {
       debugPrint('Error adding shipment: $e');
       rethrow;
@@ -182,21 +218,21 @@ class DataProvider extends ChangeNotifier {
   Future<void> undoShipment(Shipment shipment) async {
     try {
       await _db.deleteShipment(shipment.id);
+      await SyncService.syncChanges();
 
       var location = _locations.firstWhere(
-            (location) => location.id == shipment.locationId,
-        orElse: () =>
-            _archivedLocations.firstWhere(
-                  (location) => location.id == shipment.locationId,
-            ),
+        (location) => location.id == shipment.locationId,
+        orElse: () => _archivedLocations.firstWhere(
+          (location) => location.id == shipment.locationId,
+        ),
       );
 
       final updatedLocation = location.copyWith(
         normalQuantity:
-        (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0),
+            (location.normalQuantity ?? 0) + (shipment.normalQuantity ?? 0),
         pieceCount: location.pieceCount + shipment.pieceCount,
         oversizeQuantity: location.oversizeQuantity != null &&
-            shipment.oversizeQuantity != null
+                shipment.oversizeQuantity != null
             ? location.oversizeQuantity! + shipment.oversizeQuantity!
             : location.oversizeQuantity,
       );
@@ -216,6 +252,7 @@ class DataProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await SyncService.syncChanges();
       _locations = await _db.getAllLocations();
     } catch (e) {
       debugPrint('Error loading locations: $e');
@@ -227,16 +264,15 @@ class DataProvider extends ChangeNotifier {
 
   Future<Location?> addLocation(Location location) async {
     try {
-      final id = await _db.insertLocation(location);
-      final savedLocation = await _db.getLocation(id);
+      final id = await _db.insertOrUpdateLocation(location);
+      await SyncService.syncChanges();
 
-      if (savedLocation != null) {
-        savedLocation.id = id;
-        _locations.add(savedLocation);
+      if (id > 0) {
+        _locations.add(location);
         notifyListeners();
       }
 
-      return savedLocation;
+      return location;
     } catch (e) {
       debugPrint('Error adding location: $e');
       return null;
@@ -245,7 +281,8 @@ class DataProvider extends ChangeNotifier {
 
   Future<bool> updateLocation(Location location) async {
     try {
-      await _db.updateLocation(location);
+      await _db.insertOrUpdateLocation(location);
+      await SyncService.syncChanges();
 
       if (location.id > 0) {
         final index = _locations.indexWhere((loc) => loc.id == location.id);
@@ -265,7 +302,8 @@ class DataProvider extends ChangeNotifier {
   Future<bool> deleteLocation(int id) async {
     try {
       final result = await _db.deleteLocation(id);
-      if (result > 0) {
+      await SyncService.syncChanges();
+      if (result == true) {
         _locations.removeWhere((location) => location.id == id);
         notifyListeners();
         return true;

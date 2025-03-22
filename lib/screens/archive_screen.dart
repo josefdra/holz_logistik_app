@@ -1,39 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../models/location.dart';
-import '../models/shipment.dart';
-import '../providers/data_provider.dart';
-import '../widgets/location_details.dart';
 
-class ArchiveScreen extends StatelessWidget {
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/utils/data_provider.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
+import 'package:holz_logistik/widgets/location_details.dart';
+
+class ArchiveScreen extends StatefulWidget {
   const ArchiveScreen({super.key});
 
+  @override
+  State<ArchiveScreen> createState() => _ArchiveScreenState();
+}
+
+class _ArchiveScreenState extends State<ArchiveScreen> {
   @override
   Widget build(BuildContext context) {
     return Consumer<DataProvider>(
       builder: (context, provider, child) {
         final archivedLocations = provider.archivedLocations;
         final locationsWithShipments = provider.locationsWithShipments;
-
         final allLocations = [...archivedLocations, ...locationsWithShipments];
 
-        if (allLocations.isEmpty) {
-          return const Center(
-            child: Text('Keine Abfuhren vorhanden'),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: allLocations.length,
-          itemBuilder: (context, index) {
-            final location = allLocations[index];
-            final isArchived = archivedLocations.contains(location);
-            return ArchivedLocationCard(
-              location: location,
-              isArchived: isArchived,
-            );
-          },
+        return RefreshIndicator(
+          onRefresh: () => provider.syncData(),
+          child: allLocations.isEmpty
+              ? const Center(child: Text('Keine Abfuhren vorhanden'))
+              : ListView.builder(
+            itemCount: allLocations.length,
+            itemBuilder: (context, index) {
+              final location = allLocations[index];
+              final isArchived = archivedLocations.contains(location);
+              return ArchivedLocationCard(
+                location: location,
+                isArchived: isArchived,
+              );
+            },
+          ),
         );
       },
     );
@@ -125,9 +129,9 @@ class _ArchivedLocationCardState extends State<ArchivedLocationCard> {
           ),
           if (_isExpanded)
             FutureBuilder<List<Shipment>>(
-              future: context
-                  .read<DataProvider>()
-                  .getShipmentHistory(widget.location.id),
+              future: Future.value(
+                  context.read<DataProvider>().shipmentsByLocation[widget.location.id] ?? []
+              ),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -252,14 +256,14 @@ class ShipmentListItem extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.person, size: 14),
-                            SizedBox(width: 4),
+                            const Icon(Icons.person, size: 14),
+                            const SizedBox(width: 4),
                             Text(
-                              "asdf",
-                              style: TextStyle(fontSize: 12),
+                              SyncService.name,
+                              style: const TextStyle(fontSize: 12),
                             ),
                           ],
                         ),

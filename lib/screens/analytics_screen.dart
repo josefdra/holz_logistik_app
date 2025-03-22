@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:holz_logistik/database/database_helper.dart';
+
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
 
@@ -8,6 +10,8 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreen extends State<AnalyticsScreen> {
+  static final DatabaseHelper _db = DatabaseHelper.instance;
+
   @override
   void initState() {
     super.initState();
@@ -20,11 +24,8 @@ class _AnalyticsScreen extends State<AnalyticsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Text('Analytics'),
-      ),
+    return const Center(
+      child: Text("Kommt bald")
     );
   }
 }

@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 import 'package:provider/provider.dart';
-import 'package:holz_logistik/providers/data_provider.dart';
+
+import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/screens/main_screen.dart';
 
 void main() async {
@@ -14,15 +16,15 @@ void main() async {
   }
 
   await dotenv.load();
+  await SyncService.initializeUser();
+
   runApp(const HolzLogistik());
 }
 
 class AppLifecycleObserver extends WidgetsBindingObserver {
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-    }
+    if (state == AppLifecycleState.resumed) {}
   }
 }
 
@@ -48,7 +50,7 @@ class _HolzLogistikState extends State<HolzLogistik> {
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     WidgetsBinding.instance.removeObserver(_lifecycleObserver);
     super.dispose();
   }

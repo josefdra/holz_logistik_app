@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../providers/data_provider.dart';
+
+import 'package:holz_logistik/utils/data_provider.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,6 +16,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _apiKeyController = TextEditingController();
   bool _isLoading = false;
   bool _showCredentials = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -27,33 +30,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _saveSettings() async {
+    if (_apiKeyController.text.trim().isEmpty) {
+      setState(() {
+        _errorMessage = 'API-Schlüssel ist erforderlich';
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _showCredentials = false;
+      _errorMessage = '';
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final apiKey = _apiKeyController.text.trim();
+      final userData = await SyncService.getUserData(apiKey);
 
-      if (_apiKeyController.text.trim().isNotEmpty) {
-        await prefs.setInt('apiKey', int.parse(_apiKeyController.text.trim()));
-      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('apiKey', apiKey);
+
+      final name = userData['name'] ?? 'Unknown';
+      final username = userData['username'] ?? 'Unknown';
+
+      await prefs.setString('name', name);
+      await prefs.setString('username', username);
 
       if (!mounted) return;
 
-      // TODO: Get User data from server
-      // getUserData from server database server database url is in .env 'BASE_URL'
-
-      // await prefs.setString('name', name);
-      // await prefs.setString('username', username);
-
-      // Set user.hasCredentials = true
+      SyncService.updateUserData(name, apiKey);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Einstellungen gespeichert')),
       );
+
+      setState(() {
+        _showCredentials = false;
+      });
     } catch (e) {
       if (!mounted) return;
+
+      setState(() {
+        _errorMessage = 'Fehler: $e';
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Fehler beim Speichern: $e')),
@@ -73,82 +92,94 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (dataProvider.isLoading) {
         return const Center(child: CircularProgressIndicator());
       }
-      final user = dataProvider.user;
 
-      return Scaffold(
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.name,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'API-Schlüssel',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        if (user.hasCredentials)
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _showCredentials = !_showCredentials;
-                              });
-                            },
-                            child: Text(_showCredentials ? 'Verbergen' : 'Bearbeiten'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    if (user.hasCredentials && !_showCredentials)
-                      const Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.lock_outline),
-                                  SizedBox(width: 8),
-                                  Text(
-                                    'Server-Verbindung konfiguriert',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    else
-                      TextFormField(
-                        controller: _apiKeyController,
-                        decoration: const InputDecoration(
-                          labelText: 'API-Schlüssel',
-                          border: OutlineInputBorder(),
-                        ),
-                        obscureText: true,
-                      ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _saveSettings,
-                        child: const Text('Speichern'),
-                      ),
-                    ),
-                  ],
+      return _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              SyncService.name,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'API-Schlüssel',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
+                if (SyncService.hasCredentials)
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _showCredentials = !_showCredentials;
+                      });
+                    },
+                    child: Text(_showCredentials ? 'Verbergen' : 'Bearbeiten'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (SyncService.hasCredentials && !_showCredentials)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.lock_outline),
+                          SizedBox(width: 8),
+                          Text(
+                            'Server-Verbindung konfiguriert',
+                            style:
+                            TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormField(
+                    controller: _apiKeyController,
+                    decoration: const InputDecoration(
+                      labelText: 'API-Schlüssel',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  if (_errorMessage.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        _errorMessage,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ),
+                ],
               ),
+            const SizedBox(height: 16),
+            if (_showCredentials || !SyncService.hasCredentials) SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveSettings,
+                child: const Text('Speichern'),
+              ),
+            )
+          ],
+        ),
       );
     });
   }

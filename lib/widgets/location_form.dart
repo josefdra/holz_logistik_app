@@ -1,10 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/providers/data_provider.dart';
-import 'package:holz_logistik/widgets/photo_preview.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/utils/data_provider.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 
 class LocationForm extends StatefulWidget {
   final Location? initialLocation;
@@ -111,7 +113,8 @@ class _LocationFormState extends State<LocationForm> {
     final longitude = widget.initialPosition?.longitude ??
         widget.initialLocation?.longitude ??
         0.0;
-    final id = widget.initialLocation?.id ?? DateTime.now().microsecondsSinceEpoch;
+    final id =
+        widget.initialLocation?.id ?? DateTime.now().microsecondsSinceEpoch;
     if (_normalQuantityController.text.isEmpty) {
       _normalQuantityController.text = '0.0';
     }
@@ -121,7 +124,7 @@ class _LocationFormState extends State<LocationForm> {
 
     final location = Location(
         id: id,
-        userId: "asdf",
+        userId: SyncService.apiKey,
         lastEdited: DateTime.now(),
         latitude: latitude,
         longitude: longitude,
@@ -191,26 +194,26 @@ class _LocationFormState extends State<LocationForm> {
               ),
               TextFormField(
                 controller: _oversizeSawmillController,
-                decoration:
-                    const InputDecoration(labelText: 'Sägewerk ÜS'),
+                decoration: const InputDecoration(labelText: 'Sägewerk ÜS'),
               ),
               TextFormField(
                 controller: _normalQuantityController,
                 decoration: const InputDecoration(labelText: 'Normal (fm)'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
               TextFormField(
                 controller: _oversizeQuantityController,
                 decoration: const InputDecoration(labelText: 'ÜS (fm)'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
               TextFormField(
                 controller: _pieceCountController,
                 decoration: const InputDecoration(labelText: 'Stückzahl *'),
                 keyboardType: TextInputType.number,
-                validator: (value) => value?.isEmpty ?? true
-                    ? 'Bitte Stückzahl eingeben'
-                    : null,
+                validator: (value) =>
+                    value?.isEmpty ?? true ? 'Bitte Stückzahl eingeben' : null,
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
@@ -257,6 +260,66 @@ class _LocationFormState extends State<LocationForm> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class PhotoPreview extends StatelessWidget {
+  final String? photoUrl;
+  final File? photoFile;
+  final VoidCallback onRemove;
+
+  const PhotoPreview({
+    super.key,
+    this.photoUrl,
+    this.photoFile,
+    required this.onRemove,
+  }) : assert(photoUrl != null || photoFile != null);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: photoUrl != null
+                ? Image.file(
+                    File(photoUrl!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.broken_image,
+                      size: 40,
+                    ),
+                  )
+                : Image.file(
+                    photoFile!,
+                    fit: BoxFit.cover,
+                  ),
+          ),
+        ),
+        Positioned(
+          top: -12,
+          right: -12,
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, color: Colors.red, size: 20),
+            ),
+            onPressed: onRemove,
+          ),
+        ),
+      ],
     );
   }
 }

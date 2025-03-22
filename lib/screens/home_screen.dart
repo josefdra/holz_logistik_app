@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/providers/data_provider.dart';
+
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,7 +31,8 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () async {
                     await dataProvider.loadLocations();
                     if (context.mounted) {
-                      // await context.read<SyncProvider>().sync();
+                      await SyncService.syncChanges();
+                      dataProvider.updateArchivedStatus();
                     }
                   },
                   child: const Text('Neu laden'),
@@ -42,7 +45,8 @@ class HomeScreen extends StatelessWidget {
         return RefreshIndicator(
           onRefresh: () async {
             if (context.mounted) {
-              // await context.read<SyncProvider>().sync();
+              await SyncService.syncChanges();
+              dataProvider.updateArchivedStatus();
             }
             return dataProvider.loadLocations();
           },
@@ -117,10 +121,7 @@ class LocationListItem extends StatelessWidget {
   Widget _buildLetterAvatar(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .primary
-            .withAlpha(51),
+        color: Theme.of(context).colorScheme.primary.withAlpha(51),
         borderRadius: BorderRadius.circular(4),
       ),
       alignment: Alignment.center,
@@ -149,6 +150,7 @@ class LocationListItem extends StatelessWidget {
           TextButton(
             onPressed: () {
               context.read<DataProvider>().deleteLocation(location.id);
+              SyncService.syncChanges();
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(

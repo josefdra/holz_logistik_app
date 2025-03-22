@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/models/shipment.dart';
+
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 
 class ShipmentForm extends StatefulWidget {
   final Location location;
@@ -57,6 +58,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
     if (!_formKey.currentState!.validate()) return;
 
     final id = DateTime.now().microsecondsSinceEpoch;
+
     if (_normalQuantityController.text.isEmpty) {
       _normalQuantityController.text = '0.0';
     }
@@ -66,7 +68,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
 
     final shipment = Shipment(
         id: id,
-        userId: "asdf",
+        userId: SyncService.apiKey,
         locationId: widget.location.id,
         date: DateTime.now(),
         contract: _contractController.text,
@@ -114,17 +116,18 @@ class _ShipmentFormState extends State<ShipmentForm> {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Fahrer: ',
                               style: TextStyle(fontSize: 14),
                             ),
                             Text(
-                              "asdf",
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              SyncService.name,
+                              style: const TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),

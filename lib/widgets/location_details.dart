@@ -1,15 +1,15 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:holz_logistik/models/location.dart';
-import 'package:holz_logistik/providers/data_provider.dart';
-import 'package:holz_logistik/widgets/location_form.dart';
-import 'package:holz_logistik/widgets/photo_gallery.dart';
-import 'package:holz_logistik/widgets/shipment_form.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:provider/provider.dart';
 
-import '../models/shipment.dart';
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/utils/data_provider.dart';
+import 'package:holz_logistik/widgets/location_form.dart';
+import 'package:holz_logistik/widgets/shipment_form.dart';
+import 'package:holz_logistik/utils/sync_service.dart';
 
 class LocationDetailsDialog extends StatelessWidget {
   final Location location;
@@ -20,7 +20,7 @@ class LocationDetailsDialog extends StatelessWidget {
   });
 
   void _showEditForm(BuildContext context) {
-    Navigator.of(context).pop(); // Close the details dialog
+    Navigator.of(context).pop();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -42,8 +42,9 @@ class LocationDetailsDialog extends StatelessWidget {
           TextButton(
             onPressed: () {
               context.read<DataProvider>().deleteLocation(location.id);
-              Navigator.of(context).pop(); // Close confirmation dialog
-              Navigator.of(context).pop(); // Close details dialog
+              SyncService.syncChanges();
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Löschen'),
@@ -67,7 +68,7 @@ class LocationDetailsDialog extends StatelessWidget {
       try {
         await dataProvider.addShipment(shipment);
         if (context.mounted) {
-          navigator.pop(); // Close the details dialog
+          navigator.pop();
         }
       } catch (e) {
         if (context.mounted) {
@@ -90,7 +91,6 @@ class LocationDetailsDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -133,14 +133,11 @@ class LocationDetailsDialog extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Main content
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Quantities and Shipment Button
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -191,9 +188,7 @@ class LocationDetailsDialog extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     if (location.additionalInfo != null && location.additionalInfo!.isNotEmpty ||
                         location.access != null && location.access!.isNotEmpty ||
                         location.partieNr.isNotEmpty) ...[
@@ -215,8 +210,6 @@ class LocationDetailsDialog extends StatelessWidget {
                           content: location.access!,
                         )
                     ],
-
-                    // Coordinates Button
                     const SizedBox(height: 8),
                     TextButton.icon(
                       onPressed: () {
@@ -240,8 +233,6 @@ class LocationDetailsDialog extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // Photos section
               if (location.photoUrls != null && location.photoUrls!.isNotEmpty) ...[
                 const Divider(),
                 Padding(
@@ -289,8 +280,6 @@ class LocationDetailsDialog extends StatelessWidget {
                   ),
                 ),
               ],
-
-              // Action buttons
               const Divider(),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -397,6 +386,65 @@ class _InfoSection extends StatelessWidget {
             Text(content),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class PhotoGallery extends StatefulWidget {
+  final List<String> photoUrls;
+  final int initialIndex;
+
+  const PhotoGallery({
+    super.key,
+    required this.photoUrls,
+    this.initialIndex = 0,
+  });
+
+  @override
+  State<PhotoGallery> createState() => _PhotoGalleryState();
+}
+
+class _PhotoGalleryState extends State<PhotoGallery> {
+  late int currentIndex;
+  late PageController pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    currentIndex = widget.initialIndex;
+    pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${currentIndex + 1} / ${widget.photoUrls.length}'),
+      ),
+      body: PhotoViewGallery.builder(
+        scrollPhysics: const BouncingScrollPhysics(),
+        builder: (context, index) {
+          return PhotoViewGalleryPageOptions(
+            imageProvider: FileImage(File(widget.photoUrls[index])),
+            initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained * 0.8,
+            maxScale: PhotoViewComputedScale.covered * 2,
+          );
+        },
+        itemCount: widget.photoUrls.length,
+        loadingBuilder: (context, event) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        pageController: pageController,
+        onPageChanged: (index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
       ),
     );
   }

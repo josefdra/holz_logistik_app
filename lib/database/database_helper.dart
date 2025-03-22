@@ -3,10 +3,9 @@ import 'dart:convert';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
-import '../models/location.dart';
-import '../models/shipment.dart';
-import 'tables/location_table.dart';
-import 'tables/shipment_table.dart';
+
+import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/database/tables.dart';
 
 class DatabaseHelper {
   static const _databaseName = "holz_logistik.db";
@@ -41,91 +40,27 @@ class DatabaseHelper {
     // Handle future migrations here
   }
 
-  Future<void> printAllLocations() async {
-    try {
-      final db = await database;
-      final List<Map<String, dynamic>> maps = await db.query(LocationTable.tableName);
-
-      if (maps.isEmpty) {
-        print('No locations found in database');
-        return;
-      }
-
-      print('Found ${maps.length} locations:');
-      for (var location in maps) {
-        print('-----------------------------------');
-        print('ID: ${location[LocationTable.columnId]}');
-        print('User ID: ${location[LocationTable.columnUserId]}');
-        print('Last Edited: ${DateTime.fromMillisecondsSinceEpoch(location[LocationTable.columnLastEdited])}');
-        print('Latitude: ${location[LocationTable.columnLatitude]}');
-        print('Longitude: ${location[LocationTable.columnLongitude]}');
-        print('Partie Nr: ${location[LocationTable.columnPartieNr]}');
-        print('Contract: ${location[LocationTable.columnContract]}');
-        print('Additional Info: ${location[LocationTable.columnAdditionalInfo]}');
-        print('Access: ${location[LocationTable.columnAccess]}');
-        print('Sawmill: ${location[LocationTable.columnSawmill]}');
-        print('Oversize Sawmill: ${location[LocationTable.columnOversizeSawmill]}');
-        print('Normal Quantity: ${location[LocationTable.columnNormalQuantity]}');
-        print('Oversize Quantity: ${location[LocationTable.columnOversizeQuantity]}');
-        print('Piece Count: ${location[LocationTable.columnPieceCount]}');
-        print('Photo IDs: ${location[LocationTable.columnPhotoIds]}');
-        print('Photo URLs: ${location[LocationTable.columnPhotoUrls]}');
-      }
-    } catch (e) {
-      print('Error querying locations: $e');
-    }
-  }
-
-  Future<int> insertLocation(Location location) async {
-    final db = await database;
-
-    final values = {
-      LocationTable.columnId: location.id,
-      LocationTable.columnUserId: 0,
-      LocationTable.columnLastEdited: location.lastEdited.millisecondsSinceEpoch,
-      LocationTable.columnLatitude: location.latitude,
-      LocationTable.columnLongitude: location.longitude,
-      LocationTable.columnPartieNr: location.partieNr,
-      LocationTable.columnContract: location.contract,
-      LocationTable.columnAdditionalInfo: location.additionalInfo,
-      LocationTable.columnAccess: location.access,
-      LocationTable.columnSawmill: location.sawmill,
-      LocationTable.columnOversizeSawmill: location.oversizeSawmill,
-      LocationTable.columnNormalQuantity: location.normalQuantity,
-      LocationTable.columnOversizeQuantity: location.oversizeQuantity,
-      LocationTable.columnPieceCount: location.pieceCount,
-      LocationTable.columnPhotoIds: json.encode(location.photoIds ?? []),
-      LocationTable.columnPhotoUrls: jsonEncode(location.photoUrls ?? []),
-    };
-
-    return await db.insert(LocationTable.tableName, values);
-  }
-
-  Future<Location?> getLocation(int id) async {
-    final db = await database;
-    final maps = await db.query(
-      LocationTable.tableName,
-      where: '${LocationTable.columnId} = ?',
-      whereArgs: [id],
-    );
-
-    if (maps.isEmpty) return null;
-    return _locationFromMap(maps.first);
-  }
-
   Future<List<Location>> getAllLocations() async {
     final db = await database;
-    final maps = await db.query(LocationTable.tableName);
+
+    final maps = await db.query(
+      LocationTable.tableName,
+      where: '${LocationTable.columnDeleted} = ?',
+      whereArgs: [0],
+    );
+
     return maps.map((map) => _locationFromMap(map)).toList();
   }
 
-  Future<int> updateLocation(Location location) async {
+  Future<int> insertOrUpdateLocation(Location location) async {
     final db = await database;
 
     final values = {
       LocationTable.columnId: location.id,
-      LocationTable.columnUserId: 0,
-      LocationTable.columnLastEdited: location.lastEdited.millisecondsSinceEpoch,
+      LocationTable.columnUserId: location.userId,
+      LocationTable.columnLastEdited:
+          location.lastEdited.millisecondsSinceEpoch,
+      LocationTable.columnDeleted: location.deleted,
       LocationTable.columnLatitude: location.latitude,
       LocationTable.columnLongitude: location.longitude,
       LocationTable.columnPartieNr: location.partieNr,
@@ -141,21 +76,54 @@ class DatabaseHelper {
       LocationTable.columnPhotoUrls: jsonEncode(location.photoUrls ?? []),
     };
 
-    return await db.update(
+    final List<Map<String, dynamic>> result = await db.query(
       LocationTable.tableName,
-      values,
-      where: '${LocationTable.columnId} = ?',
-      whereArgs: [location.id],
+      where:
+          '${LocationTable.columnId} = ? AND ${LocationTable.columnDeleted} = ?',
+      whereArgs: [location.id, 0],
+      limit: 1,
     );
+
+    if (result.isNotEmpty) {
+      return await db.update(
+        LocationTable.tableName,
+        values,
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [location.id],
+      );
+    } else {
+      return await db.insert(LocationTable.tableName, values);
+    }
   }
 
-  Future<int> deleteLocation(int id) async {
+  Future<bool> deleteLocation(int id) async {
     final db = await database;
-    return await db.delete(
+
+    final List<Map<String, dynamic>> result = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnId} = ?',
-      whereArgs: [id],
+      where:
+          '${LocationTable.columnId} = ? AND ${LocationTable.columnDeleted} = ?',
+      whereArgs: [id, 0],
+      limit: 1,
     );
+
+    if (result.isNotEmpty) {
+      await db.update(
+        LocationTable.tableName,
+        {
+          LocationTable.columnDeleted: 1,
+          LocationTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch
+        },
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [id],
+      );
+
+      deleteShipmentsByLocation(id);
+      
+      return true;
+    }
+
+    return false;
   }
 
   Location _locationFromMap(Map<String, dynamic> map) {
@@ -164,6 +132,7 @@ class DatabaseHelper {
       userId: map[LocationTable.columnUserId] as String,
       lastEdited: DateTime.fromMillisecondsSinceEpoch(
           map[LocationTable.columnLastEdited] as int),
+      deleted: map[LocationTable.columnDeleted] as int,
       latitude: map[LocationTable.columnLatitude] as double,
       longitude: map[LocationTable.columnLongitude] as double,
       partieNr: map[LocationTable.columnPartieNr] as String,
@@ -182,35 +151,6 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> printAllShipments() async {
-    try {
-      final db = await database;
-      final List<Map<String, dynamic>> maps = await db.query(ShipmentTable.tableName);
-
-      if (maps.isEmpty) {
-        print('No shipments found in database');
-        return;
-      }
-
-      print('Found ${maps.length} shipments:');
-      for (var shipment in maps) {
-        print('-----------------------------------');
-        print('ID: ${shipment[ShipmentTable.columnId]}');
-        print('User ID: ${shipment[ShipmentTable.columnUserId]}');
-        print('Location ID: ${shipment[ShipmentTable.columnLocationId]}');
-        print('Date: ${DateTime.fromMillisecondsSinceEpoch(shipment[ShipmentTable.columnDate])}');
-        print('Contract: ${shipment[ShipmentTable.columnContract]}');
-        print('Additional Info: ${shipment[ShipmentTable.columnAdditionalInfo]}');
-        print('Sawmill: ${shipment[ShipmentTable.columnSawmill]}');
-        print('Normal Quantity: ${shipment[ShipmentTable.columnNormalQuantity]}');
-        print('Oversize Quantity: ${shipment[ShipmentTable.columnOversizeQuantity]}');
-        print('Piece Count: ${shipment[ShipmentTable.columnPieceCount]}');
-      }
-    } catch (e) {
-      print('Error querying shipments: $e');
-    }
-  }
-
   Future<int> insertShipment(Shipment shipment) async {
     final db = await database;
 
@@ -219,6 +159,7 @@ class DatabaseHelper {
       ShipmentTable.columnUserId: shipment.userId,
       ShipmentTable.columnLocationId: shipment.locationId,
       ShipmentTable.columnDate: shipment.date.millisecondsSinceEpoch,
+      ShipmentTable.columnDeleted: shipment.deleted,
       ShipmentTable.columnContract: shipment.contract,
       ShipmentTable.columnAdditionalInfo: shipment.additionalInfo,
       ShipmentTable.columnSawmill: shipment.sawmill,
@@ -230,66 +171,78 @@ class DatabaseHelper {
     return await db.insert(ShipmentTable.tableName, values);
   }
 
-  Future<Shipment?> getShipment(int id) async {
+  Future<List<Shipment>> getAllShipments() async {
     final db = await database;
-    final maps = await db.query(
-      ShipmentTable.tableName,
-      where: '${ShipmentTable.columnId} = ?',
-      whereArgs: [id],
-    );
-
-    if (maps.isEmpty) return null;
-    return _shipmentFromMap(maps.first);
+    final maps = await db.query(ShipmentTable.tableName,
+        where: '${ShipmentTable.columnDeleted} = ?', whereArgs: [0]);
+    return maps.map((map) => _shipmentFromMap(map)).toList();
   }
 
   Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
     final db = await database;
+
     final maps = await db.query(
       ShipmentTable.tableName,
-      where: '${ShipmentTable.columnLocationId} = ?',
-      whereArgs: [locationId],
+      where:
+          '${ShipmentTable.columnLocationId} = ? AND ${ShipmentTable.columnDeleted} = ?',
+      whereArgs: [locationId, 0],
       orderBy: '${ShipmentTable.columnDate} DESC',
     );
+
     return maps.map((map) => _shipmentFromMap(map)).toList();
   }
 
-  Future<List<Shipment>> getAllShipments() async {
+  Future<bool> deleteShipmentsByLocation(int locationId) async {
     final db = await database;
-    final maps = await db.query(ShipmentTable.tableName);
-    return maps.map((map) => _shipmentFromMap(map)).toList();
+
+    final List<Map<String, dynamic>> result = await db.query(
+      ShipmentTable.tableName,
+      where:
+          '${ShipmentTable.columnLocationId} = ? AND ${ShipmentTable.columnDeleted} = ?',
+      whereArgs: [locationId, 0],
+    );
+
+    if (result.isNotEmpty) {
+      await db.update(
+        ShipmentTable.tableName,
+        {
+          ShipmentTable.columnDeleted: 1,
+          ShipmentTable.columnDate: DateTime.now().millisecondsSinceEpoch
+        },
+        where: '${ShipmentTable.columnLocationId} = ?',
+        whereArgs: [locationId],
+      );
+      return true;
+    }
+
+    return false;
   }
 
-  Future<int> updateShipment(Shipment shipment) async {
+  Future<bool> deleteShipment(int id) async {
     final db = await database;
 
-    final values = {
-      ShipmentTable.columnId: shipment.id,
-      ShipmentTable.columnUserId: shipment.userId,
-      ShipmentTable.columnLocationId: shipment.locationId,
-      ShipmentTable.columnDate: shipment.date.millisecondsSinceEpoch,
-      ShipmentTable.columnContract: shipment.contract,
-      ShipmentTable.columnAdditionalInfo: shipment.additionalInfo,
-      ShipmentTable.columnSawmill: shipment.sawmill,
-      ShipmentTable.columnNormalQuantity: shipment.normalQuantity,
-      ShipmentTable.columnOversizeQuantity: shipment.oversizeQuantity,
-      ShipmentTable.columnPieceCount: shipment.pieceCount,
-    };
-
-    return await db.update(
+    final List<Map<String, dynamic>> result = await db.query(
       ShipmentTable.tableName,
-      values,
-      where: '${ShipmentTable.columnId} = ?',
-      whereArgs: [shipment.id],
+      where:
+          '${ShipmentTable.columnId} = ? AND ${ShipmentTable.columnDeleted} = ?',
+      whereArgs: [id, 0],
+      limit: 1,
     );
-  }
 
-  Future<int> deleteShipment(int id) async {
-    final db = await database;
-    return await db.delete(
-      ShipmentTable.tableName,
-      where: '${ShipmentTable.columnId} = ?',
-      whereArgs: [id],
-    );
+    if (result.isNotEmpty) {
+      await db.update(
+        ShipmentTable.tableName,
+        {
+          ShipmentTable.columnDeleted: 1,
+          ShipmentTable.columnDate: DateTime.now().millisecondsSinceEpoch
+        },
+        where: '${ShipmentTable.columnId} = ?',
+        whereArgs: [id],
+      );
+      return true;
+    }
+
+    return false;
   }
 
   Shipment _shipmentFromMap(Map<String, dynamic> map) {
@@ -299,12 +252,67 @@ class DatabaseHelper {
       locationId: map[ShipmentTable.columnLocationId] as int,
       date: DateTime.fromMillisecondsSinceEpoch(
           map[ShipmentTable.columnDate] as int),
+      deleted: map[ShipmentTable.columnDeleted] as int,
       contract: map[ShipmentTable.columnContract] as String?,
       additionalInfo: map[ShipmentTable.columnAdditionalInfo] as String?,
       sawmill: map[ShipmentTable.columnSawmill] as String,
       normalQuantity: map[ShipmentTable.columnNormalQuantity] as double?,
       oversizeQuantity: map[ShipmentTable.columnOversizeQuantity] as double?,
       pieceCount: map[ShipmentTable.columnPieceCount] as int,
+    );
+  }
+
+  Future<void> updateDB(String apiKey) async {
+    final db = await database;
+
+    await db.update(
+      LocationTable.tableName,
+      {LocationTable.columnUserId: apiKey},
+      where: '${LocationTable.columnUserId} = ?',
+      whereArgs: [""],
+    );
+
+    await db.update(
+      ShipmentTable.tableName,
+      {ShipmentTable.columnUserId: apiKey},
+      where: '${ShipmentTable.columnUserId} = ?',
+      whereArgs: [""],
+    );
+  }
+
+  Future<Map<String, List<Map<String, dynamic>>>> getUnSyncedChanges(
+      int lastSync) async {
+    final db = await database;
+
+    final locationMaps = await db.query(
+      LocationTable.tableName,
+      where: '${LocationTable.columnLastEdited} > ?',
+      whereArgs: [lastSync],
+    );
+
+    final shipmentMaps = await db.query(
+      ShipmentTable.tableName,
+      where: '${ShipmentTable.columnDate} > ?',
+      whereArgs: [lastSync],
+    );
+
+    return {
+      'locations': locationMaps,
+      'shipments': shipmentMaps,
+    };
+  }
+
+  Future<void> debugRestoreValues() async {
+    final db = await database;
+
+    await db.update(
+      LocationTable.tableName,
+      {LocationTable.columnDeleted: 0}
+    );
+
+    await db.update(
+      ShipmentTable.tableName,
+      {ShipmentTable.columnDeleted: 0}
     );
   }
 }

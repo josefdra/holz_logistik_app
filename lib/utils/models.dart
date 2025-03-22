@@ -2,6 +2,7 @@ class Location {
   late int id;
   final String userId;
   late DateTime lastEdited;
+  final int deleted;
   final double latitude;
   final double longitude;
   final String partieNr;
@@ -20,6 +21,7 @@ class Location {
     required this.id,
     required this.userId,
     required this.lastEdited,
+    this.deleted = 0,
     required this.latitude,
     required this.longitude,
     required this.partieNr,
@@ -39,6 +41,7 @@ class Location {
     int? id,
     String? userId,
     DateTime? lastEdited,
+    int? deleted,
     double? latitude,
     double? longitude,
     String? partieNr,
@@ -57,6 +60,7 @@ class Location {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       lastEdited: lastEdited ?? this.lastEdited,
+      deleted: deleted ?? this.deleted,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       partieNr: partieNr ?? this.partieNr,
@@ -73,31 +77,12 @@ class Location {
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'userId': userId,
-      'latitude': latitude,
-      'longitude': longitude,
-      'partieNr': partieNr,
-      'contract': contract,
-      'additionalInfo': additionalInfo,
-      'access': access,
-      'sawmill': sawmill,
-      'oversizeSawmill': oversizeSawmill,
-      'normalQuantity': normalQuantity,
-      'oversizeQuantity': oversizeQuantity,
-      'pieceCount': pieceCount,
-      'photoIds': photoIds,
-      'photoUrls': photoUrls,
-    };
-  }
-
   factory Location.fromMap(Map<String, dynamic> map) {
     return Location(
       id: map['id'],
       userId: map['userId'],
-      lastEdited: DateTime.fromMillisecondsSinceEpoch(map['lastEdited']),
+      lastEdited: DateTime.parse(map['lastEdited']),
+      deleted: map['deleted'],
       latitude: map['latitude'],
       longitude: map['longitude'],
       partieNr: map['partieNr'],
@@ -106,11 +91,84 @@ class Location {
       access: map['access'],
       sawmill: map['sawmill'],
       oversizeSawmill: map['oversizeSawmill'],
-      normalQuantity: map['normalQuantity'],
-      oversizeQuantity: map['oversizeQuantity'],
+      normalQuantity: (map['normalQuantity'] ?? 0).toDouble(),
+      oversizeQuantity: (map['oversizeQuantity'] ?? 0).toDouble(),
       pieceCount: map['pieceCount'],
       photoIds: List<int>.from(map['photoIds'] ?? []),
       photoUrls: List<String>.from(map['photoUrls'] ?? []),
+    );
+  }
+}
+
+class Shipment {
+  late int id;
+  final String userId;
+  final int locationId;
+  late DateTime date;
+  final int deleted;
+  final String? contract;
+  final String? additionalInfo;
+  final String sawmill;
+  final double? normalQuantity;
+  final double? oversizeQuantity;
+  final int pieceCount;
+
+  Shipment({
+    required this.id,
+    required this.userId,
+    required this.locationId,
+    required this.date,
+    this.deleted = 0,
+    this.contract,
+    this.additionalInfo,
+    required this.sawmill,
+    this.normalQuantity,
+    this.oversizeQuantity,
+    required this.pieceCount,
+  });
+
+  factory Shipment.fromMap(Map<String, dynamic> map) {
+    return Shipment(
+      id: map['id'],
+      userId: map['userId'],
+      locationId: map['locationId'],
+      date: DateTime.parse(map['date']),
+      deleted: map['deleted'],
+      contract: map['contract'],
+      additionalInfo: map['additionalInfo'],
+      sawmill: map['sawmill'],
+      normalQuantity: (map['normalQuantity'] ?? 0).toDouble(),
+      oversizeQuantity: (map['oversizeQuantity'] ?? 0).toDouble(),
+      pieceCount: map['pieceCount'],
+    );
+  }
+
+  Shipment copyWith({
+    int? id,
+    int? version,
+    String? userId,
+    int? locationId,
+    DateTime? date,
+    int? deleted,
+    String? contract,
+    String? additionalInfo,
+    String? sawmill,
+    double? normalQuantity,
+    double? oversizeQuantity,
+    int? pieceCount,
+  }) {
+    return Shipment(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      locationId: locationId ?? this.locationId,
+      date: date ?? this.date,
+      deleted: deleted ?? this.deleted,
+      contract: contract ?? this.contract,
+      additionalInfo: additionalInfo ?? this.additionalInfo,
+      sawmill: sawmill ?? this.sawmill,
+      normalQuantity: normalQuantity ?? this.normalQuantity,
+      oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
+      pieceCount: pieceCount ?? this.pieceCount,
     );
   }
 }
