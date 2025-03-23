@@ -122,53 +122,17 @@ class LocationShipmentsCard extends StatefulWidget {
 }
 
 class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
-  List<Shipment> _shipments = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _loadShipments();
+    context.read<DataProvider>().getShipmentsByLocation(widget.location.id);
   }
 
   @override
   void didUpdateWidget(LocationShipmentsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isExpanded && !oldWidget.isExpanded) {
-      _loadShipments();
-    }
-  }
-
-  @override
-  void dispose() {
-    Provider.of<DataProvider>(context, listen: false)
-        .stopObservingLocation(widget.location.id);
-    super.dispose();
-  }
-
-  Future<void> _loadShipments() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final shipments = await context
-          .read<DataProvider>()
-          .getShipmentsByLocation(widget.location.id);
-
-      if (mounted) {
-        setState(() {
-          _shipments = shipments;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error loading shipments: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      context.read<DataProvider>().getShipmentsByLocation(widget.location.id);
     }
   }
 
@@ -183,14 +147,24 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
       ),
       child: Column(
         children: [
-          _buildLocationHeader(context),
+          StreamBuilder<Map<int, List<Shipment>>>(
+            stream: DataProvider.shipmentsByLocationStream,
+            builder: (context, snapshot) {
+              final shipmentCount = snapshot.hasData &&
+                      snapshot.data!.containsKey(widget.location.id)
+                  ? snapshot.data![widget.location.id]!.length
+                  : 0;
+
+              return _buildLocationHeader(context, shipmentCount);
+            },
+          ),
           if (widget.isExpanded) _buildShipmentsList(context),
         ],
       ),
     );
   }
 
-  Widget _buildLocationHeader(BuildContext context) {
+  Widget _buildLocationHeader(BuildContext context, int length) {
     return InkWell(
       onTap: widget.onToggleExpanded,
       borderRadius: BorderRadius.vertical(
@@ -243,7 +217,7 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${_shipments.length} ${_shipments.length == 1 ? 'Abfuhr' : 'Abfuhren'}',
+                          '${length} ${length == 1 ? 'Abfuhr' : 'Abfuhren'}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.primary,
@@ -298,36 +272,27 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
     return StreamBuilder<Map<int, List<Shipment>>>(
       stream: DataProvider.shipmentsByLocationStream,
       builder: (context, snapshot) {
-        if (snapshot.hasData &&
-            snapshot.data!.containsKey(widget.location.id)) {
-          _shipments = snapshot.data![widget.location.id]!;
-        }
-
-        if (_isLoading) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.0),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 3)),
-          );
-        }
-
-        if (_shipments.isEmpty) {
+        if (!snapshot.hasData ||
+            !snapshot.data!.containsKey(widget.location.id) ||
+            snapshot.data![widget.location.id]!.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: Text('Keine Abfuhren gefunden')),
           );
         }
 
+        final shipments = snapshot.data![widget.location.id]!;
         return Column(
           children: [
             const Divider(height: 1),
             ListView.separated(
               physics: const NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemCount: _shipments.length,
+              itemCount: shipments.length,
               separatorBuilder: (context, index) =>
                   const Divider(height: 1, indent: 64),
               itemBuilder: (context, index) {
-                final shipment = _shipments[index];
+                final shipment = shipments[index];
                 return ShipmentListItem(
                   shipment: shipment,
                   onUndo: () => widget.onUndoShipment(shipment),
