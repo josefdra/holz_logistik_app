@@ -12,11 +12,17 @@ class DataProvider extends ChangeNotifier {
       StreamController<List<Location>>.broadcast();
   static final _archiveLocationsStreamController =
       StreamController<List<Location>>.broadcast();
+  static final _shipmentsByLocationController =
+      StreamController<Map<int, List<Shipment>>>.broadcast();
+
+  final Set<int> _observedLocationIds = {};
 
   static Stream<List<Location>> get activeLocationsStream =>
       _activeLocationsStreamController.stream;
   static Stream<List<Location>> get archivedLocationsStream =>
       _archiveLocationsStreamController.stream;
+  static Stream<Map<int, List<Shipment>>> get shipmentsByLocationStream =>
+      _shipmentsByLocationController.stream;
 
   void init() {
     SyncService.initializeUser();
@@ -27,6 +33,7 @@ class DataProvider extends ChangeNotifier {
     super.dispose();
     _activeLocationsStreamController.close();
     _archiveLocationsStreamController.close();
+    _shipmentsByLocationController.close();
   }
 
   Future<List<Location>> getActiveLocations() async {
@@ -35,6 +42,16 @@ class DataProvider extends ChangeNotifier {
 
   Future<List<Location>> getArchivedLocations() async {
     return _db.getArchivedLocations();
+  }
+
+  Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
+    _observedLocationIds.add(locationId);
+
+    return _db.getShipmentsByLocation(locationId);
+  }
+
+  void stopObservingLocation(int locationId) {
+    _observedLocationIds.remove(locationId);
   }
 
   Future<void> startObservingLocations() async {
@@ -56,6 +73,14 @@ class DataProvider extends ChangeNotifier {
     if (!_archiveLocationsStreamController.isClosed) {
       _archiveLocationsStreamController.add(archiveLocations);
     }
+
+    final Map<int, List<Shipment>> updates = {};
+    for (final locationId in _observedLocationIds) {
+      updates[locationId] = await _db.getShipmentsByLocation(locationId);
+    }
+    if (updates.isNotEmpty && !_shipmentsByLocationController.isClosed) {
+      _shipmentsByLocationController.add(updates);
+    }
   }
 
   Future<int> addOrUpdateLocation(Location location) async {
@@ -73,6 +98,7 @@ class DataProvider extends ChangeNotifier {
   Future<void> deleteLocation(int id) async {
     try {
       await _db.deleteLocation(id);
+      _observedLocationIds.remove(id);
       await _updateStreams();
     } catch (e) {
       debugPrint('Error deleting location: $e');
@@ -83,9 +109,21 @@ class DataProvider extends ChangeNotifier {
   Future<void> addShipment(Shipment shipment) async {
     try {
       await _db.insertShipment(shipment);
+
       await _updateStreams();
     } catch (e) {
       debugPrint('Error adding shipment: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> undoShipment(int shipmentId) async {
+    try {
+      await _db.deleteShipment(shipmentId);
+
+      await _updateStreams();
+    } catch (e) {
+      debugPrint('Error undoing shipment: $e');
       rethrow;
     }
   }
@@ -94,140 +132,3 @@ class DataProvider extends ChangeNotifier {
     _db.printDatabaseContents();
   }
 }
-
-/*
-  @override
-  void dispose() {
-    stopAutoSync();
-    super.dispose();
-  }
-
-  void startAutoSync({Duration interval = const Duration(seconds: 10)}) {
-    _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(interval, (_) {
-      syncData();
-    });
-  }
-
-  void stopAutoSync() {
-    _syncTimer?.cancel();
-    _syncTimer = null;
-  }
-
-  Future<void> syncData() async {
-    try {
-      _isLoading = true;
-      notifyListeners();
-
-      await SyncService.syncChanges();
-
-      await loadLocations();
-      await loadArchivedLocations();
-
-      _isLoading = false;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('Error syncing data: $e');
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> loadArchivedLocations() async {
-    try {
-      final allShipments = await _db.getAllShipments();
-
-      _shipmentsByLocation = {};
-      for (var shipment in allShipments) {
-        _shipmentsByLocation
-            .putIfAbsent(shipment.locationId, () => [])
-            .add(shipment);
-      }
-
-      await loadLocations();
-    } catch (e) {
-      debugPrint('Error loading archived locations: $e');
-    }
-    notifyListeners();
-  }
-
-  List<Location> get locationsWithShipments {
-    final Set<int> locationIdsWithShipments = {};
-
-    for (var entry in _shipmentsByLocation.entries) {
-      locationIdsWithShipments.add(entry.key);
-    }
-
-    return _locations
-        .where((location) => locationIdsWithShipments.contains(location.id))
-        .toList();
-  }
-
-  Map<String, dynamic> getShippedTotals(int locationId) {
-    if (!_shipmentsByLocation.containsKey(locationId)) {
-      return {'normalQuantity': 0.0, 'oversizeQuantity': 0.0, 'pieceCount': 0};
-    }
-
-    final shipments = _shipmentsByLocation[locationId]!.toList();
-
-    double totalNormalQuantity = 0.0;
-    double totalOversizeQuantity = 0.0;
-    int totalPieceCount = 0;
-
-    for (var shipment in shipments) {
-      totalNormalQuantity += shipment.normalQuantity;
-      totalOversizeQuantity += shipment.oversizeQuantity;
-      totalPieceCount += shipment.pieceCount;
-    }
-
-    return {
-      'normalQuantity': totalNormalQuantity,
-      'oversizeQuantity': totalOversizeQuantity,
-      'pieceCount': totalPieceCount,
-    };
-  }
-
-  Future<void> addShipment(Shipment shipment) async {
-    try {
-      await _db.insertShipment(shipment);
-      await syncData();
-    } catch (e) {
-      debugPrint('Error adding shipment: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> undoShipment(Shipment shipment) async {
-    try {
-      await _db.deleteShipment(shipment.id);
-      await syncData();
-    } catch (e) {
-      debugPrint('Error undoing shipment: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> loadLocations() async {
-    if (_isLoading) return;
-
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      _locations = await _db.getAllLocations();
-      final allShipments = await _db.getAllShipments();
-      _shipmentsByLocation = {};
-      for (var shipment in allShipments) {
-        _shipmentsByLocation
-            .putIfAbsent(shipment.locationId, () => [])
-            .add(shipment);
-      }
-    } catch (e) {
-      debugPrint('Error loading locations: $e');
-    }
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  */

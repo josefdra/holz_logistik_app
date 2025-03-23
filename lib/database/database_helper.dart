@@ -243,6 +243,24 @@ class DatabaseHelper {
     return maps.map((map) => _shipmentFromMap(map)).toList();
   }
 
+  Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT 
+        ${ShipmentTable.tableName}.*, 
+        ${UserTable.tableName}.${UserTable.columnName} AS name
+      FROM ${ShipmentTable.tableName}
+      LEFT JOIN ${UserTable.tableName} 
+        ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
+      WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnLocationId} = ? 
+        AND ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
+      ORDER BY ${ShipmentTable.tableName}.${ShipmentTable.columnDate} DESC
+    ''', [locationId, 0]);
+
+    return result.map((map) => _shipmentFromMap(map)).toList();
+  }
+
   Future<bool> deleteShipmentsByLocation(int locationId) async {
     final db = await database;
 
@@ -272,18 +290,22 @@ class DatabaseHelper {
     final db = await database;
 
     return await db.transaction((txn) async {
-      final List<Map<String, dynamic>> shipmentResult = await txn.query(
-        ShipmentTable.tableName,
-        where: '${ShipmentTable.columnId} = ?',
-        whereArgs: [id],
-        limit: 1,
-      );
+      final shipmentResult = await txn.rawQuery('''
+        SELECT 
+          ${ShipmentTable.tableName}.*, 
+          ${UserTable.tableName}.${UserTable.columnName} AS name
+        FROM ${ShipmentTable.tableName}
+        LEFT JOIN ${UserTable.tableName} 
+          ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
+        WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnId} = ?
+        LIMIT 1
+      ''', [id]);
 
       if (shipmentResult.isEmpty) {
         return false;
       }
 
-      final shipment = Shipment.fromMap(shipmentResult.first);
+      final shipment = _shipmentFromMap(shipmentResult.first);
 
       if (shipment.deleted == 1) {
         return true;
@@ -300,7 +322,7 @@ class DatabaseHelper {
         throw Exception('Location not found for ID: ${shipment.locationId}');
       }
 
-      final location = Location.fromMap(locationResult.first);
+      final location = _locationFromMap(locationResult.first);
 
       location.pieceCount += shipment.pieceCount;
       location.normalQuantity += shipment.normalQuantity;
@@ -442,13 +464,15 @@ class DatabaseHelper {
       print('ID: ${shipment[ShipmentTable.columnId]}');
       print('UserID: ${shipment[ShipmentTable.columnUserId]}');
       print('LocationID: ${shipment[ShipmentTable.columnLocationId]}');
-      print('Date: ${DateTime.fromMillisecondsSinceEpoch(shipment[ShipmentTable.columnDate] as int)}');
+      print(
+          'Date: ${DateTime.fromMillisecondsSinceEpoch(shipment[ShipmentTable.columnDate] as int)}');
       print('Deleted: ${shipment[ShipmentTable.columnDeleted]}');
       print('Contract: ${shipment[ShipmentTable.columnContract]}');
       print('AdditionalInfo: ${shipment[ShipmentTable.columnAdditionalInfo]}');
       print('Sawmill: ${shipment[ShipmentTable.columnSawmill]}');
       print('NormalQuantity: ${shipment[ShipmentTable.columnNormalQuantity]}');
-      print('OversizeQuantity: ${shipment[ShipmentTable.columnOversizeQuantity]}');
+      print(
+          'OversizeQuantity: ${shipment[ShipmentTable.columnOversizeQuantity]}');
       print('PieceCount: ${shipment[ShipmentTable.columnPieceCount]}');
     }
     print('=================== END SHIPMENTS ===================\n');
@@ -462,7 +486,8 @@ class DatabaseHelper {
       print('-----------------------------------------------');
       print('ID: ${location[LocationTable.columnId]}');
       print('UserID: ${location[LocationTable.columnUserId]}');
-      print('LastEdited: ${DateTime.fromMillisecondsSinceEpoch(location[LocationTable.columnLastEdited] as int)}');
+      print(
+          'LastEdited: ${DateTime.fromMillisecondsSinceEpoch(location[LocationTable.columnLastEdited] as int)}');
       print('Deleted: ${location[LocationTable.columnDeleted]}');
       print('Latitude: ${location[LocationTable.columnLatitude]}');
       print('Longitude: ${location[LocationTable.columnLongitude]}');
@@ -471,9 +496,11 @@ class DatabaseHelper {
       print('AdditionalInfo: ${location[LocationTable.columnAdditionalInfo]}');
       print('Access: ${location[LocationTable.columnAccess]}');
       print('Sawmill: ${location[LocationTable.columnSawmill]}');
-      print('OversizeSawmill: ${location[LocationTable.columnOversizeSawmill]}');
+      print(
+          'OversizeSawmill: ${location[LocationTable.columnOversizeSawmill]}');
       print('NormalQuantity: ${location[LocationTable.columnNormalQuantity]}');
-      print('OversizeQuantity: ${location[LocationTable.columnOversizeQuantity]}');
+      print(
+          'OversizeQuantity: ${location[LocationTable.columnOversizeQuantity]}');
       print('PieceCount: ${location[LocationTable.columnPieceCount]}');
       print('PhotoIds: ${location[LocationTable.columnPhotoIds]}');
       print('PhotoUrls: ${location[LocationTable.columnPhotoUrls]}');
