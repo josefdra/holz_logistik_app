@@ -49,26 +49,29 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+/*
+  leading: IconButton(
+  icon: const Icon(Icons.bug_report),
+  onPressed: () async {
+  ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(content: Text('Printing database contents to console...')),
+  );
+  await DatabaseHelper.instance.printDatabaseContents();
+  if (mounted) {
+  ScaffoldMessenger.of(context).showSnackBar(
+  const SnackBar(content: Text('Database contents printed to console')),
+  );
+  }
+  },
+  tooltip: 'Print Database',
+  ),
+  */
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Holz Logistik'),
-        leading: IconButton(
-          icon: const Icon(Icons.bug_report),
-          onPressed: () async {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Printing database contents to console...')),
-            );
-            await DatabaseHelper.instance.printDatabaseContents();
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Database contents printed to console')),
-              );
-            }
-          },
-          tooltip: 'Print Database',
-        ),
         actions: [
           IconButton(
             icon: Icon(_showSettings ? Icons.close : Icons.settings),

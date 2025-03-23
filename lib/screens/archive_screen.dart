@@ -84,29 +84,23 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
           );
         }
 
-        final locations = snapshot.data!;
-        return StreamBuilder<Map<int, List<Shipment>>>(
-          stream: DataProvider.shipmentsByLocationStream,
-          builder: (context, shipmentsSnapshot) {
-            // Pre-fetch all shipments data
-            final shipmentsData = shipmentsSnapshot.data ?? {};
+        final locationMaps = snapshot.data!;
+        
+        return ListView.builder(
+          itemCount: locationMaps.length,
+          itemBuilder: (context, index) {
+            // Get location and its shipments from the map
+            final locationMap = locationMaps[index];
+            final location = locationMap.keys.first;
+            final shipments = locationMap[location] ?? [];
 
-            return ListView.builder(
-              itemCount: locations.length,
-              itemBuilder: (context, index) {
-                final location = locations[index];
-                final locationShipments = shipmentsData[location.id] ?? [];
-
-                return LocationCard(
-                  key: ValueKey('location-${location.id}'),
-                  location: location,
-                  shipments: locationShipments,
-                  isExpanded: _expandedState[location.id] ?? false,
-                  onToggleExpanded: () => _toggleExpanded(location.id),
-                  onUndoShipment: (shipment) =>
-                      _handleUndoShipment(context, shipment),
-                );
-              },
+            return LocationCard(
+              key: ValueKey('location-${location.id}'),
+              location: location,
+              shipments: shipments,
+              isExpanded: _expandedState[location.id] ?? false,
+              onToggleExpanded: () => _toggleExpanded(location.id),
+              onUndoShipment: (shipment) => _handleUndoShipment(context, shipment),
             );
           },
         );

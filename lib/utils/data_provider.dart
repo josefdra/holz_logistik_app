@@ -85,7 +85,7 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> addShipment(Shipment shipment) async {
     try {
-      await _db.insertShipment(shipment);
+      await _db.insertShipment(shipment, false);
 
       await _updateStreams();
     } catch (e) {
@@ -96,7 +96,7 @@ class DataProvider extends ChangeNotifier {
 
   Future<void> undoShipment(int shipmentId) async {
     try {
-      await _db.deleteShipment(shipmentId);
+      await _db.deleteShipment(shipmentId, false);
 
       await _updateStreams();
     } catch (e) {

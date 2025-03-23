@@ -62,9 +62,11 @@ class DatabaseHelper {
     final locationMaps = await db.rawQuery('''
       SELECT DISTINCT l.* 
       FROM ${LocationTable.tableName} l
-      INNER JOIN ${ShipmentTable.tableName} s ON l.${LocationTable.columnId} = s.${ShipmentTable.columnLocationId}
-      WHERE l.${LocationTable.columnDeleted} = ?
-    ''', [0]);
+      INNER JOIN ${ShipmentTable.tableName} s 
+        ON l.${LocationTable.columnId} = s.${ShipmentTable.columnLocationId}
+      WHERE l.${LocationTable.columnDeleted} = ? 
+        AND s.${ShipmentTable.columnDeleted} = ?
+    ''', [0, 0]);
 
     final locations = locationMaps.map((map) => _locationFromMap(map)).toList();
 
@@ -188,7 +190,7 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertShipment(Shipment shipment) async {
+  Future<int> insertShipment(Shipment shipment, bool sync) async {
     final db = await database;
 
     return await db.transaction((txn) async {
@@ -200,37 +202,43 @@ class DatabaseHelper {
       );
 
       if (existingShipment.isNotEmpty) {
-        return shipment.id;
+        if (shipment.deleted == 1) {
+          deleteShipment(shipment.id, sync);
+        }
+        return 0;
       }
 
-      final List<Map<String, dynamic>> locationResult = await txn.query(
-        LocationTable.tableName,
-        where: '${LocationTable.columnId} = ?',
-        whereArgs: [shipment.locationId],
-        limit: 1,
-      );
+      if (!sync) {
+        final List<Map<String, dynamic>> locationResult = await txn.query(
+          LocationTable.tableName,
+          where: '${LocationTable.columnId} = ?',
+          whereArgs: [shipment.locationId],
+          limit: 1,
+        );
 
-      if (locationResult.isEmpty) {
-        throw Exception('Location not found for ID: ${shipment.locationId}');
+        if (locationResult.isEmpty) {
+          throw Exception('Location not found for ID: ${shipment.locationId}');
+        }
+
+        final location = _locationFromMap(locationResult.first);
+
+        location.pieceCount -= shipment.pieceCount;
+        location.normalQuantity -= shipment.normalQuantity;
+        location.oversizeQuantity -= shipment.oversizeQuantity;
+
+        await txn.update(
+          LocationTable.tableName,
+          {
+            LocationTable.columnLastEdited:
+                DateTime.now().millisecondsSinceEpoch,
+            LocationTable.columnPieceCount: location.pieceCount,
+            LocationTable.columnNormalQuantity: location.normalQuantity,
+            LocationTable.columnOversizeQuantity: location.oversizeQuantity,
+          },
+          where: '${LocationTable.columnId} = ?',
+          whereArgs: [location.id],
+        );
       }
-
-      final location = _locationFromMap(locationResult.first);
-
-      location.pieceCount -= shipment.pieceCount;
-      location.normalQuantity -= shipment.normalQuantity;
-      location.oversizeQuantity -= shipment.oversizeQuantity;
-
-      await txn.update(
-        LocationTable.tableName,
-        {
-          LocationTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
-          LocationTable.columnPieceCount: location.pieceCount,
-          LocationTable.columnNormalQuantity: location.normalQuantity,
-          LocationTable.columnOversizeQuantity: location.oversizeQuantity,
-        },
-        where: '${LocationTable.columnId} = ?',
-        whereArgs: [location.id],
-      );
 
       final values = {
         ShipmentTable.columnId: shipment.id,
@@ -275,7 +283,7 @@ class DatabaseHelper {
     return false;
   }
 
-  Future<bool> deleteShipment(int id) async {
+  Future<bool> deleteShipment(int id, bool sync) async {
     final db = await database;
 
     return await db.transaction((txn) async {
@@ -300,34 +308,37 @@ class DatabaseHelper {
         return true;
       }
 
-      final List<Map<String, dynamic>> locationResult = await txn.query(
-        LocationTable.tableName,
-        where: '${LocationTable.columnId} = ?',
-        whereArgs: [shipment.locationId],
-        limit: 1,
-      );
+      if (!sync) {
+        final List<Map<String, dynamic>> locationResult = await txn.query(
+          LocationTable.tableName,
+          where: '${LocationTable.columnId} = ?',
+          whereArgs: [shipment.locationId],
+          limit: 1,
+        );
 
-      if (locationResult.isEmpty) {
-        throw Exception('Location not found for ID: ${shipment.locationId}');
+        if (locationResult.isEmpty) {
+          throw Exception('Location not found for ID: ${shipment.locationId}');
+        }
+
+        final location = _locationFromMap(locationResult.first);
+
+        location.pieceCount += shipment.pieceCount;
+        location.normalQuantity += shipment.normalQuantity;
+        location.oversizeQuantity += shipment.oversizeQuantity;
+
+        await txn.update(
+          LocationTable.tableName,
+          {
+            LocationTable.columnLastEdited:
+                DateTime.now().millisecondsSinceEpoch,
+            LocationTable.columnPieceCount: location.pieceCount,
+            LocationTable.columnNormalQuantity: location.normalQuantity,
+            LocationTable.columnOversizeQuantity: location.oversizeQuantity,
+          },
+          where: '${LocationTable.columnId} = ?',
+          whereArgs: [location.id],
+        );
       }
-
-      final location = _locationFromMap(locationResult.first);
-
-      location.pieceCount += shipment.pieceCount;
-      location.normalQuantity += shipment.normalQuantity;
-      location.oversizeQuantity += shipment.oversizeQuantity;
-
-      await txn.update(
-        LocationTable.tableName,
-        {
-          LocationTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
-          LocationTable.columnPieceCount: location.pieceCount,
-          LocationTable.columnNormalQuantity: location.normalQuantity,
-          LocationTable.columnOversizeQuantity: location.oversizeQuantity,
-        },
-        where: '${LocationTable.columnId} = ?',
-        whereArgs: [location.id],
-      );
 
       await txn.update(
         ShipmentTable.tableName,

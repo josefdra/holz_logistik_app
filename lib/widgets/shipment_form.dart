@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:holz_logistik/utils/models.dart';
 import 'package:holz_logistik/utils/sync_service.dart';
+
+class DecimalInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final String newText = newValue.text.replaceAll(',', '.');
+
+    if (newText.isEmpty || double.tryParse(newText) != null) {
+      return TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+    return oldValue;
+  }
+}
 
 class ShipmentForm extends StatefulWidget {
   final Location location;
@@ -41,9 +58,16 @@ class _ShipmentFormState extends State<ShipmentForm> {
     super.dispose();
   }
 
-  String? _validateQuantity<T extends num>(String? value, T? maxQuantity) {
-    if (value == null || value.isEmpty) {
-      return 'Dieses Feld ist erforderlich';
+  String? _validateQuantity<T extends num>(
+      String? value, T? maxQuantity, bool pieceCount) {
+    if (pieceCount) {
+      if (value == null || value.isEmpty) {
+        return 'Dieses Feld ist erforderlich';
+      }
+    } else {
+      if (value == null || value.isEmpty) {
+        return null;
+      }
     }
 
     final quantity = double.tryParse(value);
@@ -155,23 +179,27 @@ class _ShipmentFormState extends State<ShipmentForm> {
                       value?.isEmpty ?? true ? 'Bitte Sägewerk eingeben' : null,
                 ),
                 TextFormField(
-                  controller: _normalQuantityController,
-                  decoration: const InputDecoration(labelText: 'Normal (fm)'),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                ),
+                    controller: _normalQuantityController,
+                    decoration: const InputDecoration(labelText: 'Normal (fm)'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [DecimalInputFormatter()],
+                    validator: (value) => _validateQuantity(
+                        value, widget.location.normalQuantity, false)),
                 TextFormField(
-                  controller: _oversizeQuantityController,
-                  decoration: const InputDecoration(labelText: 'ÜS (fm)'),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                ),
+                    controller: _oversizeQuantityController,
+                    decoration: const InputDecoration(labelText: 'ÜS (fm)'),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [DecimalInputFormatter()],
+                    validator: (value) => _validateQuantity(
+                        value, widget.location.oversizeQuantity, false)),
                 TextFormField(
                     controller: _pieceCountController,
                     decoration: const InputDecoration(labelText: 'Stückzahl *'),
                     keyboardType: TextInputType.number,
                     validator: (value) =>
-                        _validateQuantity(value, widget.location.pieceCount)),
+                        _validateQuantity(value, widget.location.pieceCount, true)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,

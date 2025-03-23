@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +8,22 @@ import 'package:provider/provider.dart';
 import 'package:holz_logistik/utils/models.dart';
 import 'package:holz_logistik/utils/data_provider.dart';
 import 'package:holz_logistik/utils/sync_service.dart';
+
+class DecimalInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final String newText = newValue.text.replaceAll(',', '.');
+    
+    if (newText.isEmpty || double.tryParse(newText) != null) {
+      return TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+    return oldValue;
+  }
+}
 
 class LocationForm extends StatefulWidget {
   final Location? initialLocation;
@@ -42,16 +59,16 @@ class _LocationFormState extends State<LocationForm> {
     if (widget.initialLocation != null) {
       final location = widget.initialLocation!;
       _partieNrController.text = location.partieNr;
-      _contractController.text = location.contract!;
-      _additionalInfoController.text = location.additionalInfo!;
-      _accessController.text = location.access!;
-      _sawmillController.text = location.sawmill!;
-      _oversizeSawmillController.text = location.oversizeSawmill!;
+      _contractController.text = location.contract ?? '';
+      _additionalInfoController.text = location.additionalInfo ?? '';
+      _accessController.text = location.access ?? '';
+      _sawmillController.text = location.sawmill ?? '';
+      _oversizeSawmillController.text = location.oversizeSawmill ?? '';
       _normalQuantityController.text = location.normalQuantity.toString();
       _oversizeQuantityController.text = location.oversizeQuantity.toString();
       _pieceCountController.text = location.pieceCount.toString();
-      _photoIds = List.from(location.photoIds as Iterable);
-      _photoUrls = List.from(location.photoUrls as Iterable);
+      _photoIds = List.from(location.photoIds ?? []);
+      _photoUrls = List.from(location.photoUrls ?? []);
     }
   }
 
@@ -101,6 +118,17 @@ class _LocationFormState extends State<LocationForm> {
     });
   }
 
+  double parseDoubleValue(String value) {
+    if (value.isEmpty) return 0.0;
+    return double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
+  }
+
+  int parseIntValue(String value) {
+    if (value.isEmpty) return 0;
+    final doubleValue = double.tryParse(value.replaceAll(',', '.')) ?? 0.0;
+    return doubleValue.toInt();
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -113,12 +141,6 @@ class _LocationFormState extends State<LocationForm> {
         0.0;
     final id =
         widget.initialLocation?.id ?? DateTime.now().microsecondsSinceEpoch;
-    if (_normalQuantityController.text.isEmpty) {
-      _normalQuantityController.text = '0.0';
-    }
-    if (_oversizeQuantityController.text.isEmpty) {
-      _oversizeQuantityController.text = '0.0';
-    }
 
     final location = Location(
         id: id,
@@ -132,9 +154,9 @@ class _LocationFormState extends State<LocationForm> {
         access: _accessController.text,
         sawmill: _sawmillController.text,
         oversizeSawmill: _oversizeSawmillController.text,
-        normalQuantity: double.tryParse(_normalQuantityController.text)!,
-        oversizeQuantity: double.tryParse(_oversizeQuantityController.text)!,
-        pieceCount: int.tryParse(_pieceCountController.text)!,
+        normalQuantity: parseDoubleValue(_normalQuantityController.text),
+        oversizeQuantity: parseDoubleValue(_oversizeQuantityController.text),
+        pieceCount: parseIntValue(_pieceCountController.text),
         photoIds: _photoIds,
         photoUrls: _photoUrls);
 
@@ -195,12 +217,18 @@ class _LocationFormState extends State<LocationForm> {
                 decoration: const InputDecoration(labelText: 'Normal (fm)'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  DecimalInputFormatter(),
+                ],
               ),
               TextFormField(
                 controller: _oversizeQuantityController,
                 decoration: const InputDecoration(labelText: 'ÜS (fm)'),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  DecimalInputFormatter(),
+                ],
               ),
               TextFormField(
                 controller: _pieceCountController,
@@ -208,6 +236,9 @@ class _LocationFormState extends State<LocationForm> {
                 keyboardType: TextInputType.number,
                 validator: (value) =>
                     value?.isEmpty ?? true ? 'Bitte Stückzahl eingeben' : null,
+                inputFormatters: [
+                  DecimalInputFormatter(),
+                ],
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(

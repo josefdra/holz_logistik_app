@@ -97,7 +97,7 @@ class SyncService {
           for (var json in responseData['newShipments']) {
             json['id'] = json['_id'];
             final shipment = Shipment.fromMap(json);
-            await _db.insertShipment(shipment);
+            await _db.insertShipment(shipment, true);
           }
         }
 
