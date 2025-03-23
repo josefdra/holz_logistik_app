@@ -55,7 +55,6 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
       try {
         await context.read<DataProvider>().undoShipment(shipment.id);
         if (context.mounted) {
-          setState(() {});
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Abfuhr wurde rückgängig gemacht')),
           );
@@ -72,105 +71,65 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Location>>(
-        stream: DataProvider.archivedLocationsStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return StreamBuilder<List<Map<Location, List<Shipment>>>>(
+      stream: DataProvider.archivedLocationsStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-                child: Text('Keine Standorte mit Abfuhren gefunden'));
-          }
-
-          final locations = snapshot.data!;
-          return ListView.builder(
-            itemCount: locations.length,
-            itemBuilder: (context, index) {
-              final location = locations[index];
-              return LocationShipmentsCard(
-                key: ValueKey(location.id),
-                location: location,
-                isExpanded: _expandedState[location.id] ?? false,
-                onToggleExpanded: () => _toggleExpanded(location.id),
-                onUndoShipment: (shipment) =>
-                    _handleUndoShipment(context, shipment),
-              );
-            },
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+            child: Text('Keine Standorte mit Abfuhren gefunden'),
           );
-        });
+        }
+
+        final locations = snapshot.data!;
+        return StreamBuilder<Map<int, List<Shipment>>>(
+          stream: DataProvider.shipmentsByLocationStream,
+          builder: (context, shipmentsSnapshot) {
+            // Pre-fetch all shipments data
+            final shipmentsData = shipmentsSnapshot.data ?? {};
+
+            return ListView.builder(
+              itemCount: locations.length,
+              itemBuilder: (context, index) {
+                final location = locations[index];
+                final locationShipments = shipmentsData[location.id] ?? [];
+
+                return LocationCard(
+                  key: ValueKey('location-${location.id}'),
+                  location: location,
+                  shipments: locationShipments,
+                  isExpanded: _expandedState[location.id] ?? false,
+                  onToggleExpanded: () => _toggleExpanded(location.id),
+                  onUndoShipment: (shipment) =>
+                      _handleUndoShipment(context, shipment),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 }
 
-class LocationShipmentsCard extends StatefulWidget {
+class LocationCard extends StatelessWidget {
   final Location location;
+  final List<Shipment> shipments;
   final bool isExpanded;
   final VoidCallback onToggleExpanded;
   final Function(Shipment) onUndoShipment;
 
-  const LocationShipmentsCard({
+  const LocationCard({
     super.key,
     required this.location,
+    required this.shipments,
     required this.isExpanded,
     required this.onToggleExpanded,
     required this.onUndoShipment,
   });
-
-  @override
-  State<LocationShipmentsCard> createState() => _LocationShipmentsCardState();
-}
-
-class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
-  List<Shipment> _shipments = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadShipments();
-  }
-
-  @override
-  void didUpdateWidget(LocationShipmentsCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isExpanded && !oldWidget.isExpanded) {
-      _loadShipments();
-    }
-  }
-
-  @override
-  void dispose() {
-    Provider.of<DataProvider>(context, listen: false)
-        .stopObservingLocation(widget.location.id);
-    super.dispose();
-  }
-
-  Future<void> _loadShipments() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final shipments = await context
-          .read<DataProvider>()
-          .getShipmentsByLocation(widget.location.id);
-
-      if (mounted) {
-        setState(() {
-          _shipments = shipments;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error loading shipments: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +143,7 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
       child: Column(
         children: [
           _buildLocationHeader(context),
-          if (widget.isExpanded) _buildShipmentsList(context),
+          if (isExpanded) _buildShipmentsList(context),
         ],
       ),
     );
@@ -192,10 +151,10 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
 
   Widget _buildLocationHeader(BuildContext context) {
     return InkWell(
-      onTap: widget.onToggleExpanded,
+      onTap: onToggleExpanded,
       borderRadius: BorderRadius.vertical(
         top: const Radius.circular(12),
-        bottom: widget.isExpanded ? Radius.zero : const Radius.circular(12),
+        bottom: isExpanded ? Radius.zero : const Radius.circular(12),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
@@ -204,18 +163,18 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
             SizedBox(
               width: 40,
               height: 40,
-              child: widget.location.photoUrls != null &&
-                      widget.location.photoUrls!.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.file(
-                        File(widget.location.photoUrls!.first),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildLetterAvatar(context),
-                      ),
-                    )
-                  : _buildLetterAvatar(context),
+              child:
+                  location.photoUrls != null && location.photoUrls!.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: Image.file(
+                            File(location.photoUrls!.first),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildLetterAvatar(context),
+                          ),
+                        )
+                      : _buildLetterAvatar(context),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -226,7 +185,7 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
                     children: [
                       Expanded(
                         child: Text(
-                          widget.location.partieNr,
+                          location.partieNr,
                           style:
                               Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
@@ -243,7 +202,7 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${_shipments.length} ${_shipments.length == 1 ? 'Abfuhr' : 'Abfuhren'}',
+                          '${shipments.length} ${shipments.length == 1 ? 'Abfuhr' : 'Abfuhren'}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(context).colorScheme.primary,
@@ -255,11 +214,11 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      if (widget.location.sawmill != null &&
-                          widget.location.sawmill!.isNotEmpty)
+                      if (location.sawmill != null &&
+                          location.sawmill!.isNotEmpty)
                         Expanded(
                           child: Text(
-                            widget.location.sawmill!,
+                            location.sawmill!,
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey[700],
@@ -281,12 +240,11 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
               onPressed: () => _showLocationDetails(context),
             ),
             IconButton(
-              icon: Icon(
-                  widget.isExpanded ? Icons.expand_less : Icons.expand_more),
+              icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
               visualDensity: VisualDensity.compact,
               iconSize: 20,
-              tooltip: widget.isExpanded ? 'Einklappen' : 'Ausklappen',
-              onPressed: widget.onToggleExpanded,
+              tooltip: isExpanded ? 'Einklappen' : 'Ausklappen',
+              onPressed: onToggleExpanded,
             ),
           ],
         ),
@@ -295,48 +253,31 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
   }
 
   Widget _buildShipmentsList(BuildContext context) {
-    return StreamBuilder<Map<int, List<Shipment>>>(
-      stream: DataProvider.shipmentsByLocationStream,
-      builder: (context, snapshot) {
-        if (snapshot.hasData &&
-            snapshot.data!.containsKey(widget.location.id)) {
-          _shipments = snapshot.data![widget.location.id]!;
-        }
+    if (shipments.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(child: Text('Keine Abfuhren gefunden')),
+      );
+    }
 
-        if (_isLoading) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20.0),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 3)),
-          );
-        }
-
-        if (_shipments.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: Text('Keine Abfuhren gefunden')),
-          );
-        }
-
-        return Column(
-          children: [
-            const Divider(height: 1),
-            ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: _shipments.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(height: 1, indent: 64),
-              itemBuilder: (context, index) {
-                final shipment = _shipments[index];
-                return ShipmentListItem(
-                  shipment: shipment,
-                  onUndo: () => widget.onUndoShipment(shipment),
-                );
-              },
-            ),
-          ],
-        );
-      },
+    return Column(
+      children: [
+        const Divider(height: 1),
+        ListView.separated(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: shipments.length,
+          separatorBuilder: (context, index) =>
+              const Divider(height: 1, indent: 64),
+          itemBuilder: (context, index) {
+            final shipment = shipments[index];
+            return ShipmentListItem(
+              shipment: shipment,
+              onUndo: () => onUndoShipment(shipment),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -349,10 +290,10 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
       ),
       alignment: Alignment.center,
       child: Text(
-        widget.location.sawmill != null && widget.location.sawmill!.isNotEmpty
-            ? widget.location.sawmill![0].toUpperCase()
-            : widget.location.partieNr.isNotEmpty
-                ? widget.location.partieNr[0].toUpperCase()
+        location.sawmill != null && location.sawmill!.isNotEmpty
+            ? location.sawmill![0].toUpperCase()
+            : location.partieNr.isNotEmpty
+                ? location.partieNr[0].toUpperCase()
                 : '?',
         style: TextStyle(
           color: colorScheme.primary,
@@ -366,7 +307,7 @@ class _LocationShipmentsCardState extends State<LocationShipmentsCard> {
   void _showLocationDetails(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => LocationDetailsDialog(location: widget.location),
+      builder: (context) => LocationDetailsDialog(location: location),
     );
   }
 }

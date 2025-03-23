@@ -54,17 +54,40 @@ class DatabaseHelper {
     return maps.map((map) => _locationFromMap(map)).toList();
   }
 
-  Future<List<Location>> getArchivedLocations() async {
+  Future<List<Map<Location, List<Shipment>>>>
+      getArchivedLocationsWithShipments() async {
     final db = await database;
+    final result = <Map<Location, List<Shipment>>>[];
 
-    final maps = await db.rawQuery('''
+    final locationMaps = await db.rawQuery('''
       SELECT DISTINCT l.* 
       FROM ${LocationTable.tableName} l
       INNER JOIN ${ShipmentTable.tableName} s ON l.${LocationTable.columnId} = s.${ShipmentTable.columnLocationId}
       WHERE l.${LocationTable.columnDeleted} = ?
     ''', [0]);
 
-    return maps.map((map) => _locationFromMap(map)).toList();
+    final locations = locationMaps.map((map) => _locationFromMap(map)).toList();
+
+    for (final location in locations) {
+      final shipmentMaps = await db.rawQuery('''
+        SELECT 
+          ${ShipmentTable.tableName}.*, 
+          ${UserTable.tableName}.${UserTable.columnName} AS name
+        FROM ${ShipmentTable.tableName}
+        LEFT JOIN ${UserTable.tableName} 
+          ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
+        WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnLocationId} = ? 
+          AND ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
+        ORDER BY ${ShipmentTable.tableName}.${ShipmentTable.columnDate} DESC
+      ''', [location.id, 0]);
+
+      final shipments =
+          shipmentMaps.map((map) => _shipmentFromMap(map)).toList();
+
+      result.add({location: shipments});
+    }
+
+    return result;
   }
 
   Future<int> insertOrUpdateLocation(Location location) async {
@@ -225,40 +248,6 @@ class DatabaseHelper {
 
       return await txn.insert(ShipmentTable.tableName, values);
     });
-  }
-
-  Future<List<Shipment>> getAllShipments() async {
-    final db = await database;
-
-    final maps = await db.rawQuery('''
-    SELECT 
-      ${ShipmentTable.tableName}.*, 
-      ${UserTable.tableName}.${UserTable.columnName} AS name
-    FROM ${ShipmentTable.tableName}
-    LEFT JOIN ${UserTable.tableName} 
-      ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
-    WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
-  ''', [0]);
-
-    return maps.map((map) => _shipmentFromMap(map)).toList();
-  }
-
-  Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
-    final db = await database;
-
-    final List<Map<String, dynamic>> result = await db.rawQuery('''
-      SELECT 
-        ${ShipmentTable.tableName}.*, 
-        ${UserTable.tableName}.${UserTable.columnName} AS name
-      FROM ${ShipmentTable.tableName}
-      LEFT JOIN ${UserTable.tableName} 
-        ON ${ShipmentTable.tableName}.${ShipmentTable.columnUserId} = ${UserTable.tableName}.${UserTable.columnId}
-      WHERE ${ShipmentTable.tableName}.${ShipmentTable.columnLocationId} = ? 
-        AND ${ShipmentTable.tableName}.${ShipmentTable.columnDeleted} = ?
-      ORDER BY ${ShipmentTable.tableName}.${ShipmentTable.columnDate} DESC
-    ''', [locationId, 0]);
-
-    return result.map((map) => _shipmentFromMap(map)).toList();
   }
 
   Future<bool> deleteShipmentsByLocation(int locationId) async {

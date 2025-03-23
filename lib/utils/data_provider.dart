@@ -11,18 +11,14 @@ class DataProvider extends ChangeNotifier {
   static final _activeLocationsStreamController =
       StreamController<List<Location>>.broadcast();
   static final _archiveLocationsStreamController =
-      StreamController<List<Location>>.broadcast();
-  static final _shipmentsByLocationController =
-      StreamController<Map<int, List<Shipment>>>.broadcast();
+      StreamController<List<Map<Location, List<Shipment>>>>.broadcast();
 
   final Set<int> _observedLocationIds = {};
 
   static Stream<List<Location>> get activeLocationsStream =>
       _activeLocationsStreamController.stream;
-  static Stream<List<Location>> get archivedLocationsStream =>
+  static Stream<List<Map<Location, List<Shipment>>>> get archivedLocationsStream =>
       _archiveLocationsStreamController.stream;
-  static Stream<Map<int, List<Shipment>>> get shipmentsByLocationStream =>
-      _shipmentsByLocationController.stream;
 
   void init() {
     SyncService.initializeUser();
@@ -33,25 +29,14 @@ class DataProvider extends ChangeNotifier {
     super.dispose();
     _activeLocationsStreamController.close();
     _archiveLocationsStreamController.close();
-    _shipmentsByLocationController.close();
   }
 
   Future<List<Location>> getActiveLocations() async {
     return _db.getActiveLocations();
   }
 
-  Future<List<Location>> getArchivedLocations() async {
-    return _db.getArchivedLocations();
-  }
-
-  Future<List<Shipment>> getShipmentsByLocation(int locationId) async {
-    _observedLocationIds.add(locationId);
-
-    return _db.getShipmentsByLocation(locationId);
-  }
-
-  void stopObservingLocation(int locationId) {
-    _observedLocationIds.remove(locationId);
+  Future<List<Map<Location, List<Shipment>>>> getArchivedLocations() async {
+    return _db.getArchivedLocationsWithShipments();
   }
 
   Future<void> startObservingLocations() async {
@@ -72,14 +57,6 @@ class DataProvider extends ChangeNotifier {
     final archiveLocations = await getArchivedLocations();
     if (!_archiveLocationsStreamController.isClosed) {
       _archiveLocationsStreamController.add(archiveLocations);
-    }
-
-    final Map<int, List<Shipment>> updates = {};
-    for (final locationId in _observedLocationIds) {
-      updates[locationId] = await _db.getShipmentsByLocation(locationId);
-    }
-    if (updates.isNotEmpty && !_shipmentsByLocationController.isClosed) {
-      _shipmentsByLocationController.add(updates);
     }
   }
 
