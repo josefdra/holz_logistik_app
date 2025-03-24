@@ -187,7 +187,6 @@ class LocationDetailsDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     if (location.additionalInfo != null && location.additionalInfo!.isNotEmpty ||
-                        location.access != null && location.access!.isNotEmpty ||
                         location.partieNr.isNotEmpty) ...[
                       Text(
                         'Details',
@@ -199,12 +198,6 @@ class LocationDetailsDialog extends StatelessWidget {
                           icon: Icons.info_outline,
                           title: 'Zusatzinfo',
                           content: location.additionalInfo!,
-                        ),
-                      if (location.access!.isNotEmpty)
-                        _InfoSection(
-                          icon: Icons.directions,
-                          title: 'Anfahrt',
-                          content: location.access!,
                         )
                     ],
                     const SizedBox(height: 8),

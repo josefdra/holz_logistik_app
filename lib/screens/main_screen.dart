@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:holz_logistik/database/database_helper.dart';
 import 'package:holz_logistik/utils/sync_service.dart';
 import 'package:holz_logistik/screens/analytics_screen.dart';
 import 'package:holz_logistik/screens/home_screen.dart';

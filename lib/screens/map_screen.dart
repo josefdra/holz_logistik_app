@@ -77,7 +77,7 @@ class _MapScreenState extends State<MapScreen> with AutomaticKeepAliveClientMixi
 
   void _startPositionUpdates() {
     _positionUpdateTimer?.cancel();
-    _positionUpdateTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+    _positionUpdateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _updateCurrentLocation();
     });
   }

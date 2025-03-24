@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:holz_logistik/database/database_helper.dart';
 
 import 'package:holz_logistik/utils/models.dart';
 import 'package:holz_logistik/utils/sync_service.dart';
@@ -22,10 +23,12 @@ class DecimalInputFormatter extends TextInputFormatter {
 
 class ShipmentForm extends StatefulWidget {
   final Location location;
+  final Shipment? shipment;
 
   const ShipmentForm({
     super.key,
     required this.location,
+    this.shipment,
   });
 
   @override
@@ -41,10 +44,15 @@ class _ShipmentFormState extends State<ShipmentForm> {
   final _oversizeQuantityController = TextEditingController();
   final _pieceCountController = TextEditingController();
 
+  List<Contract> _contracts = [];
+  Contract? _selectedContract;
+  String _searchText = '';
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
-    _contractController = TextEditingController(text: widget.location.contract);
+    _loadContracts();
   }
 
   @override
@@ -56,6 +64,49 @@ class _ShipmentFormState extends State<ShipmentForm> {
     _oversizeQuantityController.dispose();
     _pieceCountController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadContracts() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final contracts = await DatabaseHelper.instance.getAllContracts();
+
+      setState(() {
+        _contracts = contracts;
+        _isLoading = false;
+
+        if (widget.shipment != null) {
+          _selectedContract = _contracts.firstWhere(
+            (c) => c.id == widget.shipment!.contractId,
+            orElse: () => _contracts.first,
+          );
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Laden der Verträge: $e')),
+        );
+      }
+    }
+  }
+
+  List<Contract> get _filteredContracts {
+    if (_searchText.isEmpty) {
+      return _contracts;
+    }
+
+    return _contracts
+        .where((contract) =>
+            contract.name.toLowerCase().contains(_searchText.toLowerCase()))
+        .toList();
   }
 
   String? _validateQuantity<T extends num>(
@@ -80,6 +131,12 @@ class _ShipmentFormState extends State<ShipmentForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedContract == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bitte wählen Sie einen Vertrag aus')),
+      );
+      return;
+    }
 
     final id = DateTime.now().microsecondsSinceEpoch;
 
@@ -96,8 +153,7 @@ class _ShipmentFormState extends State<ShipmentForm> {
         locationId: widget.location.id,
         date: DateTime.now(),
         name: SyncService.name,
-        contract: _contractController.text,
-        additionalInfo: _additionalInfoController.text,
+        contractId: _selectedContract!.id,
         sawmill: _sawmillController.text,
         normalQuantity: double.tryParse(_normalQuantityController.text)!,
         oversizeQuantity: double.tryParse(_oversizeQuantityController.text)!,
@@ -123,8 +179,6 @@ class _ShipmentFormState extends State<ShipmentForm> {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 16),
-
-                // Driver information display
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -160,14 +214,75 @@ class _ShipmentFormState extends State<ShipmentForm> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _contractController,
-                  decoration: const InputDecoration(labelText: 'Vertrag *'),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Bitte Vertrag eingeben' : null,
-                ),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Vertrag *',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        decoration: const InputDecoration(
+                          hintText: 'Vertrag suchen...',
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _searchText = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: _filteredContracts.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Text('Keine Verträge gefunden'),
+                              )
+                            : ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: _filteredContracts.length,
+                                itemBuilder: (context, index) {
+                                  final contract = _filteredContracts[index];
+                                  return RadioListTile<Contract>(
+                                    title: Text(contract.name),
+                                    subtitle: Text(
+                                        '${contract.price} • ${contract.time}'),
+                                    value: contract,
+                                    groupValue: _selectedContract,
+                                    onChanged: (Contract? value) {
+                                      setState(() {
+                                        _selectedContract = value;
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                      if (_selectedContract != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            'Ausgewählt: ${_selectedContract!.name}',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 TextFormField(
                   controller: _additionalInfoController,
                   decoration: const InputDecoration(labelText: 'Zusatzinfo'),
@@ -198,8 +313,8 @@ class _ShipmentFormState extends State<ShipmentForm> {
                     controller: _pieceCountController,
                     decoration: const InputDecoration(labelText: 'Stückzahl *'),
                     keyboardType: TextInputType.number,
-                    validator: (value) =>
-                        _validateQuantity(value, widget.location.pieceCount, true)),
+                    validator: (value) => _validateQuantity(
+                        value, widget.location.pieceCount, true)),
                 const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,

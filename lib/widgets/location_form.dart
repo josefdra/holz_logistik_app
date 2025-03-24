@@ -44,7 +44,6 @@ class _LocationFormState extends State<LocationForm> {
   final _partieNrController = TextEditingController();
   final _contractController = TextEditingController();
   final _additionalInfoController = TextEditingController();
-  final _accessController = TextEditingController();
   final _sawmillController = TextEditingController();
   final _oversizeSawmillController = TextEditingController();
   final _normalQuantityController = TextEditingController();
@@ -61,7 +60,6 @@ class _LocationFormState extends State<LocationForm> {
       _partieNrController.text = location.partieNr;
       _contractController.text = location.contract ?? '';
       _additionalInfoController.text = location.additionalInfo ?? '';
-      _accessController.text = location.access ?? '';
       _sawmillController.text = location.sawmill ?? '';
       _oversizeSawmillController.text = location.oversizeSawmill ?? '';
       _normalQuantityController.text = location.normalQuantity.toString();
@@ -77,7 +75,6 @@ class _LocationFormState extends State<LocationForm> {
     _partieNrController.dispose();
     _contractController.dispose();
     _additionalInfoController.dispose();
-    _accessController.dispose();
     _sawmillController.dispose();
     _oversizeSawmillController.dispose();
     _normalQuantityController.dispose();
@@ -151,7 +148,6 @@ class _LocationFormState extends State<LocationForm> {
         partieNr: _partieNrController.text,
         contract: _contractController.text,
         additionalInfo: _additionalInfoController.text,
-        access: _accessController.text,
         sawmill: _sawmillController.text,
         oversizeSawmill: _oversizeSawmillController.text,
         normalQuantity: parseDoubleValue(_normalQuantityController.text),
@@ -199,10 +195,6 @@ class _LocationFormState extends State<LocationForm> {
               TextFormField(
                 controller: _additionalInfoController,
                 decoration: const InputDecoration(labelText: 'Zusatzinfo'),
-              ),
-              TextFormField(
-                controller: _accessController,
-                decoration: const InputDecoration(labelText: 'Anfahrt'),
               ),
               TextFormField(
                 controller: _sawmillController,
