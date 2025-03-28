@@ -12,9 +12,10 @@ List<T>? decodeJsonList<T>(String? jsonString) {
   }
 }
 
+/// --------------------------------------- Quantity --------------------------------------- ///
+
 class Quantity {
   final int id;
-  final bool deleted;
   DateTime lastEdited;
   double? normal;
   double? oversize;
@@ -22,7 +23,6 @@ class Quantity {
 
   Quantity(
       {required this.id,
-      required this.deleted,
       required this.lastEdited,
       this.normal,
       this.oversize,
@@ -31,7 +31,6 @@ class Quantity {
   static Quantity fromMap(Map<String, dynamic> map) {
     return Quantity(
       id: map[QuantityTable.columnId],
-      deleted: map[QuantityTable.columnDeleted],
       lastEdited: DateTime.fromMillisecondsSinceEpoch(
           map[QuantityTable.columnLastEdited]),
       normal: map[QuantityTable.columnNormalQuantity],
@@ -42,7 +41,6 @@ class Quantity {
 
   static Map<String, dynamic> getValues(Quantity quantity) {
     Map<String, dynamic> values = {
-      QuantityTable.columnDeleted: 0,
       QuantityTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
       QuantityTable.columnNormalQuantity: quantity.normal,
       QuantityTable.columnOversizeQuantity: quantity.oversize,
@@ -63,19 +61,19 @@ class Quantity {
   static Map<String, dynamic> getUpdateValues(Quantity quantity) {
     Map<String, dynamic> values = getValues(quantity);
 
-    values[QuantityTable.columnId] = quantity.id;
-
     return values;
   }
 }
 
-class DisplayLocation {
+/// --------------------------------------- Location --------------------------------------- ///
+
+class Location {
   final int id;
   DateTime lastEdited;
   final double latitude;
   final double longitude;
   String partieNr;
-  DisplayContract? contract;
+  Contract? contract;
   String? additionalInfo;
   String? sawmill;
   String? oversizeSawmill;
@@ -83,9 +81,9 @@ class DisplayLocation {
   final Quantity? currentQuantity;
   final List<int>? photoIds;
   final List<String>? photoUrls;
-  final List<DisplayShipment>? shipments;
+  final List<Shipment>? shipments;
 
-  DisplayLocation(
+  Location(
       {required this.id,
       required this.lastEdited,
       required this.latitude,
@@ -101,12 +99,9 @@ class DisplayLocation {
       this.photoUrls,
       this.shipments});
 
-  static DisplayLocation fromMap(
-      Map<String, dynamic> map,
-      DisplayContract contract,
-      Quantity initialQuantity,
-      Quantity currentQuantity,
-      {List<DisplayShipment>? shipments}) {
+  static Location fromMap(Map<String, dynamic> map, Contract contract,
+      Quantity initialQuantity, Quantity currentQuantity,
+      {List<Shipment>? shipments}) {
     final bool isDone = (map[LocationTable.columnDone] ?? 0) == 1;
     final photoIds =
         isDone ? decodeJsonList<int>(map[LocationTable.columnPhotoIds]) : null;
@@ -114,7 +109,7 @@ class DisplayLocation {
         ? decodeJsonList<String>(map[LocationTable.columnPhotoUrls])
         : null;
 
-    return DisplayLocation(
+    return Location(
         id: map[LocationTable.columnId],
         lastEdited: DateTime.fromMillisecondsSinceEpoch(
             map[LocationTable.columnLastEdited]),
@@ -132,22 +127,14 @@ class DisplayLocation {
         shipments: shipments);
   }
 
-  static bool isDone(DisplayLocation location) {
-    return (location.currentQuantity!.normal == 0 &&
-        location.currentQuantity!.oversize! == 0 &&
-        location.currentQuantity!.pieceCount == 0);
-  }
-
-  static Future<Map<String, dynamic>> getValues(
-      DisplayLocation location) async {
+  static Future<Map<String, dynamic>> getValues(Location location) async {
     final prefs = await SharedPreferences.getInstance();
 
     Map<String, dynamic> values = {
-      LocationTable.columnUserId: prefs.getString('apiKey'),
+      LocationTable.columnUserId: prefs.getString('userId'),
       LocationTable.columnContractId: location.contract!.id,
       LocationTable.columnInitialQuantityId: location.initialQuantity!.id,
       LocationTable.columnCurrentQuantityId: location.currentQuantity!.id,
-      LocationTable.columnDeleted: 0,
       LocationTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
       LocationTable.columnLatitude: location.latitude,
       LocationTable.columnLongitude: location.longitude,
@@ -162,177 +149,90 @@ class DisplayLocation {
     return values;
   }
 
-  static Future<Map<String, dynamic>> getCreateValues(
-      DisplayLocation location) async {
+  static Future<Map<String, dynamic>> getCreateValues(Location location) async {
     Map<String, dynamic> values = await getValues(location);
 
     values[LocationTable.columnId] = DateTime.now().microsecondsSinceEpoch;
+    values[LocationTable.columnDeleted] = 0;
     values[LocationTable.columnDone] = 0;
 
     return values;
   }
 
-  static Future<Map<String, dynamic>> getUpdateValues(
-      DisplayLocation location) async {
+  static Future<Map<String, dynamic>> getUpdateValues(Location location) async {
     Map<String, dynamic> values = await getValues(location);
 
-    values[LocationTable.columnId] = location.id;
-    values[LocationTable.columnDone] = 0;
-
     return values;
   }
 }
 
-class SyncLocation extends DisplayLocation {
-  final String userId;
-  final int contractId;
-  final int initialQuantityId;
-  final int currentQuantityId;
-  final bool deleted;
-  final bool done;
+/// --------------------------------------- Shipment --------------------------------------- ///
 
-  SyncLocation(
-      {required super.id,
-      required this.userId,
-      required this.contractId,
-      required this.initialQuantityId,
-      required this.currentQuantityId,
-      required this.deleted,
-      required this.done,
-      required super.lastEdited,
-      required super.latitude,
-      required super.longitude,
-      required super.partieNr,
-      super.additionalInfo,
-      super.sawmill,
-      super.oversizeSawmill,
-      super.photoIds,
-      super.photoUrls,
-      super.shipments});
-
-  static SyncLocation fromMap(Map<String, dynamic> map) {
-    return SyncLocation(
-        id: map[LocationTable.columnId],
-        userId: map[LocationTable.columnUserId],
-        contractId: map[LocationTable.columnContractId],
-        initialQuantityId: map[LocationTable.columnInitialQuantityId],
-        currentQuantityId: map[LocationTable.columnCurrentQuantityId],
-        deleted: map[LocationTable.columnDeleted],
-        done: map[LocationTable.columnDone],
-        lastEdited: DateTime.fromMillisecondsSinceEpoch(
-            map[LocationTable.columnLastEdited]),
-        latitude: map[LocationTable.columnLatitude],
-        longitude: map[LocationTable.columnLongitude],
-        partieNr: map[LocationTable.columnPartieNr],
-        additionalInfo: map[LocationTable.columnAdditionalInfo],
-        sawmill: map[LocationTable.columnSawmill],
-        oversizeSawmill: map[LocationTable.columnOversizeSawmill],
-        photoIds: decodeJsonList<int>(map[LocationTable.columnPhotoIds]),
-        photoUrls: decodeJsonList<String>(map[LocationTable.columnPhotoUrls]));
-  }
-}
-
-class DisplayShipment {
-  final DateTime lastEdited;
+class Shipment {
+  final int id;
+  final int locationId;
   final String? driverName;
-  final DisplayContract? contract;
+  final Contract? contract;
   final String sawmill;
   final Quantity? quantity;
 
-  DisplayShipment(
-      {required this.lastEdited,
+  Shipment(
+      {required this.id,
+      required this.locationId,
       this.driverName,
       this.contract,
       required this.sawmill,
       this.quantity});
 
-  static DisplayShipment fromMap(Map<String, dynamic> map, Quantity quantity) {
-    DisplayContract contract = DisplayContract.fromMap(map);
+  static Shipment fromMap(Map<String, dynamic> map, Quantity quantity) {
+    Contract contract = Contract.fromMap(map);
 
-    return DisplayShipment(
-        lastEdited: DateTime.fromMillisecondsSinceEpoch(
-            map[ShipmentTable.columnLastEdited]),
+    return Shipment(
+        id: map[ShipmentTable.columnId],
+        locationId: map[ShipmentTable.columnLocationId],
         driverName: map[UserTable.columnName],
         contract: contract,
         sawmill: map[ShipmentTable.columnSawmill],
         quantity: quantity);
   }
 
-  static Future<Map<String, dynamic>> getInserUpdateValues(
-      DisplayShipment shipment, int locationId) async {
+  static Future<Map<String, dynamic>> getValues(Shipment shipment) async {
     final prefs = await SharedPreferences.getInstance();
 
     Map<String, dynamic> values = {
-      ShipmentTable.columnId: DateTime.now().microsecondsSinceEpoch,
-      ShipmentTable.columnUserId: prefs.getString('apiKey'),
-      ShipmentTable.columnLocationId: locationId,
-      ShipmentTable.columnContractId: shipment.contract!.id,
-      ShipmentTable.columnQuantityId: shipment.quantity!.id,
-      ShipmentTable.columnDeleted: 0,
-      ShipmentTable.columnLastEdited: shipment.lastEdited,
-      ShipmentTable.columnSawmill: shipment.sawmill
-    };
-
-    return values;
-  }
-}
-
-class SyncShipment extends DisplayShipment {
-  final int id;
-  final String userId;
-  final int locationId;
-  final int contractId;
-  final int quantityId;
-  final bool deleted;
-
-  SyncShipment(
-      {required this.id,
-      required this.userId,
-      required this.locationId,
-      required this.contractId,
-      required this.quantityId,
-      required this.deleted,
-      required super.lastEdited,
-      required super.sawmill});
-
-  static SyncShipment fromMap(Map<String, dynamic> map) {
-    return SyncShipment(
-        id: map[ShipmentTable.columnId],
-        userId: map[ShipmentTable.columnUserId],
-        locationId: map[ShipmentTable.columnLocationId],
-        contractId: map[ShipmentTable.columnContractId],
-        quantityId: map[ShipmentTable.columnQuantityId],
-        deleted: map[ShipmentTable.columnDeleted],
-        lastEdited: DateTime.fromMillisecondsSinceEpoch(
-            map[ShipmentTable.columnLastEdited]),
-        sawmill: map[ShipmentTable.columnSawmill]);
-  }
-
-  static Future<Map<String, dynamic>> getValues(SyncShipment shipment) async {
-    Map<String, dynamic> values = {
-      ShipmentTable.columnId: shipment.id,
-      ShipmentTable.columnUserId: shipment.userId,
+      ShipmentTable.columnUserId: prefs.getString('userId'),
       ShipmentTable.columnLocationId: shipment.locationId,
       ShipmentTable.columnContractId: shipment.contract!.id,
       ShipmentTable.columnQuantityId: shipment.quantity!.id,
-      ShipmentTable.columnDeleted: shipment.deleted,
-      ShipmentTable.columnLastEdited: shipment.lastEdited,
-      ShipmentTable.columnSawmill: shipment.sawmill
+      ShipmentTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
+      ShipmentTable.columnSawmill: shipment.sawmill,
     };
+
+    return values;
+  }
+
+  static Future<Map<String, dynamic>> getCreateValues(
+      Shipment shipment) async {
+    Map<String, dynamic> values = await getValues(shipment);
+
+    values[ShipmentTable.columnId] = DateTime.now().microsecondsSinceEpoch;
+    values[ShipmentTable.columnDeleted] = 0;
 
     return values;
   }
 }
 
-class DisplayContract {
-  final int id;
-  final String title;
-  final String? additionalInfo;
-  final int availableQuantity;
-  final int bookedQuantity;
-  final int shippedQuantity;
+/// --------------------------------------- Contract --------------------------------------- ///
 
-  DisplayContract({
+class Contract {
+  final int id;
+  String title;
+  String? additionalInfo;
+  int availableQuantity;
+  int bookedQuantity;
+  int shippedQuantity;
+
+  Contract({
     required this.id,
     required this.title,
     this.additionalInfo,
@@ -341,8 +241,8 @@ class DisplayContract {
     required this.shippedQuantity,
   });
 
-  static DisplayContract fromMap(Map<String, dynamic> map) {
-    return DisplayContract(
+  static Contract fromMap(Map<String, dynamic> map) {
+    return Contract(
       id: map[ContractTable.columnId],
       title: map[ContractTable.columnTitle],
       additionalInfo: map[ContractTable.columnAdditionalInfo],
@@ -352,62 +252,43 @@ class DisplayContract {
     );
   }
 
-  static Future<Map<String, dynamic>> getInserUpdateValues(
-      DisplayContract contract) async {
-    final prefs = await SharedPreferences.getInstance();
-
+  static Future<Map<String, dynamic>> getValues(Contract contract) async {
     Map<String, dynamic> values = {
-      ContractTable.columnId: DateTime.now().microsecondsSinceEpoch,
-      ContractTable.columnUserId: prefs.getString('apiKey'),
-      ContractTable.columnLocationId: locationId,
-      ContractTable.columnContractId: shipment.contract!.id,
-      ContractTable.columnQuantityId: shipment.quantity!.id,
-      ContractTable.columnDeleted: 0,
-      ContractTable.columnLastEdited: shipment.lastEdited,
-      ContractTable.columnSawmill: shipment.sawmill
+      ContractTable.columnLastEdited: DateTime.now().millisecondsSinceEpoch,
+      ContractTable.columnTitle: contract.title,
+      ContractTable.columnAdditionalInfo: contract.additionalInfo,
+      ContractTable.columnAvailableQuantity: contract.availableQuantity,
+      ContractTable.columnBookedQuantity: contract.bookedQuantity,
+      ContractTable.columnShippedQuantity: contract.shippedQuantity,
     };
+
+    return values;
+  }
+
+  static Future<Map<String, dynamic>> getCreateValues(Contract contract) async {
+    Map<String, dynamic> values = await getValues(contract);
+
+    values[ContractTable.columnId] = DateTime.now().microsecondsSinceEpoch;
+    values[ContractTable.columnDeleted] = 0;
+    values[ContractTable.columnDone] = 0;
+
+    return values;
+  }
+
+  static Future<Map<String, dynamic>> getUpdateValues(Contract contract) async {
+    Map<String, dynamic> values = await getValues(contract);
 
     return values;
   }
 }
 
-class SyncContract extends DisplayContract {
-  final bool deleted;
-  final bool done;
-  final DateTime lastEdited;
-
-  SyncContract(
-      {required super.id,
-      required this.deleted,
-      required this.done,
-      required this.lastEdited,
-      required super.title,
-      super.additionalInfo,
-      required super.availableQuantity,
-      required super.bookedQuantity,
-      required super.shippedQuantity});
-
-  static SyncContract fromMap(Map<String, dynamic> map) {
-    return SyncContract(
-      id: map[ContractTable.columnId],
-      deleted: map[ContractTable.columnDeleted],
-      done: map[ContractTable.columnDone],
-      lastEdited: DateTime.fromMillisecondsSinceEpoch(
-          map[ContractTable.columnLastEdited]),
-      title: map[ContractTable.columnTitle],
-      additionalInfo: map[ContractTable.columnAdditionalInfo],
-      availableQuantity: map[ContractTable.columnAvailableQuantity],
-      bookedQuantity: map[ContractTable.columnBookedQuantity],
-      shippedQuantity: map[ContractTable.columnShippedQuantity],
-    );
-  }
-}
+/// --------------------------------------- User --------------------------------------- ///
 
 class User {
   final String id;
-  final bool privileged;
-  final DateTime lastEdited;
-  final String name;
+  bool privileged;
+  DateTime lastEdited;
+  String name;
 
   User(
       {required this.id,

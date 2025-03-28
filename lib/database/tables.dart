@@ -1,3 +1,5 @@
+/// --------------------------------------- Quantity --------------------------------------- ///
+
 class QuantityTable {
   static const String tableName = 'quantities';
 
@@ -19,6 +21,8 @@ class QuantityTable {
     )
 ''';
 }
+
+/// --------------------------------------- Location --------------------------------------- ///
 
 class LocationTable {
   static const String tableName = 'locations';
@@ -66,6 +70,8 @@ class LocationTable {
   ''';
 }
 
+/// --------------------------------------- Shipment --------------------------------------- ///
+
 class ShipmentTable {
   static const String tableName = 'shipments';
 
@@ -96,6 +102,8 @@ class ShipmentTable {
   ''';
 }
 
+/// --------------------------------------- Contract --------------------------------------- ///
+
 class ContractTable {
   static const String tableName = 'contracts';
 
@@ -123,6 +131,8 @@ class ContractTable {
     )
   ''';
 }
+
+/// --------------------------------------- User --------------------------------------- ///
 
 class UserTable {
   static const String tableName = 'users';

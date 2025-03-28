@@ -9,7 +9,7 @@ import 'package:holz_logistik/utils/models.dart';
 class SyncService {
   static final baseUrl = dotenv.env['BASE_URL'];
   static String name = 'Test Nutzer';
-  static String apiKey = '';
+  static String userId = '';
   static bool hasCredentials = false;
   static late int lastSync;
   static final DatabaseHelper _db = DatabaseHelper.instance;
@@ -18,22 +18,22 @@ class SyncService {
     final prefs = await SharedPreferences.getInstance();
     lastSync = prefs.getInt('lastSync') ?? 0;
 
-    if (!prefs.containsKey('apiKey')) {
+    if (!prefs.containsKey('userId')) {
       return;
     }
 
     name = prefs.getString('name')!;
-    apiKey = prefs.getString('apiKey')!;
+    userId = prefs.getString('userId')!;
     hasCredentials = true;
   }
 
-  static Future<void> updateUserData(String newName, String newApiKey) async {
+  static Future<void> updateUserData(String newName, String newuserId) async {
     name = newName;
-    apiKey = newApiKey;
+    userId = newuserId;
     hasCredentials = true;
 
     lastSync = 0;
-    await _db.updateDB(apiKey);
+    await _db.updateDB(userId);
     await syncChanges();
   }
 
@@ -43,8 +43,8 @@ class SyncService {
     await prefs.setInt('lastSync', SyncService.lastSync);
   }
 
-  static Future<Map<String, dynamic>> getUserData(String apiKey) async {
-    final url = '$baseUrl/verify/$apiKey';
+  static Future<Map<String, dynamic>> getUserData(String userId) async {
+    final url = '$baseUrl/verify/$userId';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -62,7 +62,7 @@ class SyncService {
   static Map<String, String> getAuthHeaders() {
     return {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
+      'x-api-key': userId,
     };
   }
 
