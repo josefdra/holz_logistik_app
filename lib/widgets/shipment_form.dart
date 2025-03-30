@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:holz_logistik/database/database_helper.dart';
+import 'package:holz_logistik/data/database_helper.dart';
 
-import 'package:holz_logistik/utils/models.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
+import 'package:holz_logistik/data/models.dart';
+import 'package:holz_logistik/data/sync_service.dart';
 
 class DecimalInputFormatter extends TextInputFormatter {
   @override

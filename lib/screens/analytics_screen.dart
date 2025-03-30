@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:holz_logistik/database/database_helper.dart';
+import 'package:holz_logistik/data/database_helper.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});

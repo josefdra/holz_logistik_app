@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:holz_logistik/utils/models.dart';
+import 'package:holz_logistik/data/models.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:holz_logistik/utils/data_provider.dart';
+import 'package:holz_logistik/data/data_provider.dart';
 import 'package:holz_logistik/widgets/location_form.dart';
 import 'package:holz_logistik/widgets/location_details.dart';
 

@@ -5,9 +5,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import 'package:holz_logistik/utils/models.dart';
-import 'package:holz_logistik/utils/data_provider.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
+import 'package:holz_logistik/data/models.dart';
+import 'package:holz_logistik/data/data_provider.dart';
+import 'package:holz_logistik/data/sync_service.dart';
 
 class DecimalInputFormatter extends TextInputFormatter {
   @override

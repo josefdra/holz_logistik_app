@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:holz_logistik/utils/data_provider.dart';
-import 'package:holz_logistik/utils/sync_service.dart';
+import 'package:holz_logistik/data/data_provider.dart';
+import 'package:holz_logistik/data/sync_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
