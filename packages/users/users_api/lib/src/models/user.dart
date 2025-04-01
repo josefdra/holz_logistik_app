@@ -5,7 +5,14 @@ import 'package:users_api/users_api.dart';
 
 part 'user.g.dart';
 
-enum Role { basic, privileged }
+/// Defines the possible roles a user can have
+enum Role {
+  /// Basic user (regular permissions)
+  basic,
+  
+  /// Privileged user (administrative permissions)
+  privileged
+}
 
 /// {@template user_item}
 /// A single `user` item.
