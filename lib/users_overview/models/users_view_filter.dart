@@ -1,6 +1,6 @@
 import 'package:users_repository/users_repository.dart';
 
-enum UsersViewFilter { all, activeOnly, completedOnly }
+enum UsersViewFilter { all, activeOnly, privilegedOnly }
 
 extension UsersViewFilterX on UsersViewFilter {
   bool apply(User user) {
@@ -8,9 +8,9 @@ extension UsersViewFilterX on UsersViewFilter {
       case UsersViewFilter.all:
         return true;
       case UsersViewFilter.activeOnly:
-        return !user.isCompleted;
-      case UsersViewFilter.completedOnly:
-        return user.isCompleted;
+        return !user.isPrivileged;
+      case UsersViewFilter.privilegedOnly:
+        return user.isPrivileged;
     }
   }
 

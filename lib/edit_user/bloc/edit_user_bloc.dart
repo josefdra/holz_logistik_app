@@ -13,29 +13,20 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
         super(
           EditUserState(
             initialUser: initialUser,
-            title: initialUser?.title ?? '',
-            description: initialUser?.description ?? '',
+            name: initialUser?.name ?? '',
           ),
         ) {
-    on<EditUserTitleChanged>(_onTitleChanged);
-    on<EditUserDescriptionChanged>(_onDescriptionChanged);
+    on<EditUserNameChanged>(_onNameChanged);
     on<EditUserSubmitted>(_onSubmitted);
   }
 
   final UsersRepository _usersRepository;
 
-  void _onTitleChanged(
-    EditUserTitleChanged event,
+  void _onNameChanged(
+    EditUserNameChanged event,
     Emitter<EditUserState> emit,
   ) {
-    emit(state.copyWith(title: event.title));
-  }
-
-  void _onDescriptionChanged(
-    EditUserDescriptionChanged event,
-    Emitter<EditUserState> emit,
-  ) {
-    emit(state.copyWith(description: event.description));
+    emit(state.copyWith(name: event.name));
   }
 
   Future<void> _onSubmitted(
@@ -43,10 +34,12 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
     Emitter<EditUserState> emit,
   ) async {
     emit(state.copyWith(status: EditUserStatus.loading));
-    final user = (state.initialUser ?? User(title: '')).copyWith(
-      title: state.title,
-      description: state.description,
-    );
+    final user = state.initialUser ??
+        User(
+          name: '',
+          id: DateTime.now().microsecondsSinceEpoch,
+          isPrivileged: false,
+        ).copyWith(name: state.name);
 
     try {
       await _usersRepository.saveUser(user);

@@ -1,9 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
-import 'package:users_api/user_api.dart';
+import 'package:users_api/users_api.dart';
 
-part '../modles/user.g.dart';
+part 'user.g.dart';
 
 /// {@template user_item}
 /// A single `user` item.
@@ -19,7 +19,7 @@ part '../modles/user.g.dart';
 @JsonSerializable()
 class User extends Equatable {
   /// {@macro user_item}
-  User({
+  const User({
     required this.id,
     required this.name,
     required this.isPrivileged,

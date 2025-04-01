@@ -70,7 +70,7 @@ class EditUserView extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Column(
-              children: [_TitleField(), _DescriptionField()],
+              children: [_NameField()],
             ),
           ),
         ),
@@ -79,21 +79,21 @@ class EditUserView extends StatelessWidget {
   }
 }
 
-class _TitleField extends StatelessWidget {
-  const _TitleField();
+class _NameField extends StatelessWidget {
+  const _NameField();
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = context.watch<EditUserBloc>().state;
-    final hintText = state.initialUser?.title ?? '';
+    final hintText = state.initialUser?.name ?? '';
 
     return TextFormField(
-      key: const Key('editUserView_title_textFormField'),
-      initialValue: state.title,
+      key: const Key('editUserView_name_textFormField'),
+      initialValue: state.name,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editUserTitleLabel,
+        labelText: l10n.editUserNameLabel,
         hintText: hintText,
       ),
       maxLength: 50,
@@ -102,37 +102,7 @@ class _TitleField extends StatelessWidget {
         FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
       ],
       onChanged: (value) {
-        context.read<EditUserBloc>().add(EditUserTitleChanged(value));
-      },
-    );
-  }
-}
-
-class _DescriptionField extends StatelessWidget {
-  const _DescriptionField();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    final state = context.watch<EditUserBloc>().state;
-    final hintText = state.initialUser?.description ?? '';
-
-    return TextFormField(
-      key: const Key('editUserView_description_textFormField'),
-      initialValue: state.description,
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editUserDescriptionLabel,
-        hintText: hintText,
-      ),
-      maxLength: 300,
-      maxLines: 7,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(300),
-      ],
-      onChanged: (value) {
-        context.read<EditUserBloc>().add(EditUserDescriptionChanged(value));
+        context.read<EditUserBloc>().add(EditUserNameChanged(value));
       },
     );
   }

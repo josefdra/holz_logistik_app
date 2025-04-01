@@ -5,13 +5,13 @@ class UserListTile extends StatelessWidget {
   const UserListTile({
     required this.user,
     super.key,
-    this.onToggleCompleted,
+    this.onTogglePrivileged,
     this.onDismissed,
     this.onTap,
   });
 
   final User user;
-  final ValueChanged<bool>? onToggleCompleted;
+  final ValueChanged<bool>? onTogglePrivileged;
   final DismissDirectionCallback? onDismissed;
   final VoidCallback? onTap;
 
@@ -36,29 +36,24 @@ class UserListTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         title: Text(
-          user.title,
+          user.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: !user.isCompleted
+          style: !user.isPrivileged
               ? null
               : TextStyle(
                   color: captionColor,
                   decoration: TextDecoration.lineThrough,
                 ),
         ),
-        subtitle: Text(
-          user.description,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
         leading: Checkbox(
           shape: const ContinuousRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-          value: user.isCompleted,
-          onChanged: onToggleCompleted == null
+          value: user.isPrivileged,
+          onChanged: onTogglePrivileged == null
               ? null
-              : (value) => onToggleCompleted!(value!),
+              : (value) => onTogglePrivileged!(value!),
         ),
         trailing: onTap == null ? null : const Icon(Icons.chevron_right),
       ),

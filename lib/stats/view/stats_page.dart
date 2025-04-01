@@ -34,11 +34,11 @@ class StatsView extends StatelessWidget {
       body: Column(
         children: [
           ListTile(
-            key: const Key('statsView_completedUsers_listTile'),
+            key: const Key('statsView_privilegedUsers_listTile'),
             leading: const Icon(Icons.check_rounded),
-            title: Text(l10n.statsCompletedUserCountLabel),
+            title: Text(l10n.statsPrivilegedUserCountLabel),
             trailing: Text(
-              '${state.completedUsers}',
+              '${state.privilegedUsers}',
               style: textTheme.headlineSmall,
             ),
           ),

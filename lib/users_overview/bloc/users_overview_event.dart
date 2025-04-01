@@ -14,14 +14,14 @@ final class UsersOverviewSubscriptionRequested extends UsersOverviewEvent {
 final class UsersOverviewUserCompletionToggled extends UsersOverviewEvent {
   const UsersOverviewUserCompletionToggled({
     required this.user,
-    required this.isCompleted,
+    required this.isPrivileged,
   });
 
   final User user;
-  final bool isCompleted;
+  final bool isPrivileged;
 
   @override
-  List<Object> get props => [user, isCompleted];
+  List<Object> get props => [user, isPrivileged];
 }
 
 final class UsersOverviewUserDeleted extends UsersOverviewEvent {
@@ -44,12 +44,4 @@ class UsersOverviewFilterChanged extends UsersOverviewEvent {
 
   @override
   List<Object> get props => [filter];
-}
-
-class UsersOverviewToggleAllRequested extends UsersOverviewEvent {
-  const UsersOverviewToggleAllRequested();
-}
-
-class UsersOverviewClearCompletedRequested extends UsersOverviewEvent {
-  const UsersOverviewClearCompletedRequested();
 }

@@ -35,8 +35,8 @@ class UsersOverviewFilterButton extends StatelessWidget {
             child: Text(l10n.usersOverviewFilterActiveOnly),
           ),
           PopupMenuItem(
-            value: UsersViewFilter.completedOnly,
-            child: Text(l10n.usersOverviewFilterCompletedOnly),
+            value: UsersViewFilter.privilegedOnly,
+            child: Text(l10n.usersOverviewFilterPrivilegedOnly),
           ),
         ];
       },

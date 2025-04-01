@@ -5,25 +5,25 @@ enum StatsStatus { initial, loading, success, failure }
 final class StatsState extends Equatable {
   const StatsState({
     this.status = StatsStatus.initial,
-    this.completedUsers = 0,
+    this.privilegedUsers = 0,
     this.activeUsers = 0,
   });
 
   final StatsStatus status;
-  final int completedUsers;
+  final int privilegedUsers;
   final int activeUsers;
 
   @override
-  List<Object> get props => [status, completedUsers, activeUsers];
+  List<Object> get props => [status, privilegedUsers, activeUsers];
 
   StatsState copyWith({
     StatsStatus? status,
-    int? completedUsers,
+    int? privilegedUsers,
     int? activeUsers,
   }) {
     return StatsState(
       status: status ?? this.status,
-      completedUsers: completedUsers ?? this.completedUsers,
+      privilegedUsers: privilegedUsers ?? this.privilegedUsers,
       activeUsers: activeUsers ?? this.activeUsers,
     );
   }

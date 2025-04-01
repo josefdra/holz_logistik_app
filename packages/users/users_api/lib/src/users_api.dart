@@ -3,9 +3,9 @@ import 'package:users_api/users_api.dart';
 /// {@template users_api}
 /// The interface for an API that provides access to users.
 /// {@endtemplate}
-abstract class UsersAip {
+abstract class UsersApi {
   /// {@macro users_api}
-  const UsersAip();
+  const UsersApi();
 
   /// Provides a [Stream] of all users.
   Stream<List<User>> getUsers();

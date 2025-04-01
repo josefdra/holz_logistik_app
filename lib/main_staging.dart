@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:holz_logistik/bootstrap.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:users_local_storage/users_local_storage.dart';
 
 Future<void> main() async {

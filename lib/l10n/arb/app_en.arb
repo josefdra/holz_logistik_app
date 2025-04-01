@@ -16,28 +16,20 @@
   "@usersOverviewFilterActiveOnly": {
     "description": "Text shown in the filter dropdown of the Users Overview Page for the option to display active users only"
   },
-  "usersOverviewFilterCompletedOnly": "Completed only",
-  "@usersOverviewFilterCompletedOnly": {
-    "description": "Text shown in the filter dropdown of the Users Overview Page for the option to display completed users only"
-  },
-  "usersOverviewMarkAllCompleteButtonText": "Mark all complete",
-  "@usersOverviewMarkAllCompleteButtonText": {
-    "description": "Button text shown in the options dropdown of the Users Overview Page that marks all current users as complete"
-  },
-  "usersOverviewClearCompletedButtonText": "Clear completed",
-  "@usersOverviewClearCompletedButtonText": {
-    "description": "Button text shown in the options dropdown of the Users Overview Page that deletes all completed users"
+  "usersOverviewFilterPrivilegedOnly": "Privileged only",
+  "@usersOverviewFilterPrivilegedOnly": {
+    "description": "Text shown in the filter dropdown of the Users Overview Page for the option to display privileged users only"
   },
   "usersOverviewEmptyText": "No users found with the selected filters.",
   "@usersOverviewEmptyText": {
     "description": "Text shown in the Users Overview Page when no users are found with the selected filters"
   },
-  "usersOverviewUserDeletedSnackbarText": "User \"{userTitle}\" deleted.",
+  "usersOverviewUserDeletedSnackbarText": "User \"{userName}\" deleted.",
   "@usersOverviewUserDeletedSnackbarText": {
     "description": "Snackbar text shown when a user is deleted from the Users Overview Page",
     "placeholders": {
-      "userTitle": {
-        "description": "The title of the user that was deleted"
+      "userName": {
+        "description": "The Name of the user that was deleted"
       }
     }
   },
@@ -52,18 +44,6 @@
   "usersOverviewOptionsTooltip": "Options",
   "@usersOverviewOptionsTooltip": {
     "description": "Tooltip text shown in the options dropdown of the Users Overview Page"
-  },
-  "usersOverviewOptionsMarkAllComplete": "Mark all as completed",
-  "@usersOverviewOptionsMarkAllComplete": {
-    "description": "Button text shown in the options dropdown of the Users Overview Page that marks all users as complete"
-  },
-  "usersOverviewOptionsMarkAllIncomplete": "Mark all as incomplete",
-  "@usersOverviewOptionsMarkAllIncomplete": {
-    "description": "Button text shown in the options dropdown of the Users Overview Page that marks all users as incomplete"
-  },
-  "usersOverviewOptionsClearCompleted": "Clear completed",
-  "@usersOverviewOptionsClearCompleted": {
-    "description": "Button text shown in the options dropdown of the Users Overview Page that deletes all completed users"
   },
   "userDetailsAppBarTitle": "User Details",
   "@userDetailsAppBarTitle": {
@@ -85,13 +65,9 @@
   "@editUserAddAppBarTitle": {
     "description": "Title text shown in the AppBar of the User Edit Page when adding a new user"
   },
-  "editUserTitleLabel": "Title",
-  "@editUserTitleLabel": {
-    "description": "Label text shown in the title input field of the User Edit Page"
-  },
-  "editUserDescriptionLabel": "Description",
-  "@editUserDescriptionLabel": {
-    "description": "Label text shown in the description input field of the User Edit Page"
+  "editUserNameLabel": "Name",
+  "@editUserNameLabel": {
+    "description": "Label text shown in the name input field of the User Edit Page"
   },
   "editUserSaveButtonTooltip": "Save changes",
   "@editUserSaveButtonTooltip": {
@@ -101,9 +77,9 @@
   "@statsAppBarTitle": {
     "description": "Title text shown in the AppBar of the Stats Page"
   },
-  "statsCompletedUserCountLabel": "Completed users",
-  "@statsCompletedUserCountLabel": {
-    "description": "Label text shown in the completed users count section of the Stats Page"
+  "statsPrivilegedUserCountLabel": "Privileged users",
+  "@statsPrivilegedUserCountLabel": {
+    "description": "Label text shown in the privileged users count section of the Stats Page"
   },
   "statsActiveUserCountLabel": "Active users",
   "@statsActiveUserCountLabel": {

@@ -16,8 +16,6 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     on<UsersOverviewUserDeleted>(_onUserDeleted);
     on<UsersOverviewUndoDeletionRequested>(_onUndoDeletionRequested);
     on<UsersOverviewFilterChanged>(_onFilterChanged);
-    on<UsersOverviewToggleAllRequested>(_onToggleAllRequested);
-    on<UsersOverviewClearCompletedRequested>(_onClearCompletedRequested);
   }
 
   final UsersRepository _usersRepository;
@@ -44,7 +42,7 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     UsersOverviewUserCompletionToggled event,
     Emitter<UsersOverviewState> emit,
   ) async {
-    final newUser = event.user.copyWith(isCompleted: event.isCompleted);
+    final newUser = event.user.copyWith(isPrivileged: event.isPrivileged);
     await _usersRepository.saveUser(newUser);
   }
 
@@ -75,20 +73,5 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     Emitter<UsersOverviewState> emit,
   ) {
     emit(state.copyWith(filter: () => event.filter));
-  }
-
-  Future<void> _onToggleAllRequested(
-    UsersOverviewToggleAllRequested event,
-    Emitter<UsersOverviewState> emit,
-  ) async {
-    final areAllCompleted = state.users.every((user) => user.isCompleted);
-    await _usersRepository.completeAll(isCompleted: !areAllCompleted);
-  }
-
-  Future<void> _onClearCompletedRequested(
-    UsersOverviewClearCompletedRequested event,
-    Emitter<UsersOverviewState> emit,
-  ) async {
-    await _usersRepository.clearCompleted();
   }
 }

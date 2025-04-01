@@ -32,7 +32,6 @@ class UsersOverviewView extends StatelessWidget {
         title: Text(l10n.usersOverviewAppBarTitle),
         actions: const [
           UsersOverviewFilterButton(),
-          UsersOverviewOptionsButton(),
         ],
       ),
       body: MultiBlocListener(
@@ -65,7 +64,7 @@ class UsersOverviewView extends StatelessWidget {
                   SnackBar(
                     content: Text(
                       l10n.usersOverviewUserDeletedSnackbarText(
-                        deletedUser.title,
+                        deletedUser.name,
                       ),
                     ),
                     action: SnackBarAction(
@@ -106,11 +105,11 @@ class UsersOverviewView extends StatelessWidget {
                   final user = state.filteredUsers.elementAt(index);
                   return UserListTile(
                     user: user,
-                    onToggleCompleted: (isCompleted) {
+                    onTogglePrivileged: (isPrivileged) {
                       context.read<UsersOverviewBloc>().add(
                             UsersOverviewUserCompletionToggled(
                               user: user,
-                              isCompleted: isCompleted,
+                              isPrivileged: isPrivileged,
                             ),
                           );
                     },

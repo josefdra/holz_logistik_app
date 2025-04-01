@@ -7,22 +7,13 @@ sealed class EditUserEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class EditUserTitleChanged extends EditUserEvent {
-  const EditUserTitleChanged(this.title);
+final class EditUserNameChanged extends EditUserEvent {
+  const EditUserNameChanged(this.name);
 
-  final String title;
-
-  @override
-  List<Object> get props => [title];
-}
-
-final class EditUserDescriptionChanged extends EditUserEvent {
-  const EditUserDescriptionChanged(this.description);
-
-  final String description;
+  final String name;
 
   @override
-  List<Object> get props => [description];
+  List<Object> get props => [name];
 }
 
 final class EditUserSubmitted extends EditUserEvent {

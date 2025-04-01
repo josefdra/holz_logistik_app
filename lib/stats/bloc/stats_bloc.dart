@@ -25,8 +25,8 @@ class StatsBloc extends Bloc<StatsEvent, StatsState> {
       _usersRepository.getUsers(),
       onData: (users) => state.copyWith(
         status: StatsStatus.success,
-        completedUsers: users.where((user) => user.isCompleted).length,
-        activeUsers: users.where((user) => !user.isCompleted).length,
+        privilegedUsers: users.where((user) => user.isPrivileged).length,
+        activeUsers: users.where((user) => !user.isPrivileged).length,
       ),
       onError: (_, __) => state.copyWith(status: StatsStatus.failure),
     );
