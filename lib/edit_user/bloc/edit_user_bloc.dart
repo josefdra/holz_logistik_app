@@ -34,12 +34,14 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
     Emitter<EditUserState> emit,
   ) async {
     emit(state.copyWith(status: EditUserStatus.loading));
-    final user = state.initialUser ??
-        User(
-          name: '',
-          id: DateTime.now().microsecondsSinceEpoch,
-          isPrivileged: false,
-        ).copyWith(name: state.name);
+    final user = (state.initialUser ??
+            User(
+              name: '',
+              id: DateTime.now().microsecondsSinceEpoch,
+              role: Role.basic,
+              lastEdit: DateTime.now(),
+            ))
+        .copyWith(name: state.name);
 
     try {
       await _usersRepository.saveUser(user);

@@ -1,0 +1,21 @@
+name: core_sync_service
+description: A flutter implementation of Synchronization service that is usable from specific components.
+version: 0.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ^3.24.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  build_runner: ^2.2.0
+  flutter_test:
+    sdk: flutter
+  json_serializable: ^6.3.1
+  mocktail: ^1.0.4
+  very_good_analysis: ^6.0.0

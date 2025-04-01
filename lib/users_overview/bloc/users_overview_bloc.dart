@@ -42,7 +42,8 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     UsersOverviewUserCompletionToggled event,
     Emitter<UsersOverviewState> emit,
   ) async {
-    final newUser = event.user.copyWith(isPrivileged: event.isPrivileged);
+    final newRole = event.isPrivileged ? Role.privileged : Role.basic;
+    final newUser = event.user.copyWith(role: newRole, lastEdit: DateTime.now());
     await _usersRepository.saveUser(newUser);
   }
 
