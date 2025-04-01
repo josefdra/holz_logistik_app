@@ -15,10 +15,10 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.19.0
-  users_database_api:
-    path: packages/users/users_database_api
   users_api:
     path: packages/users/users_api
+  users_local_storage:
+    path: packages/users/users_local_storage
   users_repository:
     path: packages/users/users_repository
 
