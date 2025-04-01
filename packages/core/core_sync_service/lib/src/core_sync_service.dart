@@ -1,49 +1,91 @@
+import 'dart:convert';
+
+import 'package:core_sync_service/core_sync_service.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+
 /// {@template core_sync_service}
 /// A flutter implementation of Synchronization service that is usable from specific components.
 /// {@endtemplate}
 class CoreSyncService {
   /// {@macro core_sync_service}
-  const CoreSyncService();
+  factory CoreSyncService() {
+    return _instance;
+  }
+
+  /// Private constructor
+  CoreSyncService._internal();
+
+  static final CoreSyncService _instance = CoreSyncService._internal();
+
+  final String _wsUrl = 'wss://your-api-endpoint.com/ws';
+
+  WebSocketChannel? _channel;
+
+  void _onDone() {
+    print('WebSocket connection closed');
+  }
+
+  void _onError(dynamic error) {
+    print('WebSocket error: $error');
+  }
+
+  void _onMessage(dynamic message) {
+    try {
+      final jsonMap = message is String
+          ? jsonDecode(message) as Map<String, dynamic>
+          : message as Map<String, dynamic>;
+
+      final wsMessage = WebSocketMessage.fromJson(jsonMap);
+
+      if (wsMessage.type == 'ping') {
+        // send(const WebSocketMessage(type: 'pong', data: {}));
+      } else {
+        //
+      }
+    } catch (e) {
+      print('Error processing message: $e');
+    }
+  }
+
+  Future<void> _connect() async {
+    if (_channel != null) {
+      return;
+    }
+
+    try {
+      _channel = IOWebSocketChannel.connect(
+        Uri.parse(_wsUrl),
+        pingInterval: const Duration(seconds: 30),
+      );
+
+      _channel!.stream.listen(
+        _onMessage,
+        onError: _onError,
+        onDone: _onDone,
+        cancelOnError: false,
+      );
+    } catch (e) {
+      print('WebSocket connection failed: $e');
+    }
+  }
+
+  void _disconnect() {
+    _channel?.sink.close();
+    _channel = null;
+  }
+
+  void close() {
+    _disconnect();
+  }
 }
 
 
-/// ======================================= Sync Status ======================================= ///
-
-enum SyncStatus { synced, syncing, pending, failed, offline }
-
-/// ======================================= WebSocket Message ======================================= ///
 
 
 
-/// ======================================= Offline Queue ======================================= ///
 
-class OfflineQueueManager {
-  static const String _queueKey = 'offline_message_queue';
 
-  static Future<void> enqueueMessage(WebSocketMessage message) async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> queue = prefs.getStringList(_queueKey) ?? [];
-
-    queue.add(jsonEncode(message.toMap()));
-
-    await prefs.setStringList(_queueKey, queue);
-  }
-
-  static Future<List<WebSocketMessage>> getQueuedMessages() async {
-    final prefs = await SharedPreferences.getInstance();
-    final List<String> queue = prefs.getStringList(_queueKey) ?? [];
-
-    return queue.map((jsonStr) {
-      final map = jsonDecode(jsonStr) as Map<String, dynamic>;
-      return WebSocketMessage.fromMap(map);
-    }).toList();
-  }
-
-  static Future<void> clearQueue() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_queueKey);
-  }
-}
 
 /// ======================================= WebSocket Service ======================================= ///
 
