@@ -13,24 +13,7 @@ enum SyncStatus { synced, syncing, pending, failed, offline }
 
 /// ======================================= WebSocket Message ======================================= ///
 
-class WebSocketMessage {
-  final String type;
-  final Map<String, dynamic> data;
 
-  WebSocketMessage({required this.type, required this.data});
-
-  Map<String, dynamic> toMap() => {
-        'type': type,
-        'data': data,
-      };
-
-  factory WebSocketMessage.fromMap(Map<String, dynamic> json) {
-    return WebSocketMessage(
-      type: json['type'],
-      data: json['data'],
-    );
-  }
-}
 
 /// ======================================= Offline Queue ======================================= ///
 

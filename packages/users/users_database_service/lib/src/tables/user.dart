@@ -8,7 +8,7 @@ class UserTable {
   static const String columnId = 'id';
 
   /// The column name for storing the timestamp when a user was last modified.
-  static const String columnLastEdited = 'lastEdited';
+  static const String columnLastEdit = 'lastEdit';
 
   /// The column name for storing the user role (stored as INTEGER).
   static const String columnRole = 'role';
@@ -20,7 +20,7 @@ class UserTable {
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId INTEGER PRIMARY KEY NOT NULL,
-      $columnLastEdited INTEGER NOT NULL,
+      $columnLastEdit TEXT NOT NULL,
       $columnRole INTEGER NOT NULL,
       $columnName TEXT NOT NULL
     )

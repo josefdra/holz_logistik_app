@@ -8,17 +8,19 @@ part of 'user.dart';
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
       role: $enumDecode(_$RoleEnumMap, json['role']),
+      lastEdit: DateTime.parse(json['lastEdit'] as String),
+      name: json['name'] as String,
     );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'id': instance.id,
-      'name': instance.name,
       'role': _$RoleEnumMap[instance.role]!,
+      'lastEdit': instance.lastEdit.toIso8601String(),
+      'name': instance.name,
     };
 
 const _$RoleEnumMap = {
-  Role.basic: 'basic',
-  Role.privileged: 'privileged',
+  Role.basic: 0,
+  Role.privileged: 1,
 };

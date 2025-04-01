@@ -30,7 +30,7 @@ class UsersDatabaseService extends UsersApi {
     int oldVersion,
     int newVersion,
   ) async {
-    //
+    // Migration logic here if needed
   }
 
   Future<void> _init() async {

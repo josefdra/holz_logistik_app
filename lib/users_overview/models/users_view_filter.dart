@@ -8,9 +8,9 @@ extension UsersViewFilterX on UsersViewFilter {
       case UsersViewFilter.all:
         return true;
       case UsersViewFilter.activeOnly:
-        return user.role == 0;
+        return user.role == Role.basic;
       case UsersViewFilter.privilegedOnly:
-        return user.role == 1;
+        return user.role == Role.privileged;
     }
   }
 
