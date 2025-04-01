@@ -39,7 +39,7 @@ class UserListTile extends StatelessWidget {
           user.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: !user.isPrivileged
+          style: user.role == 0
               ? null
               : TextStyle(
                   color: captionColor,
@@ -50,7 +50,7 @@ class UserListTile extends StatelessWidget {
           shape: const ContinuousRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-          value: user.isPrivileged,
+          value: user.role == 1,
           onChanged: onTogglePrivileged == null
               ? null
               : (value) => onTogglePrivileged!(value!),

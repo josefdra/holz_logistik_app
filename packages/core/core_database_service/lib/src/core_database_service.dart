@@ -102,6 +102,24 @@ class CoreDatabase {
     }
   }
 
+  /// Gets all entities of [tableName]
+  Future<List<Map<String, dynamic>>> getAll(String tableName) async {
+    final db = await database;
+    return db.query(
+      tableName,
+    );
+  }
+
+  /// Gets entity of [tableName] by [id]
+  Future<List<Map<String, dynamic>>> getById(String tableName, int id) async {
+    final db = await database;
+    return db.query(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   /// Inserts [data] into [tableName]
   Future<int> insert(String tableName, Map<String, dynamic> data) async {
     final db = await database;

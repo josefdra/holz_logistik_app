@@ -38,7 +38,7 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
         User(
           name: '',
           id: DateTime.now().microsecondsSinceEpoch,
-          isPrivileged: false,
+          role: 0,
         ).copyWith(name: state.name);
 
     try {

@@ -18,8 +18,8 @@ dependencies:
   shared_preferences: ^2.5.3
   users_api:
     path: packages/users/users_api
-  users_local_storage:
-    path: packages/users/users_local_storage
+  users_database_service:
+    path: packages/users/users_database_service
   users_repository:
     path: packages/users/users_repository
 

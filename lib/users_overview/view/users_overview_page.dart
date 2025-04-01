@@ -105,11 +105,11 @@ class UsersOverviewView extends StatelessWidget {
                   final user = state.filteredUsers.elementAt(index);
                   return UserListTile(
                     user: user,
-                    onTogglePrivileged: (isPrivileged) {
+                    onTogglePrivileged: (role) {
                       context.read<UsersOverviewBloc>().add(
                             UsersOverviewUserCompletionToggled(
                               user: user,
-                              isPrivileged: isPrivileged,
+                              role: role,
                             ),
                           );
                     },

@@ -5,10 +5,12 @@ import 'package:users_api/users_api.dart';
 
 part 'user.g.dart';
 
+enum Role { basic, privileged }
+
 /// {@template user_item}
 /// A single `user` item.
 ///
-/// Contains a [id], [name] in addition to a [isPrivileged]
+/// Contains a [id], [name] in addition to a [role]
 /// flag.
 ///
 /// [User]s are immutable and can be copied using [copyWith], in addition to
@@ -22,7 +24,7 @@ class User extends Equatable {
   const User({
     required this.id,
     required this.name,
-    required this.isPrivileged,
+    required this.role,
   });
 
   /// The id of the `user`.
@@ -35,10 +37,10 @@ class User extends Equatable {
   /// Cannot be empty.
   final String name;
 
-  /// Whether the `user` is privileged.
+  /// The `user`role.
   ///
   /// Cannot be empty.
-  final bool isPrivileged;
+  final Role role;
 
   /// Returns a copy of this `user` with the given values updated.
   ///
@@ -46,12 +48,12 @@ class User extends Equatable {
   User copyWith({
     int? id,
     String? name,
-    bool? isPrivileged,
+    Role? role,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
-      isPrivileged: isPrivileged ?? this.isPrivileged,
+      role: role ?? this.role,
     );
   }
 
@@ -62,5 +64,5 @@ class User extends Equatable {
   JsonMap toJson() => _$UserToJson(this);
 
   @override
-  List<Object> get props => [id, name, isPrivileged];
+  List<Object> get props => [id, name, role];
 }
