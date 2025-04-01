@@ -11,6 +11,8 @@ dependencies:
     path: ../users_api
 
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   mocktail: ^1.0.4
   test: ^1.25.8
   very_good_analysis: ^6.0.0

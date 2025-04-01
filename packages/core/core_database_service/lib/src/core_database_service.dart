@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -12,6 +13,12 @@ class CoreDatabase {
     return _instance;
   }
 
+  /// Constructor for testing
+  @visibleForTesting
+  CoreDatabase.test({Database? database}) {
+    if (database != null) _database = database;
+  }
+
   /// Private constructor
   CoreDatabase._internal();
 
@@ -21,9 +28,17 @@ class CoreDatabase {
   /// Map of table creation functions registered by feature packages
   final List<String> _tableCreationScripts = [];
 
+  /// Getter for testing tableCreationScript
+  @visibleForTesting
+  List<String> get tableCreationScriptsForTest => _tableCreationScripts;
+
   /// List of migration functions registered by feature packages
   final List<FutureOr<void> Function(Database, int, int)> _migrationCallbacks =
       [];
+
+  /// Getter for testing migrationCallbacks
+  @visibleForTesting
+  List<Function> get migrationCallbacksForTest => _migrationCallbacks;
 
   /// Get the database instance, initializing if needed
   Future<Database> get database async {
@@ -39,12 +54,21 @@ class CoreDatabase {
     }
   }
 
+  /// _onCreate for testing
+  @visibleForTesting
+  Future<void> onCreate(Database db, int version) => _onCreate(db, version);
+
   /// Handle database migrations
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     for (final migration in _migrationCallbacks) {
       await migration(db, oldVersion, newVersion);
     }
   }
+
+  /// _onUpgrade for testing
+  @visibleForTesting
+  Future<void> onUpgrade(Database db, int oldVersion, int newVersion) =>
+      _onUpgrade(db, oldVersion, newVersion);
 
   /// Initialize the database
   Future<Database> _initDatabase() async {
@@ -100,7 +124,9 @@ class CoreDatabase {
 
   /// Inserts or Updates entity of table [tableName] based on [data]
   Future<int> insertOrUpdate(
-      String tableName, Map<String, dynamic> data) async {
+    String tableName,
+    Map<String, dynamic> data,
+  ) async {
     final db = await database;
 
     final List<Map<String, dynamic>> existing = await db.query(
