@@ -34,6 +34,7 @@ class CoreSyncService {
   /// Connect to the WebSocket server
   void _connect() {
     try {
+      print('Attempting to connect to WebSocket at: $_url');
       final uri = Uri.parse(_url);
       _channel = WebSocketChannel.connect(uri);
 
@@ -42,8 +43,9 @@ class CoreSyncService {
         onError: _handleError,
         onDone: _handleDone,
       );
+      print('WebSocket connection established');
     } catch (e) {
-      // print('WebSocket connection error: $e');
+      print('WebSocket connection error: $e');
       // Implement reconnection logic here if needed
       _scheduleReconnect();
     }

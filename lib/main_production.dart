@@ -8,7 +8,7 @@ import 'package:user_sync_service/user_sync_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final url = '';
+  const url = 'ws://localhost:8080/ws';
 
   final coreDatabaseService = CoreDatabaseService();
   final userApi =
