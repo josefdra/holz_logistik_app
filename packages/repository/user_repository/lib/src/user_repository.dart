@@ -43,7 +43,16 @@ class UserRepository {
   ///
   /// If no `user` with the given id exists, a [UserNotFoundException] error is
   /// thrown.
-  Future<void> deleteUser(int id) => _userApi.deleteUser(id);
+  Future<void> deleteUser(int id) {
+    _userApi.deleteUser(id);
+    final data = {
+      'id': id,
+      'deleted': true,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    return _userSyncService.sendUserDeletion(data);
+  }
 
   /// Disposes any resources managed by the repository.
   void dispose() => _userApi.close();
