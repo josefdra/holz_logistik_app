@@ -1,4 +1,4 @@
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 enum UsersViewFilter { all, activeOnly, privilegedOnly }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/stats/stats.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 class StatsPage extends StatelessWidget {
   const StatsPage({super.key});
@@ -11,7 +11,7 @@ class StatsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => StatsBloc(
-        usersRepository: context.read<UsersRepository>(),
+        userRepository: context.read<UserRepository>(),
       )..add(const StatsSubscriptionRequested()),
       child: const StatsView(),
     );

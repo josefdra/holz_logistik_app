@@ -1,15 +1,15 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:holz_logistik/users_overview/users_overview.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 part 'users_overview_event.dart';
 part 'users_overview_state.dart';
 
 class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
   UsersOverviewBloc({
-    required UsersRepository usersRepository,
-  })  : _usersRepository = usersRepository,
+    required UserRepository userRepository,
+  })  : _userRepository = userRepository,
         super(const UsersOverviewState()) {
     on<UsersOverviewSubscriptionRequested>(_onSubscriptionRequested);
     on<UsersOverviewUserCompletionToggled>(_onUserCompletionToggled);
@@ -18,7 +18,7 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     on<UsersOverviewFilterChanged>(_onFilterChanged);
   }
 
-  final UsersRepository _usersRepository;
+  final UserRepository _userRepository;
 
   Future<void> _onSubscriptionRequested(
     UsersOverviewSubscriptionRequested event,
@@ -27,7 +27,7 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     emit(state.copyWith(status: () => UsersOverviewStatus.loading));
 
     await emit.forEach<List<User>>(
-      _usersRepository.getUsers(),
+      _userRepository.getUsers(),
       onData: (users) => state.copyWith(
         status: () => UsersOverviewStatus.success,
         users: () => users,
@@ -43,8 +43,9 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     Emitter<UsersOverviewState> emit,
   ) async {
     final newRole = event.isPrivileged ? Role.privileged : Role.basic;
-    final newUser = event.user.copyWith(role: newRole, lastEdit: DateTime.now());
-    await _usersRepository.saveUser(newUser);
+    final newUser =
+        event.user.copyWith(role: newRole, lastEdit: DateTime.now());
+    await _userRepository.saveUser(newUser);
   }
 
   Future<void> _onUserDeleted(
@@ -52,7 +53,7 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
     Emitter<UsersOverviewState> emit,
   ) async {
     emit(state.copyWith(lastDeletedUser: () => event.user));
-    await _usersRepository.deleteUser(event.user.id);
+    await _userRepository.deleteUser(event.user.id);
   }
 
   Future<void> _onUndoDeletionRequested(
@@ -66,7 +67,7 @@ class UsersOverviewBloc extends Bloc<UsersOverviewEvent, UsersOverviewState> {
 
     final user = state.lastDeletedUser!;
     emit(state.copyWith(lastDeletedUser: () => null));
-    await _usersRepository.saveUser(user);
+    await _userRepository.saveUser(user);
   }
 
   void _onFilterChanged(

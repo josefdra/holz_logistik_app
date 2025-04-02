@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/edit_user/view/edit_user_page.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/users_overview/users_overview.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 class UsersOverviewPage extends StatelessWidget {
   const UsersOverviewPage({super.key});
@@ -13,7 +13,7 @@ class UsersOverviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => UsersOverviewBloc(
-        usersRepository: context.read<UsersRepository>(),
+        userRepository: context.read<UserRepository>(),
       )..add(const UsersOverviewSubscriptionRequested()),
       child: const UsersOverviewView(),
     );

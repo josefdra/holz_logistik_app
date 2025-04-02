@@ -1,15 +1,15 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 part 'edit_user_event.dart';
 part 'edit_user_state.dart';
 
 class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
   EditUserBloc({
-    required UsersRepository usersRepository,
+    required UserRepository userRepository,
     required User? initialUser,
-  })  : _usersRepository = usersRepository,
+  })  : _userRepository = userRepository,
         super(
           EditUserState(
             initialUser: initialUser,
@@ -20,7 +20,7 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
     on<EditUserSubmitted>(_onSubmitted);
   }
 
-  final UsersRepository _usersRepository;
+  final UserRepository _userRepository;
 
   void _onNameChanged(
     EditUserNameChanged event,
@@ -44,7 +44,7 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
         .copyWith(name: state.name);
 
     try {
-      await _usersRepository.saveUser(user);
+      await _userRepository.saveUser(user);
       emit(state.copyWith(status: EditUserStatus.success));
     } catch (e) {
       emit(state.copyWith(status: EditUserStatus.failure));

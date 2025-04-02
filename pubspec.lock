@@ -90,9 +90,16 @@ packages:
     source: hosted
     version: "3.1.2"
   core_database_service:
-    dependency: transitive
+    dependency: "direct main"
     description:
       path: "packages/core/core_database_service"
+      relative: true
+    source: path
+    version: "0.1.0+1"
+  core_sync_service:
+    dependency: "direct main"
+    description:
+      path: "packages/core/core_sync_service"
       relative: true
     source: path
     version: "0.1.0+1"
@@ -657,24 +664,31 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  users_api:
+  user_api:
     dependency: "direct main"
     description:
-      path: "packages/users/users_api"
+      path: "packages/user/user_api"
       relative: true
     source: path
     version: "0.1.0+1"
-  users_database_service:
+  user_database_service:
     dependency: "direct main"
     description:
-      path: "packages/users/users_database_service"
+      path: "packages/user/user_database_service"
       relative: true
     source: path
     version: "0.1.0+1"
-  users_repository:
+  user_repository:
     dependency: "direct main"
     description:
-      path: "packages/users/users_repository"
+      path: "packages/user/user_repository"
+      relative: true
+    source: path
+    version: "0.1.0+1"
+  user_sync_service:
+    dependency: "direct main"
+    description:
+      path: "packages/user/user_sync_service"
       relative: true
     source: path
     version: "0.1.0+1"

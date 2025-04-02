@@ -1,311 +1,116 @@
+import 'dart:async';
 import 'dart:convert';
 
-import 'package:core_sync_service/core_sync_service.dart';
-import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
+/// Handler type definition for message data processing
+typedef MessageHandler = void Function(dynamic data);
+
 /// {@template core_sync_service}
-/// A flutter implementation of Synchronization service that is usable from specific components.
+/// A flutter implementation of Synchronization service that is usable from
+/// specific components.
 /// {@endtemplate}
 class CoreSyncService {
   /// {@macro core_sync_service}
-  factory CoreSyncService() {
-    return _instance;
+  CoreSyncService({
+    required String url,
+  }) : _url = url {
+    _connect();
   }
 
-  /// Private constructor
-  CoreSyncService._internal();
-
-  static final CoreSyncService _instance = CoreSyncService._internal();
-
-  final String _wsUrl = 'wss://your-api-endpoint.com/ws';
-
+  final String _url;
   WebSocketChannel? _channel;
+  StreamSubscription<dynamic>? _channelSubscription;
 
-  void _onDone() {
-    print('WebSocket connection closed');
+  // Map to store message type to handler mappings
+  final Map<String, MessageHandler> _messageHandlers = {};
+
+  /// Register a handler for a specific message type
+  void registerHandler(String messageType, MessageHandler handler) {
+    _messageHandlers[messageType] = handler;
   }
 
-  void _onError(dynamic error) {
-    print('WebSocket error: $error');
-  }
-
-  void _onMessage(dynamic message) {
+  /// Connect to the WebSocket server
+  void _connect() {
     try {
-      final jsonMap = message is String
-          ? jsonDecode(message) as Map<String, dynamic>
-          : message as Map<String, dynamic>;
+      final uri = Uri.parse(_url);
+      _channel = WebSocketChannel.connect(uri);
 
-      final wsMessage = WebSocketMessage.fromJson(jsonMap);
-
-      if (wsMessage.type == 'ping') {
-        // send(const WebSocketMessage(type: 'pong', data: {}));
-      } else {
-        //
-      }
-    } catch (e) {
-      print('Error processing message: $e');
-    }
-  }
-
-  Future<void> _connect() async {
-    if (_channel != null) {
-      return;
-    }
-
-    try {
-      _channel = IOWebSocketChannel.connect(
-        Uri.parse(_wsUrl),
-        pingInterval: const Duration(seconds: 30),
-      );
-
-      _channel!.stream.listen(
-        _onMessage,
-        onError: _onError,
-        onDone: _onDone,
-        cancelOnError: false,
+      _channelSubscription = _channel!.stream.listen(
+        _handleMessage,
+        onError: _handleError,
+        onDone: _handleDone,
       );
     } catch (e) {
-      print('WebSocket connection failed: $e');
-    }
-  }
-
-  void _disconnect() {
-    _channel?.sink.close();
-    _channel = null;
-  }
-
-  void close() {
-    _disconnect();
-  }
-}
-
-
-
-
-
-
-
-
-/// ======================================= WebSocket Service ======================================= ///
-
-class WebSocketService {
-  static final WebSocketService _instance = WebSocketService._internal();
-  factory WebSocketService() => _instance;
-
-  final String _wsUrl = 'wss://your-api-endpoint.com/ws';
-
-  WebSocketChannel? _channel;
-  final _messageController = StreamController<WebSocketMessage>.broadcast();
-  final _connectionStatusController =
-      BehaviorSubject<SyncStatus>.seeded(SyncStatus.offline);
-
-  final List<WebSocketMessage> _offlineQueue = [];
-
-  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
-  bool _isConnected = false;
-  bool _wasConnected = false;
-  bool _intentionalClosure = false;
-
-  Stream<WebSocketMessage> get messages => _messageController.stream;
-  Stream<SyncStatus> get connectionStatus => _connectionStatusController.stream;
-
-  WebSocketService._internal();
-
-  void init() {
-    _connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen(_handleConnectivityChange);
-
-    Connectivity().checkConnectivity().then(_handleConnectivityChange);
-  }
-
-  void _handleConnectivityChange(List<ConnectivityResult> results) {
-    _wasConnected = _isConnected;
-    _isConnected =
-        results.isNotEmpty && results.first != ConnectivityResult.none;
-
-    if (_isConnected && !_wasConnected) {
-      connect();
-    } else if (!_isConnected && _wasConnected) {
-      _connectionStatusController.add(SyncStatus.offline);
-      _disconnect(reconnect: false);
-    }
-  }
-
-  Future<void> connect() async {
-    if (_channel != null) {
-      return;
-    }
-
-    _intentionalClosure = false;
-    _connectionStatusController.add(SyncStatus.syncing);
-
-    try {
-      _channel = IOWebSocketChannel.connect(
-        Uri.parse(_wsUrl),
-        pingInterval: const Duration(seconds: 30),
-      );
-
-      _channel!.stream.listen(
-        _onMessage,
-        onError: _onError,
-        onDone: _onDone,
-        cancelOnError: false,
-      );
-
-      _authenticate();
-
-      _connectionStatusController.add(SyncStatus.synced);
-
-      if (_offlineQueue.isEmpty) {
-        _offlineQueue.addAll(await OfflineQueueManager.getQueuedMessages());
-      }
-
-      _processOfflineQueue();
-    } catch (e) {
-      print('WebSocket connection failed: $e');
-      _connectionStatusController.add(SyncStatus.failed);
-
+      // print('WebSocket connection error: $e');
+      // Implement reconnection logic here if needed
       _scheduleReconnect();
     }
   }
 
-  void _authenticate() {
-    send(WebSocketMessage(
-      type: 'auth',
-      data: {
-        'token': 'your-auth-token', // Replace with your actual auth token
-      },
-    ));
-  }
-
-  void _onMessage(dynamic data) {
+  /// Handle incoming messages
+  void _handleMessage(dynamic rawMessage) {
     try {
-      final Map<String, dynamic> message = jsonDecode(data);
-      final wsMessage = WebSocketMessage.fromMap(message);
+      // Parse the message
+      final message = rawMessage is String
+          ? jsonDecode(rawMessage) as Map<String, dynamic>
+          : rawMessage as Map<String, dynamic>;
 
-      if (wsMessage.type == 'auth_response') {
-        if (wsMessage.data['success'] == true) {
-          _requestInitialData();
-        } else {
-          print('Authentication failed: ${wsMessage.data['message']}');
-          _connectionStatusController.add(SyncStatus.failed);
-          _disconnect(reconnect: true);
-        }
-      } else if (wsMessage.type == 'ping') {
-        send(WebSocketMessage(type: 'pong', data: {}));
-      } else {
-        _messageController.add(wsMessage);
+      // Process with registered handlers
+      final type = message['type'] as String;
+      final dynamic data = message['data'];
+
+      final handler = _messageHandlers[type];
+      if (handler != null) {
+        handler(data);
       }
     } catch (e) {
-      print('Error processing message: $e');
+      // print('Error processing message: $e');
     }
   }
 
-  void _onError(dynamic error) {
-    print('WebSocket error: $error');
-    _connectionStatusController.add(SyncStatus.failed);
-    _disconnect(reconnect: true);
+  /// Handle WebSocket errors
+  void _handleError(dynamic error) {
+    // print('WebSocket error: $error');
+    _scheduleReconnect();
   }
 
-  void _onDone() {
-    print('WebSocket connection closed');
-
-    if (!_intentionalClosure) {
-      _connectionStatusController.add(SyncStatus.failed);
-      _disconnect(reconnect: true);
-    }
+  /// Handle WebSocket connection close
+  void _handleDone() {
+    // print('WebSocket connection closed');
+    _scheduleReconnect();
   }
 
-  void _disconnect({bool reconnect = false}) {
-    _channel?.sink.close();
-    _channel = null;
-
-    if (reconnect && _isConnected) {
-      _scheduleReconnect();
-    }
-  }
-
+  /// Schedule a reconnection attempt
   void _scheduleReconnect() {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (_isConnected) {
-        connect();
-      }
-    });
+    // Implement backoff strategy if needed
+    Future.delayed(const Duration(seconds: 5), _connect);
   }
 
-  Future<void> _requestInitialData() async {
-    final db = DatabaseHelper.instance;
-
-    final userTimestamp =
-        await db.getLastSyncTimestamp(SyncTimestampTable.entityUser);
-    final contractTimestamp =
-        await db.getLastSyncTimestamp(SyncTimestampTable.entityContract);
-    final quantityTimestamp =
-        await db.getLastSyncTimestamp(SyncTimestampTable.entityQuantity);
-    final shipmentTimestamp =
-        await db.getLastSyncTimestamp(SyncTimestampTable.entityShipment);
-    final locationTimestamp =
-        await db.getLastSyncTimestamp(SyncTimestampTable.entityLocation);
-
-    send(WebSocketMessage(
-      type: 'sync_request',
-      data: {
-        'last_sync': {
-          'user': userTimestamp,
-          'contract': contractTimestamp,
-          'quantity': quantityTimestamp,
-          'shipment': shipmentTimestamp,
-          'location': locationTimestamp,
-        }
-      },
-    ));
-  }
-
-  void send(WebSocketMessage message) {
-    if (_channel != null && _isConnected) {
+  /// Send a message through the WebSocket
+  Future<void> sendMessage(String type, dynamic data) {
+    if (_channel != null) {
       try {
-        _channel!.sink.add(jsonEncode(message.toMap()));
+        final message = {
+          'type': type,
+          'data': data,
+          'timestamp': DateTime.now().toIso8601String(),
+        };
+
+        _channel!.sink.add(jsonEncode(message));
       } catch (e) {
-        print('Failed to send message: $e');
-        _queueMessageForLater(message);
+        // print('Error sending message: $e');
       }
-    } else {
-      _queueMessageForLater(message);
-    }
-  }
-
-  Future<void> _queueMessageForLater(WebSocketMessage message) async {
-    _offlineQueue.add(message);
-    await OfflineQueueManager.enqueueMessage(message);
-    _connectionStatusController.add(SyncStatus.pending);
-  }
-
-  Future<void> _processOfflineQueue() async {
-    if (_offlineQueue.isEmpty) {
-      return;
     }
 
-    _connectionStatusController.add(SyncStatus.syncing);
-
-    final queueCopy = List<WebSocketMessage>.from(_offlineQueue);
-    _offlineQueue.clear();
-
-    await OfflineQueueManager.clearQueue();
-
-    for (final message in queueCopy) {
-      send(message);
-      await Future.delayed(const Duration(milliseconds: 100));
-    }
-
-    _connectionStatusController.add(SyncStatus.synced);
+    return Future<void>.value();
   }
 
-  void close() {
-    _intentionalClosure = true;
-    _messageController.close();
-    _connectionStatusController.close();
-    _connectivitySubscription.cancel();
-    _disconnect(reconnect: false);
+  /// Close the WebSocket connection and clean up resources
+  void dispose() {
+    _channelSubscription?.cancel();
+    _channel?.sink.close(status.normalClosure);
+    _messageHandlers.clear();
   }
 }
