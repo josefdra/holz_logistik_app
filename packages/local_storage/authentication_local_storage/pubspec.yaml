@@ -1,0 +1,23 @@
+name: authentication_local_storage
+description: A flutter implementation of the authentication local storage
+version: 0.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ^3.24.0
+
+dependencies:
+  authentication_api:
+    path: ../../api/authentication_api
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.0.0
+  user_api:
+    path: ../../api/user_api
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mocktail: ^1.0.4
+  very_good_analysis: ^6.0.0

@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:core_sync_service/core_sync_service.dart';
 import 'package:web_socket_channel/status.dart' as status;
 import 'package:web_socket_channel/web_socket_channel.dart';
-
-/// Handler type definition for message data processing
-typedef MessageHandler = void Function(dynamic data);
 
 /// {@template core_sync_service}
 /// A flutter implementation of Synchronization service that is usable from
@@ -25,6 +23,14 @@ class CoreSyncService {
 
   // Map to store message type to handler mappings
   final Map<String, MessageHandler> _messageHandlers = {};
+
+  // StreamController to broadcast connection status updates
+  final _connectionStatusUpdateController =
+      StreamController<Map<String, dynamic>>.broadcast();
+
+  /// Stream of connection status updates
+  Stream<Map<String, dynamic>> get connectionStatusUpdate =>
+      _connectionStatusUpdateController.stream;
 
   /// Register a handler for a specific message type
   void registerHandler(String messageType, MessageHandler handler) {

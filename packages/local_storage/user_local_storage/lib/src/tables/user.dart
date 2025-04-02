@@ -26,3 +26,25 @@ class UserTable {
     )
   ''';
 }
+
+/// Provides constants and utilities for working with
+/// the "authenticated_user" database table.
+class AuthenticatedUserTable {
+  /// The name of the database table
+  static const String tableName = 'authenticatedUser';
+
+  /// The column name for the primary key identifier of a user.
+  static const String columnId = 'id';
+
+  /// The column name for storing the timestamp when a user was last modified.
+  static const String columnUserId = 'userId';
+
+  /// SQL statement for creating the users table with the defined schema.
+  static const String createTable = '''
+    CREATE TABLE $tableName (
+      $columnId INTEGER PRIMARY KEY NOT NULL,
+      $columnUserId INTEGER NOT NULL,
+      FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId})
+    )
+  ''';
+}

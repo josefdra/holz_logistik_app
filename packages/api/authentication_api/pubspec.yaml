@@ -1,0 +1,16 @@
+name: authentication_api
+description: A dart implementation of the authentication api
+version: 0.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  user_api:
+    path: ../user_api
+
+dev_dependencies:
+  mocktail: ^1.0.4
+  test: ^1.25.8
+  very_good_analysis: ^6.0.0

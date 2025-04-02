@@ -11,7 +11,4 @@ enum SyncStatus {
 
   /// Synchronization failed
   failed,
-
-  /// The device is offline
-  offline,
 }
