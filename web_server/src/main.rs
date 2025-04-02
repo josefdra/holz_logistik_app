@@ -115,6 +115,8 @@ async fn handle_client_message(client_id: String, msg: Value, clients: &Clients)
         // Create a new message with timestamp
         let data = msg.get("data").cloned().unwrap_or(json!({}));
         let timestamp = msg.get("timestamp").cloned().unwrap_or(json!(chrono::Utc::now().to_rfc3339()));
+
+        println!("Message data: {}", data);
         
         let broadcast_msg = json!({
             "type": "user_update",

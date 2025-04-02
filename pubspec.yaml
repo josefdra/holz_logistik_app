@@ -8,10 +8,10 @@ environment:
 
 dependencies:
   bloc: ^9.0.0
-  core_database_service:
-    path: packages/core/core_database_service
+  core_local_storage:
+    path: packages/local_storage/core_local_storage
   core_sync_service:
-    path: packages/core/core_sync_service
+    path: packages/sync/core_sync_service
   equatable: ^2.0.0
   flutter:
     sdk: flutter
@@ -21,13 +21,13 @@ dependencies:
   intl: ^0.19.0
   shared_preferences: ^2.5.3
   user_api:
-    path: packages/user/user_api
-  user_database_service:
-    path: packages/user/user_database_service
+    path: packages/api/user_api
+  user_local_storage:
+    path: packages/local_storage/user_local_storage
   user_repository:
-    path: packages/user/user_repository
+    path: packages/repository/user_repository
   user_sync_service:
-    path: packages/user/user_sync_service
+    path: packages/sync/user_sync_service
 
 dev_dependencies:
   bloc_test: ^10.0.0
