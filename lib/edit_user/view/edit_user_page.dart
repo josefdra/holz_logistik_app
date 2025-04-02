@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/edit_user/edit_user.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 class EditUserPage extends StatelessWidget {
   const EditUserPage({super.key});
@@ -14,7 +14,7 @@ class EditUserPage extends StatelessWidget {
       fullscreenDialog: true,
       builder: (context) => BlocProvider(
         create: (context) => EditUserBloc(
-          usersRepository: context.read<UsersRepository>(),
+          userRepository: context.read<UserRepository>(),
           initialUser: initialUser,
         ),
         child: const EditUserPage(),

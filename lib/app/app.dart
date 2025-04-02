@@ -3,17 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/home/home.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/theme/theme.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 class App extends StatelessWidget {
-  const App({required this.createUsersRepository, super.key});
+  const App({required this.createUserRepository, super.key});
 
-  final UsersRepository Function() createUsersRepository;
+  final UserRepository Function() createUserRepository;
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<UsersRepository>(
-      create: (_) => createUsersRepository(),
+    return RepositoryProvider<UserRepository>(
+      create: (_) => createUserRepository(),
       dispose: (repository) => repository.dispose(),
       child: const AppView(),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:users_repository/users_repository.dart';
+import 'package:user_repository/user_repository.dart';
 
 class UserListTile extends StatelessWidget {
   const UserListTile({
@@ -39,7 +39,7 @@ class UserListTile extends StatelessWidget {
           user.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: !user.isPrivileged
+          style: user.role == Role.basic
               ? null
               : TextStyle(
                   color: captionColor,
@@ -50,7 +50,7 @@ class UserListTile extends StatelessWidget {
           shape: const ContinuousRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-          value: user.isPrivileged,
+          value: user.role == Role.privileged,
           onChanged: onTogglePrivileged == null
               ? null
               : (value) => onTogglePrivileged!(value!),
