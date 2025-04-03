@@ -1,4 +1,4 @@
-import '../user_api.dart';
+import 'package:holz_logistik_backend/api/user_api.dart';
 
 /// {@template user_api}
 /// The interface for an API that provides access to users.

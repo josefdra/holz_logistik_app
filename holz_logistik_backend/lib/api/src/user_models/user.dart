@@ -1,5 +1,5 @@
-import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:equatable/equatable.dart';
+import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 

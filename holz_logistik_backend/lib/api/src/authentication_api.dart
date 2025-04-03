@@ -1,4 +1,4 @@
-import '../user_api.dart';
+import 'package:holz_logistik_backend/api/user_api.dart';
 
 /// {@template authentication_api}
 /// A dart implementation of the authentication api
