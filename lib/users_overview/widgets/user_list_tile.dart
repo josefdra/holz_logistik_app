@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:user_repository/user_repository.dart';
+import 'package:holz_logistik_backend/api/user_api.dart';
 
 class UserListTile extends StatelessWidget {
   const UserListTile({

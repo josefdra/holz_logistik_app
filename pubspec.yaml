@@ -7,27 +7,15 @@ environment:
   sdk: ^3.5.0
 
 dependencies:
-  bloc: ^9.0.0
-  core_local_storage:
-    path: packages/local_storage/core_local_storage
-  core_sync_service:
-    path: packages/sync/core_sync_service
   equatable: ^2.0.0
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.0
   flutter_localizations:
     sdk: flutter
+  holz_logistik_backend:
+    path: holz_logistik_backend
   intl: ^0.19.0
-  shared_preferences: ^2.5.3
-  user_api:
-    path: packages/api/user_api
-  user_local_storage:
-    path: packages/local_storage/user_local_storage
-  user_repository:
-    path: packages/repository/user_repository
-  user_sync_service:
-    path: packages/sync/user_sync_service
 
 dev_dependencies:
   bloc_test: ^10.0.0

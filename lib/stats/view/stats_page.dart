@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/stats/stats.dart';
-import 'package:user_repository/user_repository.dart';
+import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class StatsPage extends StatelessWidget {
   const StatsPage({super.key});

@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/home/home.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/theme/theme.dart';
-import 'package:user_repository/user_repository.dart';
+import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class App extends StatelessWidget {
   const App({required this.createUserRepository, super.key});
