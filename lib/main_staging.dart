@@ -1,9 +1,9 @@
-import 'package:core_local_storage/core_local_storage.dart';
-import 'package:core_sync_service/core_sync_service.dart';
 import 'package:flutter/widgets.dart';
 import 'package:holz_logistik/bootstrap.dart';
-import 'package:user_local_storage/user_local_storage.dart';
-import 'package:user_sync_service/user_sync_service.dart';
+import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
+import 'package:holz_logistik_backend/local_storage/user_local_storage.dart';
+import 'package:holz_logistik_backend/sync/core_sync_service.dart';
+import 'package:holz_logistik_backend/sync/user_sync_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

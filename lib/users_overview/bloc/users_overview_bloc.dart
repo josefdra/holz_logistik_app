@@ -1,7 +1,7 @@
-import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/users_overview/users_overview.dart';
-import 'package:user_repository/user_repository.dart';
+import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 part 'users_overview_event.dart';
 part 'users_overview_state.dart';

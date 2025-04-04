@@ -1,4 +1,4 @@
-import 'package:user_repository/user_repository.dart';
+import 'package:holz_logistik_backend/api/user_api.dart';
 
 enum UsersViewFilter { all, activeOnly, privilegedOnly }
 

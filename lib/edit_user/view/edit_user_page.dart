@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/edit_user/edit_user.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
-import 'package:user_repository/user_repository.dart';
+import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class EditUserPage extends StatelessWidget {
   const EditUserPage({super.key});
