@@ -2,5 +2,5 @@
 /// CoreLocalStorage and sqflite.
 library user_local_storage;
 
-export 'src/user_local_storage.dart';
-export 'src/user_tables/user.dart';
+export 'src_user/user_local_storage.dart';
+export 'src_user/user_tables/user.dart';

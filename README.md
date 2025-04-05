@@ -61,7 +61,7 @@ This project relies on [flutter_localizations][flutter_localizations_link] and f
 
 ### Adding Strings
 
-1. To add a new localizable string, open the `app_en.arb` file at `lib/l10n/arb/app_en.arb`.
+1. To add a new localizable string, open the `app_de.arb` file at `lib/l10n/arb/app_de.arb`.
 
 ```arb
 {
@@ -124,13 +124,13 @@ Update the `CFBundleLocalizations` array in the `Info.plist` at `ios/Runner/Info
 ```
 ├── l10n
 │   ├── arb
-│   │   ├── app_en.arb
+│   │   ├── app_de.arb
 │   │   └── app_es.arb
 ```
 
 2. Add the translated strings to each `.arb` file:
 
-`app_en.arb`
+`app_de.arb`
 
 ```arb
 {
