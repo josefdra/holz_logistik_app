@@ -20,7 +20,7 @@ class UserRepository {
   final UserSyncService _userSyncService;
 
   /// Provides a [Stream] of all users.
-  Stream<List<User>> getUsers() => _userApi.getUsers();
+  Stream<List<User>> getUsers() => _userApi.users;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
@@ -51,7 +51,7 @@ class UserRepository {
       'timestamp': DateTime.now().toIso8601String(),
     };
 
-    return _userSyncService.sendUserDeletion(data);
+    return _userSyncService.sendUserUpdate(data);
   }
 
   /// Disposes any resources managed by the repository.

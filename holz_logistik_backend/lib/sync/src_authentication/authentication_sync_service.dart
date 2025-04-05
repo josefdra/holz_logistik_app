@@ -23,7 +23,7 @@ class AuthenticationSyncService {
   final _authenticationUpdateController =
       StreamController<Map<String, dynamic>>.broadcast();
 
-  /// Stream of user updates from external sources
+  /// Stream of authentication updates from external sources
   Stream<Map<String, dynamic>> get authenticationUpdates =>
       _authenticationUpdateController.stream;
 
@@ -35,12 +35,12 @@ class AuthenticationSyncService {
     }
   }
 
-  /// Send user updates to server
+  /// Send authentication updates to server
   Future<void> sendAuthenticationRequest(String apiKey) {
     return _coreSyncService.sendMessage('authentication_request', apiKey);
   }
 
-  /// Dispos
+  /// Dispose
   void dispose() {
     _authenticationUpdateController.close();
   }

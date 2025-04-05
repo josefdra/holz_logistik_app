@@ -8,7 +8,7 @@ abstract class UserApi {
   const UserApi();
 
   /// Provides a [Stream] of all users.
-  Stream<List<User>> getUsers();
+  Stream<List<User>> get users;
 
   /// Saves or updates a [user].
   ///

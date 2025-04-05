@@ -1,4 +1,4 @@
-/// A flutter implementation of the user UserLocalStorage that uses 
+/// A flutter implementation of the UserLocalStorage that uses 
 /// CoreLocalStorage and sqflite.
 library user_local_storage;
 

@@ -36,12 +36,7 @@ class UserSyncService {
     return _coreSyncService.sendMessage('user_update', data);
   }
 
-  /// Send user deletion to server
-  Future<void> sendUserDeletion(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('user_update', data);
-  }
-
-  /// Dispos
+  /// Dispose
   void dispose() {
     _userUpdateController.close();
   }
