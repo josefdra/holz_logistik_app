@@ -1,0 +1,64 @@
+{
+  "@@locale": "de",
+  "editUserAddAppBarTitle": "Neuen Nutzer hinzufügen",
+  "@editUserAddAppBarTitle": {
+    "description": "Title text shown in the AppBar of the Edit User Page when a new user is create"
+  },
+  "@@locale": "de",
+  "editUserEditAppBarTitle": "Neuen Nutzer hinzufügen",
+  "@editUserEditAppBarTitle": {
+    "description": "Title text shown in the AppBar of the EditUserPage when a user is edited"
+  },
+  "@@locale": "de",
+  "editUserNameLabel": "Name",
+  "@editUserNameLabel": {
+    "description": "Label text shown in the input text field for the name"
+  },
+  "@@locale": "de",
+  "userListAppBarTitle": "Nutzer",
+  "@userListAppBarTitle": {
+    "description": "AppBar title shown in the UserListPage"
+  },
+  "@@locale": "de",
+  "userListErrorSnackbarText": "Ein Fehler ist während dem Laden der Nutzer aufgetreten",
+  "@userListErrorSnackbarText": {
+    "description": "Snackbar text shown when an error occurs while loading todos"
+  },
+  "userListUserDeletedSnackbarText": "Benutzer \"{userName}\" gelöscht.",
+  "@userListUserDeletedSnackbarText": {
+    "description": "Snackbar text shown when a user is deleted from the UserListPage",
+    "placeholders": {
+      "userName": {
+        "description": "The name of the user that was deleted"
+      }
+    }
+  },
+  "userListUndoDeletionButtonText": "Rückgängig machen",
+  "@userListUndoDeletionButtonText": {
+    "description": "Button text shown in the snackbar that undoes a deletion of a todo"
+  },
+  "userListEmptyText": "Keine Nutzer gefunden.",
+  "@userListEmptyText": {
+    "description": "Text shown in the UserListPage when no users are found with the selected filters"
+  },
+  "userListFilterAll": "Alle",
+  "@userListFilterAll": {
+    "description": "Text shown in the filter dropdown of the UserListPage for the option to display all users"
+  },
+  "userListFilterBasicOnly": "Nur Basisnutzer",
+  "@userListFilterBasicOnly": {
+    "description": "Text shown in the filter dropdown of the UserListPage for the option to display only basic users"
+  },
+  "userListFilterPrivilegedOnly": "Nur privilegierte Nutzer",
+  "@userListFilterPrivilegedOnly": {
+    "description": "Text shown in the filter dropdown of the UserListPage for the option to display only privileged users"
+  },
+  "userListFilterAdminOnly": "Nur Admins",
+  "@userListFilterAdminOnly": {
+    "description": "Text shown in the filter dropdown of the UserListPage for the option to display only admin users"
+  },
+  "userListFilterElevatedAccess": "Nutzer mit erhöhten Rechten",
+  "@userListFilterElevatedAccess": {
+    "description": "Text shown in the filter dropdown of the UserListPage for the option to display all users with privileges"
+  }
+}

@@ -2,4 +2,4 @@
 /// general core_sync_service.
 library user_sync_service;
 
-export 'src/user_sync_service.dart';
+export 'src_user/user_sync_service.dart';

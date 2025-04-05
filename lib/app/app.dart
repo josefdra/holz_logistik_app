@@ -1,21 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/home/home.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
-import 'package:holz_logistik/theme/theme.dart';
+import 'package:holz_logistik/authentication/bloc/authentication_bloc.dart';
+import 'package:holz_logistik/home/view/home_page.dart';
+import 'package:holz_logistik/user_list/bloc/user_list_bloc.dart';
+import 'package:holz_logistik_backend/api/authentication_api.dart';
+import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/local_storage/authentication_local_storage.dart';
+import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
+import 'package:holz_logistik_backend/local_storage/user_local_storage.dart';
+import 'package:holz_logistik_backend/repository/authentication_repository.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
+import 'package:holz_logistik_backend/sync/authentication_sync_service.dart';
+import 'package:holz_logistik_backend/sync/core_sync_service.dart';
+import 'package:holz_logistik_backend/sync/user_sync_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class App extends StatelessWidget {
-  const App({required this.createUserRepository, super.key});
+  App({
+    required SharedPreferences sharedPrefs,
+    required this.coreLocalStorage,
+    required this.coreSyncService,
+    super.key,
+  })  : authenticationApi = AuthenticationLocalStorage(plugin: sharedPrefs),
+        userApi = UserLocalStorage(coreLocalStorage: coreLocalStorage);
 
-  final UserRepository Function() createUserRepository;
+  final CoreLocalStorage coreLocalStorage;
+  final CoreSyncService coreSyncService;
+  final AuthenticationApi authenticationApi;
+  final UserApi userApi;
 
   @override
   Widget build(BuildContext context) {
-    return RepositoryProvider<UserRepository>(
-      create: (_) => createUserRepository(),
-      dispose: (repository) => repository.dispose(),
-      child: const AppView(),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(
+          create: (_) => AuthenticationRepository(
+            authenticationApi: authenticationApi,
+            authenticationSyncService:
+                AuthenticationSyncService(coreSyncService: coreSyncService),
+          ),
+          dispose: (repository) => repository.dispose(),
+        ),
+        RepositoryProvider(
+          create: (_) => UserRepository(
+            userApi: userApi,
+            userSyncService: UserSyncService(coreSyncService: coreSyncService),
+          ),
+          dispose: (repository) => repository.dispose(),
+        ),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            lazy: false,
+            create: (context) => AuthenticationBloc(
+              authenticationRepository:
+                  context.read<AuthenticationRepository>(),
+            )..add(AuthenticationSubscriptionRequested()),
+            child: const AppView(),
+          ),
+          BlocProvider(
+            lazy: false,
+            create: (context) => UserListBloc(
+              userRepository: context.read<UserRepository>(),
+            )..add(const UserListSubscriptionRequested()),
+            child: const AppView(),
+          ),
+        ],
+        child: const AppView(),
+      ),
     );
   }
 }
@@ -25,12 +78,8 @@ class AppView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: FlutterUsersTheme.light,
-      darkTheme: FlutterUsersTheme.dark,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const HomePage(),
+    return const MaterialApp(
+      home: HomePage(),
     );
   }
 }

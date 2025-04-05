@@ -16,6 +16,7 @@ dependencies:
   holz_logistik_backend:
     path: holz_logistik_backend
   intl: ^0.19.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   bloc_test: ^10.0.0

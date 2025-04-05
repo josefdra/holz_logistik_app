@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/edit_user/bloc/edit_user_bloc.dart';
 import 'package:holz_logistik/edit_user/edit_user.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
@@ -54,7 +55,6 @@ class EditUserView extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        tooltip: l10n.editUserSaveButtonTooltip,
         shape: const ContinuousRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(32)),
         ),
@@ -70,11 +70,24 @@ class EditUserView extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Column(
-              children: [_NameField()],
+              children: [_RoleField(), _NameField()],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RoleField extends StatelessWidget {
+  const _RoleField();
+
+  @override
+  Widget build(BuildContext context) {
+    return RoleDropdown(
+      onChanged: (value) {
+        context.read<EditUserBloc>().add(EditUserRoleChanged(value));
+      },
     );
   }
 }
@@ -89,7 +102,6 @@ class _NameField extends StatelessWidget {
     final hintText = state.initialUser?.name ?? '';
 
     return TextFormField(
-      key: const Key('editUserView_name_textFormField'),
       initialValue: state.name,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,

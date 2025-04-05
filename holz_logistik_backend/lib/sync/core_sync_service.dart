@@ -2,5 +2,5 @@
 /// specific components.
 library core_sync_service;
 
-export 'src/core_models/models.dart';
-export 'src/core_sync_service.dart';
+export 'src_core/core_models/models.dart';
+export 'src_core/core_sync_service.dart';

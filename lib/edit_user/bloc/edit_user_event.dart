@@ -7,6 +7,15 @@ sealed class EditUserEvent extends Equatable {
   List<Object> get props => [];
 }
 
+final class EditUserRoleChanged extends EditUserEvent {
+  const EditUserRoleChanged(this.role);
+
+  final Role role;
+
+  @override
+  List<Object> get props => [role];
+}
+
 final class EditUserNameChanged extends EditUserEvent {
   const EditUserNameChanged(this.name);
 

@@ -2,4 +2,4 @@
 library user_repository;
 
 export 'package:holz_logistik_backend/api/user_api.dart' show Role, User;
-export 'src/user_repository.dart';
+export 'src_user/user_repository.dart';
