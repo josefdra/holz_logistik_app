@@ -1,4 +1,4 @@
-# Holz Logistik
+# Holz Logistik App
 
 ![coverage][coverage_badge]
 [![style: very good analysis][very_good_analysis_badge]][very_good_analysis_link]
