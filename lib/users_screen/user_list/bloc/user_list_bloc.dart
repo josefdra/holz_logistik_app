@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/user_list/user_list.dart';
+import 'package:holz_logistik/users_screen/user_list/user_list.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 part 'user_list_event.dart';

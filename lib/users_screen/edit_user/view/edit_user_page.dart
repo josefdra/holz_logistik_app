@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/edit_user/bloc/edit_user_bloc.dart';
-import 'package:holz_logistik/edit_user/edit_user.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
+import 'package:holz_logistik/core/l10n/l10n.dart';
+import 'package:holz_logistik/users_screen/edit_user/bloc/edit_user_bloc.dart';
+import 'package:holz_logistik/users_screen/edit_user/edit_user.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class EditUserPage extends StatelessWidget {
@@ -84,7 +84,11 @@ class _RoleField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<EditUserBloc>().state;
+    final role = state.initialUser?.role ?? Role.basic;
+
     return RoleDropdown(
+      initialValue: role,
       onChanged: (value) {
         context.read<EditUserBloc>().add(EditUserRoleChanged(value));
       },

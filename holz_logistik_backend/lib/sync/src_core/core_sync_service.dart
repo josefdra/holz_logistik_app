@@ -49,7 +49,6 @@ class CoreSyncService {
         onError: _handleError,
         onDone: _handleDone,
       );
-      print('WebSocket connection established');
     } catch (e) {
       print('WebSocket connection error: $e');
       // Implement reconnection logic here if needed
@@ -80,13 +79,12 @@ class CoreSyncService {
 
   /// Handle WebSocket errors
   void _handleError(dynamic error) {
-    // print('WebSocket error: $error');
-    _scheduleReconnect();
+    print('WebSocket error: $error');
   }
 
   /// Handle WebSocket connection close
   void _handleDone() {
-    // print('WebSocket connection closed');
+    print('WebSocket connection closed');
     _scheduleReconnect();
   }
 

@@ -38,7 +38,7 @@ class UserListTile extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          user.role.value.toString(),
+          user.role.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

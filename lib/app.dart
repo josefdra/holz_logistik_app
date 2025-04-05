@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/authentication/bloc/authentication_bloc.dart';
-import 'package:holz_logistik/home/view/home_page.dart';
-import 'package:holz_logistik/user_list/bloc/user_list_bloc.dart';
+import 'package:holz_logistik/core/authentication/bloc/authentication_bloc.dart';
+import 'package:holz_logistik/core/home/view/home_page.dart';
+import 'package:holz_logistik/core/l10n/l10n.dart';
+import 'package:holz_logistik/users_screen/user_list/bloc/user_list_bloc.dart';
 import 'package:holz_logistik_backend/api/authentication_api.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:holz_logistik_backend/local_storage/authentication_local_storage.dart';
@@ -78,8 +79,23 @@ class AppView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: HomePage(),
+    return MaterialApp(
+      title: 'Holz Logistik App',
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF2C5E1A),
+          foregroundColor: Colors.white,
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFF2C5E1A),
+          foregroundColor: Colors.white,
+        ),
+      ),
+      home: const HomePage(),
     );
   }
 }

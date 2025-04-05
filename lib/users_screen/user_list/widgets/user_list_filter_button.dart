@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
-import 'package:holz_logistik/user_list/user_list.dart';
+import 'package:holz_logistik/core/l10n/l10n.dart';
+import 'package:holz_logistik/users_screen/user_list/user_list.dart';
 
 class UserListFilterButton extends StatelessWidget {
   const UserListFilterButton({super.key});

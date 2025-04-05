@@ -2,10 +2,10 @@
   "@@locale": "de",
   "editUserAddAppBarTitle": "Neuen Nutzer hinzufügen",
   "@editUserAddAppBarTitle": {
-    "description": "Title text shown in the AppBar of the Edit User Page when a new user is create"
+    "description": "Title text shown in the AppBar of the EditUserPage when a new user is create"
   },
   "@@locale": "de",
-  "editUserEditAppBarTitle": "Neuen Nutzer hinzufügen",
+  "editUserEditAppBarTitle": "Nutzer bearbeiten",
   "@editUserEditAppBarTitle": {
     "description": "Title text shown in the AppBar of the EditUserPage when a user is edited"
   },
