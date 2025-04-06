@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
+import 'package:holz_logistik_backend/api/general.dart';
 import 'package:holz_logistik_backend/api/src_note/note_models/note.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'comment.g.dart';
 
@@ -27,10 +29,22 @@ class Comment extends Equatable {
     required this.note,
   });
 
+  /// {@macro comment_item}
+  Comment.empty({
+    String? id,
+    DateTime? lastEdit,
+    this.text = '',
+    User? user,
+    Note? note,
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now(),
+        user = user ?? User.empty(),
+        note = note ?? Note.empty();
+
   /// The id of the `comment`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// The time the `comment` was last modified.
   ///
@@ -56,7 +70,7 @@ class Comment extends Equatable {
   ///
   /// {@macro comment_item}
   Comment copyWith({
-    int? id,
+    String? id,
     DateTime? lastEdit,
     String? text,
     User? user,

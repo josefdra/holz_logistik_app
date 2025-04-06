@@ -1,42 +1,45 @@
 part of 'location_list_bloc.dart';
 
-enum UserListStatus { initial, loading, success, failure }
+enum LocationListStatus { initial, loading, success, failure }
 
-final class UserListState extends Equatable {
-  const UserListState({
-    this.status = UserListStatus.initial,
-    this.users = const [],
-    this.filter = UserListFilter.all,
-    this.lastDeletedUser,
+final class LocationListState extends Equatable {
+  const LocationListState({
+    this.status = LocationListStatus.initial,
+    this.locations = const [],
+    this.searchQuery = const LocationListSearchQuery(),
+    this.lastDeletedLocation,
   });
 
-  final UserListStatus status;
-  final List<User> users;
-  final UserListFilter filter;
-  final User? lastDeletedUser;
+  final LocationListStatus status;
+  final List<Location> locations;
+  final LocationListSearchQuery searchQuery;
+  final Location? lastDeletedLocation;
 
-  Iterable<User> get filteredUsers => filter.applyAll(users);
+  Iterable<Location> get searchQueryedLocations =>
+      searchQuery.applyAll(locations);
 
-  UserListState copyWith({
-    UserListStatus Function()? status,
-    List<User> Function()? users,
-    UserListFilter Function()? filter,
-    User? Function()? lastDeletedUser,
+  LocationListState copyWith({
+    LocationListStatus Function()? status,
+    List<Location> Function()? locations,
+    LocationListSearchQuery Function()? searchQuery,
+    Location? Function()? lastDeletedLocation,
   }) {
-    return UserListState(
+    return LocationListState(
       status: status != null ? status() : this.status,
-      users: users != null ? users() : this.users,
-      filter: filter != null ? filter() : this.filter,
-      lastDeletedUser:
-          lastDeletedUser != null ? lastDeletedUser() : this.lastDeletedUser,
+      locations:
+          locations != null ? sortByLastEdit(locations()) : this.locations,
+      searchQuery: searchQuery != null ? searchQuery() : this.searchQuery,
+      lastDeletedLocation: lastDeletedLocation != null
+          ? lastDeletedLocation()
+          : this.lastDeletedLocation,
     );
   }
 
   @override
   List<Object?> get props => [
         status,
-        users,
-        filter,
-        lastDeletedUser,
+        locations,
+        searchQuery,
+        lastDeletedLocation,
       ];
 }

@@ -1,9 +1,11 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/general/models/json_map.dart';
-import 'package:holz_logistik_backend/api/location_api.dart';
+import 'package:holz_logistik_backend/api/photo_api.dart';
+import 'package:holz_logistik_backend/api/sawmill_api.dart';
 import 'package:holz_logistik_backend/api/src_contract/contract_models/contract.dart';
+import 'package:holz_logistik_backend/general/models/json_map.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'location.g.dart';
 
@@ -13,7 +15,8 @@ part 'location.g.dart';
 /// Contains a [id], [done], time of the [lastEdit], [latitude], [longitude],
 /// [partieNr], [additionalInfo], [initialQuantity], [initialOversizeQuantity],
 /// [initialPieceCount], [currentQuantity], [currentOversizeQuantity],
-/// [currentPieceCount], [contract].
+/// [currentPieceCount], [contract], [sawmills], [oversizeSawmills] and
+/// [photos].
 ///
 /// [Location]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -38,12 +41,38 @@ class Location extends Equatable {
     required this.currentOversizeQuantity,
     required this.currentPieceCount,
     required this.contract,
+    required this.sawmills,
+    required this.oversizeSawmills,
+    required this.photos,
   });
+
+  /// {@macro location_item}
+  Location.empty({
+    String? id,
+    this.done = false,
+    DateTime? lastEdit,
+    this.latitude = 0,
+    this.longitude = 0,
+    this.partieNr = '',
+    this.additionalInfo = '',
+    this.initialQuantity = 0,
+    this.initialOversizeQuantity = 0,
+    this.initialPieceCount = 0,
+    this.currentQuantity = 0,
+    this.currentOversizeQuantity = 0,
+    this.currentPieceCount = 0,
+    Contract? contract,
+    this.sawmills = const [],
+    this.oversizeSawmills = const [],
+    this.photos = const [],
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now(),
+        contract = contract ?? Contract.empty();
 
   /// The id of the `location`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// The done status of the `location`.
   ///
@@ -51,8 +80,6 @@ class Location extends Equatable {
   final bool done;
 
   /// The time the `location` was last modified.
-  ///
-  /// Cannot be empty.
   final DateTime lastEdit;
 
   /// The latitude of the `location`.
@@ -110,11 +137,26 @@ class Location extends Equatable {
   /// Cannot be empty.
   final Contract contract;
 
+  /// The list of recommended sawmills for the `location`.
+  ///
+  /// Cannot be empty.
+  final List<Sawmill> sawmills;
+
+  /// The list of recommended oversize sawmills for the `location`.
+  ///
+  /// Cannot be empty.
+  final List<Sawmill> oversizeSawmills;
+
+  /// The local photo urls for the `location`.
+  ///
+  /// Cannot be empty.
+  final List<Photo> photos;
+
   /// Returns a copy of this `location` with the given values updated.
   ///
   /// {@macro location_item}
   Location copyWith({
-    int? id,
+    String? id,
     bool? done,
     DateTime? lastEdit,
     double? latitude,
@@ -128,6 +170,9 @@ class Location extends Equatable {
     double? currentOversizeQuantity,
     int? currentPieceCount,
     Contract? contract,
+    List<Sawmill>? sawmills,
+    List<Sawmill>? oversizeSawmills,
+    List<Photo>? photos,
   }) {
     return Location(
       id: id ?? this.id,
@@ -146,6 +191,9 @@ class Location extends Equatable {
           currentOversizeQuantity ?? this.currentOversizeQuantity,
       currentPieceCount: currentPieceCount ?? this.currentPieceCount,
       contract: contract ?? this.contract,
+      sawmills: sawmills ?? this.sawmills,
+      oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
+      photos: photos ?? this.photos,
     );
   }
 
@@ -171,5 +219,6 @@ class Location extends Equatable {
         currentOversizeQuantity,
         currentPieceCount,
         contract,
+        photos,
       ];
 }

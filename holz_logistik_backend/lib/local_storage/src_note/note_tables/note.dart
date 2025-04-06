@@ -21,7 +21,7 @@ class NoteTable {
   /// SQL statement for creating the notes table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
-      $columnId INTEGER PRIMARY KEY NOT NULL,
+      $columnId TEXT PRIMARY KEY NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnText TEXT NOT NULL,
       $columnUserId TEXT NOT NULL,

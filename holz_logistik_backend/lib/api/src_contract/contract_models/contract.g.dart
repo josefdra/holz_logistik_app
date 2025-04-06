@@ -7,7 +7,7 @@ part of 'contract.dart';
 // **************************************************************************
 
 Contract _$ContractFromJson(Map<String, dynamic> json) => Contract(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       done: json['done'] as bool,
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       title: json['title'] as String,

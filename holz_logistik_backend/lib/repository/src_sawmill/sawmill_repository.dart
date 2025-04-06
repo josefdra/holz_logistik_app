@@ -25,7 +25,7 @@ class SawmillRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _sawmillApi.deleteSawmill(data['id'] as int);
+      _sawmillApi.deleteSawmill(data['id'] as String);
     } else {
       _sawmillApi.saveSawmill(Sawmill.fromJson(data));
     }
@@ -41,9 +41,9 @@ class SawmillRepository {
 
   /// Deletes the `sawmill` with the given id.
   ///
-  /// If no `sawmill` with the given id exists, a [SawmillNotFoundException] error is
-  /// thrown.
-  Future<void> deleteSawmill(int id) {
+  /// If no `sawmill` with the given id exists, a [SawmillNotFoundException] 
+  /// error is thrown.
+  Future<void> deleteSawmill(String id) {
     _sawmillApi.deleteSawmill(id);
     final data = {
       'id': id,

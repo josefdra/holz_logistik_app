@@ -60,5 +60,42 @@
   "userListFilterElevatedAccess": "Nutzer mit erhöhten Rechten",
   "@userListFilterElevatedAccess": {
     "description": "Text shown in the filter dropdown of the UserListPage for the option to display all users with privileges"
+  },
+  "locationListErrorSnackbarText": "Beim Laden der Standorte ist ein Fehler aufgetreten.",
+  "@locationListErrorSnackbarText": {
+    "description": "Snackbar text shown when an error occurs while loading locations"
+  },
+  "locationListLocationDeletedSnackbarText": "Standort \"{locationPartieNr}\" gelöscht.",
+  "@locationListLocationDeletedSnackbarText": {
+    "description": "Snackbar text shown when a location is deleted from the Location List Page",
+    "placeholders": {
+      "locationPartieNr": {
+        "description": "The partieNr of the location that was deleted"
+      }
+    }
+  },
+  "locationListUndoDeletionButtonText": "Rückgängig",
+  "@locationListUndoDeletionButtonText": {
+    "description": "Button text shown in the snackbar that undoes a deletion of a location"
+  },
+  "locationListEmptyText": "Keine Standorte verfügbar.",
+  "@locationListEmptyText": {
+    "description": "Text shown in the Location List Page when no locations are found with the selected filters"
+  },
+  "editLocationAddAppBarTitle": "Standort hinzufügen",
+  "@editLocationAddAppBarTitle": {
+    "description": "Text shown in the app bar when creating a new location"
+  },
+  "editLocationEditAppBarTitle": "Standort bearbeiten",
+  "@editLocationEditAppBarTitle": {
+    "description": "Text shown in the app bar when editing an existing location"
+  },
+  "editLocationPartieNrLabel": "Partie Nummer",
+  "@editLocationPartieNrLabel": {
+    "description": "Label text shown for partieNr when creating or editing a location"
+  },
+  "editLocationAdditionalInfoLabel": "Zusätzliche Info",
+  "@editLocationAdditionalInfoLabel": {
+    "description": "Label text shown for additionalInfo when creating or editing a location"
   }
 }

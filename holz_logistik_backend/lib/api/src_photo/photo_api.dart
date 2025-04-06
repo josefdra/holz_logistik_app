@@ -19,7 +19,7 @@ abstract class PhotoApi {
   ///
   /// If no `photo` with the given id exists, a [PhotoNotFoundException] 
   /// error is thrown.
-  Future<void> deletePhoto(int id);
+  Future<void> deletePhoto(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

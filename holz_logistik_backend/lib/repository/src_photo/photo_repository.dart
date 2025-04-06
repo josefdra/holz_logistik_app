@@ -25,7 +25,7 @@ class PhotoRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _photoApi.deletePhoto(data['id'] as int);
+      _photoApi.deletePhoto(data['id'] as String);
     } else {
       _photoApi.savePhoto(Photo.fromJson(data));
     }
@@ -43,7 +43,7 @@ class PhotoRepository {
   ///
   /// If no `photo` with the given id exists, a [PhotoNotFoundException] error 
   /// is thrown.
-  Future<void> deletePhoto(int id) {
+  Future<void> deletePhoto(String id) {
     _photoApi.deletePhoto(id);
     final data = {
       'id': id,

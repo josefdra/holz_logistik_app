@@ -25,7 +25,7 @@ class ContractRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _contractApi.deleteContract(data['id'] as int);
+      _contractApi.deleteContract(data['id'] as String);
     } else {
       _contractApi.saveContract(Contract.fromJson(data));
     }
@@ -43,7 +43,7 @@ class ContractRepository {
   ///
   /// If no `contract` with the given id exists, a [ContractNotFoundException] 
   /// error is thrown.
-  Future<void> deleteContract(int id) {
+  Future<void> deleteContract(String id) {
     _contractApi.deleteContract(id);
     final data = {
       'id': id,

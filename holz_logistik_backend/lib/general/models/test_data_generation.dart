@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
+import 'package:uuid/uuid.dart';
 
 /// Class that generates random user data
 class RandomUserGenerator {
@@ -55,7 +56,7 @@ class RandomUserGenerator {
     final lastName = _lastNames[_random.nextInt(_lastNames.length)];
 
     return User(
-      id: DateTime.now().microsecondsSinceEpoch + _random.nextInt(10000),
+      id: const Uuid().v4(),
       role: Role.values[_random.nextInt(Role.values.length)],
       lastEdit: DateTime.now(),
       name: '$firstName $lastName',

@@ -7,7 +7,7 @@ part of 'photo.dart';
 // **************************************************************************
 
 Photo _$PhotoFromJson(Map<String, dynamic> json) => Photo(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       localPhotoUrl: json['localPhotoUrl'] as String,
     );

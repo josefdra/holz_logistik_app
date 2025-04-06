@@ -39,8 +39,9 @@ class LocationLocalStorage extends LocationApi {
     final locationsJson =
         await _coreLocalStorage.getAll(LocationTable.tableName);
     final locations = locationsJson
-        .map((location) =>
-            Location.fromJson(Map<String, dynamic>.from(location)))
+        .map(
+          (location) => Location.fromJson(Map<String, dynamic>.from(location)),
+        )
         .toList();
     _locationStreamController.add(locations);
   }
@@ -53,7 +54,9 @@ class LocationLocalStorage extends LocationApi {
   /// Insert or Update a `location` to the database based on [locationData]
   Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
     return _coreLocalStorage.insertOrUpdate(
-        LocationTable.tableName, locationData);
+      LocationTable.tableName,
+      locationData,
+    );
   }
 
   /// Insert or Update a [location]
@@ -72,13 +75,13 @@ class LocationLocalStorage extends LocationApi {
   }
 
   /// Delete a Location from the database based on [id]
-  Future<int> _deleteLocation(int id) async {
+  Future<int> _deleteLocation(String id) async {
     return _coreLocalStorage.delete(LocationTable.tableName, id);
   }
 
   /// Delete a Location based on [id]
   @override
-  Future<int> deleteLocation(int id) async {
+  Future<int> deleteLocation(String id) async {
     final locations = [..._locationStreamController.value];
     final locationIndex = locations.indexWhere((l) => l.id == id);
     if (locationIndex == -1) {

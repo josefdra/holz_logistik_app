@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/category/admin/user/user_list/user_list.dart';
-import 'package:holz_logistik_backend/repository/user_repository.dart';
+import 'package:holz_logistik/category/screens/location_list/location_list.dart';
+import 'package:holz_logistik_backend/repository/location_repository.dart';
+import 'package:stream_transform/stream_transform.dart';
 
 part 'location_list_event.dart';
 part 'location_list_state.dart';
@@ -11,60 +12,70 @@ part 'location_list_state.dart';
 class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   LocationListBloc({
     required LocationRepository locationRepository,
-  })  : _userRepository = userRepository,
-        super(const UserListState()) {
-    on<UserListSubscriptionRequested>(_onSubscriptionRequested);
-    on<UserListUserDeleted>(_onUserDeleted);
-    on<UserListUndoDeletionRequested>(_onUndoDeletionRequested);
-    on<UserListFilterChanged>(_onFilterChanged);
-  }
-
-  final UserRepository _userRepository;
-
-  Future<void> _onSubscriptionRequested(
-    UserListSubscriptionRequested event,
-    Emitter<UserListState> emit,
-  ) async {
-    emit(state.copyWith(status: () => UserListStatus.loading));
-
-    await emit.forEach<List<User>>(
-      _userRepository.getUsers(),
-      onData: (users) => state.copyWith(
-        status: () => UserListStatus.success,
-        users: () => users,
-      ),
-      onError: (_, __) => state.copyWith(
-        status: () => UserListStatus.failure,
+  })  : _locationRepository = locationRepository,
+        super(const LocationListState()) {
+    on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
+    on<LocationListLocationDeleted>(_onLocationDeleted);
+    on<LocationListUndoDeletionRequested>(_onUndoDeletionRequested);
+    on<LocationListSearchQueryChanged>(
+      _onSearchQueryChanged,
+      transformer: debounce(
+        const Duration(milliseconds: 300),
       ),
     );
   }
 
-  Future<void> _onUserDeleted(
-    UserListUserDeleted event,
-    Emitter<UserListState> emit,
+  final LocationRepository _locationRepository;
+
+  Future<void> _onSubscriptionRequested(
+    LocationListSubscriptionRequested event,
+    Emitter<LocationListState> emit,
   ) async {
-    emit(state.copyWith(lastDeletedUser: () => event.user));
-    await _userRepository.deleteUser(event.user.id);
+    emit(state.copyWith(status: () => LocationListStatus.loading));
+
+    await emit.forEach<List<Location>>(
+      _locationRepository.getLocations(),
+      onData: (locations) => state.copyWith(
+        status: () => LocationListStatus.success,
+        locations: () => locations,
+      ),
+      onError: (_, __) => state.copyWith(
+        status: () => LocationListStatus.failure,
+      ),
+    );
+  }
+
+  Future<void> _onLocationDeleted(
+    LocationListLocationDeleted event,
+    Emitter<LocationListState> emit,
+  ) async {
+    emit(state.copyWith(lastDeletedLocation: () => event.location));
+    await _locationRepository.deleteLocation(event.location.id);
   }
 
   Future<void> _onUndoDeletionRequested(
-    UserListUndoDeletionRequested event,
-    Emitter<UserListState> emit,
+    LocationListUndoDeletionRequested event,
+    Emitter<LocationListState> emit,
   ) async {
     assert(
-      state.lastDeletedUser != null,
-      'Last deleted user can not be null.',
+      state.lastDeletedLocation != null,
+      'Last deleted location can not be null.',
     );
 
-    final user = state.lastDeletedUser!;
-    emit(state.copyWith(lastDeletedUser: () => null));
-    await _userRepository.saveUser(user);
+    final location = state.lastDeletedLocation!;
+    emit(state.copyWith(lastDeletedLocation: () => null));
+    await _locationRepository.saveLocation(location);
   }
 
-  void _onFilterChanged(
-    UserListFilterChanged event,
-    Emitter<UserListState> emit,
+  void _onSearchQueryChanged(
+    LocationListSearchQueryChanged event,
+    Emitter<LocationListState> emit,
   ) {
-    emit(state.copyWith(filter: () => event.filter));
+    emit(
+      state.copyWith(
+        searchQuery: () =>
+            LocationListSearchQuery(searchQuery: event.searchQuery),
+      ),
+    );
   }
 }

@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/general/models/json_map.dart';
+import 'package:holz_logistik_backend/general/models/json_map.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'sawmill.g.dart';
 
@@ -24,10 +25,18 @@ class Sawmill extends Equatable {
     required this.name,
   });
 
+  /// {@macro sawmill_item}
+  Sawmill.empty({
+    String? id,
+    DateTime? lastEdit,
+    this.name = '',
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now();
+
   /// The id of the `sawmill`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// The time the `sawmill` was last modified.
   ///
@@ -43,7 +52,7 @@ class Sawmill extends Equatable {
   ///
   /// {@macro sawmill_item}
   Sawmill copyWith({
-    int? id,
+    String? id,
     DateTime? lastEdit,
     String? name,
   }) {

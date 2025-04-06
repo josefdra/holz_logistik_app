@@ -7,7 +7,7 @@ part of 'shipment.dart';
 // **************************************************************************
 
 Shipment _$ShipmentFromJson(Map<String, dynamic> json) => Shipment(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       quantity: (json['quantity'] as num).toDouble(),
       oversizeQuantity: (json['oversizeQuantity'] as num).toDouble(),

@@ -19,7 +19,7 @@ abstract class ShipmentApi {
   ///
   /// If no `shipment` with the given id exists, a [ShipmentNotFoundException] 
   /// error is thrown.
-  Future<void> deleteShipment(int id);
+  Future<void> deleteShipment(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

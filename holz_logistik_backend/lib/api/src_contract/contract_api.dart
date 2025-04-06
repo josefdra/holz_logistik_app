@@ -19,7 +19,7 @@ abstract class ContractApi {
   ///
   /// If no `contract` with the given id exists, a [ContractNotFoundException]
   /// error is thrown.
-  Future<void> deleteContract(int id);
+  Future<void> deleteContract(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

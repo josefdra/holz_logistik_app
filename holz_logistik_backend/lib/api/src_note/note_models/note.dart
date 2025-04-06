@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:holz_logistik_backend/api/general.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'note.g.dart';
 
@@ -25,10 +27,20 @@ class Note extends Equatable {
     required this.user,
   });
 
+  /// {@macro note_item}
+  Note.empty({
+    String? id,
+    DateTime? lastEdit,
+    this.text = '',
+    User? user,
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now(),
+        user = user ?? User.empty();
+
   /// The id of the `note`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// The time the `note` was last modified.
   ///
@@ -49,7 +61,7 @@ class Note extends Equatable {
   ///
   /// {@macro note_item}
   Note copyWith({
-    int? id,
+    String? id,
     DateTime? lastEdit,
     String? text,
     User? user,

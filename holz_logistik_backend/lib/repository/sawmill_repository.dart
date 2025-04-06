@@ -1,5 +1,5 @@
-/// A repository that handles user related requests.
-library user_repository;
+/// A repository that handles sawmill related requests.
+library sawmill_repository;
 
-export 'package:holz_logistik_backend/api/user_api.dart' show Role, User;
-export 'src_user/user_repository.dart';
+export 'package:holz_logistik_backend/api/sawmill_api.dart' show Sawmill;
+export 'src_sawmill/sawmill_repository.dart';

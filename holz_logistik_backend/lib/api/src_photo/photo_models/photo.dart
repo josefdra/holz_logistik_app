@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/general/models/json_map.dart';
+import 'package:holz_logistik_backend/general/models/json_map.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'photo.g.dart';
 
@@ -24,10 +25,18 @@ class Photo extends Equatable {
     required this.localPhotoUrl,
   });
 
+  /// {@macro photo_item}
+  Photo.empty({
+    String? id,
+    DateTime? lastEdit,
+    this.localPhotoUrl = '',
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now();
+
   /// The id of the `photo`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// The time the `photo` was last modified.
   ///
@@ -43,7 +52,7 @@ class Photo extends Equatable {
   ///
   /// {@macro photo_item}
   Photo copyWith({
-    int? id,
+    String? id,
     DateTime? lastEdit,
     String? localPhotoUrl,
   }) {

@@ -7,7 +7,7 @@ part of 'location.dart';
 // **************************************************************************
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       done: json['done'] as bool,
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       latitude: (json['latitude'] as num).toDouble(),
@@ -23,6 +23,15 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
           (json['currentOversizeQuantity'] as num).toDouble(),
       currentPieceCount: (json['currentPieceCount'] as num).toInt(),
       contract: Contract.fromJson(json['contract'] as Map<String, dynamic>),
+      sawmills: (json['sawmills'] as List<dynamic>)
+          .map((e) => Sawmill.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      oversizeSawmills: (json['oversizeSawmills'] as List<dynamic>)
+          .map((e) => Sawmill.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      photos: (json['photos'] as List<dynamic>)
+          .map((e) => Photo.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
@@ -40,4 +49,7 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'currentOversizeQuantity': instance.currentOversizeQuantity,
       'currentPieceCount': instance.currentPieceCount,
       'contract': instance.contract,
+      'sawmills': instance.sawmills,
+      'oversizeSawmills': instance.oversizeSawmills,
+      'photos': instance.photos,
     };

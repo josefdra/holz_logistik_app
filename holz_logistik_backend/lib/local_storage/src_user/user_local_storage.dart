@@ -68,13 +68,13 @@ class UserLocalStorage extends UserApi {
   }
 
   /// Delete a User from the database based on [id]
-  Future<int> _deleteUser(int id) async {
+  Future<int> _deleteUser(String id) async {
     return _coreLocalStorage.delete(UserTable.tableName, id);
   }
 
   /// Delete a User based on [id]
   @override
-  Future<int> deleteUser(int id) async {
+  Future<int> deleteUser(String id) async {
     final users = [..._userStreamController.value];
     final userIndex = users.indexWhere((t) => t.id == id);
     if (userIndex == -1) {

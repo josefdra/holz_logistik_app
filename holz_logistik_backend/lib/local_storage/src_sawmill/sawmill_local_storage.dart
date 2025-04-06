@@ -51,7 +51,9 @@ class SawmillLocalStorage extends SawmillApi {
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
   Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {
     return _coreLocalStorage.insertOrUpdate(
-        SawmillTable.tableName, sawmillData);
+      SawmillTable.tableName,
+      sawmillData,
+    );
   }
 
   /// Insert or Update a [sawmill]
@@ -70,13 +72,13 @@ class SawmillLocalStorage extends SawmillApi {
   }
 
   /// Delete a Sawmill from the database based on [id]
-  Future<int> _deleteSawmill(int id) async {
+  Future<int> _deleteSawmill(String id) async {
     return _coreLocalStorage.delete(SawmillTable.tableName, id);
   }
 
   /// Delete a Sawmill based on [id]
   @override
-  Future<int> deleteSawmill(int id) async {
+  Future<int> deleteSawmill(String id) async {
     final sawmills = [..._sawmillStreamController.value];
     final sawmillIndex = sawmills.indexWhere((t) => t.id == id);
     if (sawmillIndex == -1) {

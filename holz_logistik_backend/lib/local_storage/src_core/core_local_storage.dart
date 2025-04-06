@@ -137,7 +137,7 @@ class CoreLocalStorage {
   }
 
   /// Deletes entity of table [tableName] based on [id]
-  Future<int> delete(String tableName, int id) async {
+  Future<int> delete(String tableName, String id) async {
     final db = await database;
     return db.delete(
       tableName,

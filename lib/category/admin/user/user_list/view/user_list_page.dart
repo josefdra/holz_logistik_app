@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/admin/user/edit_user/edit_user.dart';
 import 'package:holz_logistik/category/admin/user/user_list/user_list.dart';
+import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class UserListPage extends StatelessWidget {
