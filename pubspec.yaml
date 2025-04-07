@@ -13,9 +13,11 @@ dependencies:
   flutter_bloc: ^9.1.0
   flutter_localizations:
     sdk: flutter
+  flutter_map: ^8.1.1
   holz_logistik_backend:
     path: holz_logistik_backend
   intl: any
+  latlong2: ^0.9.1
   shared_preferences: ^2.5.3
   stream_transform: ^2.1.1
 

@@ -1,47 +1,41 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/category/admin/user/edit_user/edit_user.dart';
-import 'package:holz_logistik/category/admin/user/user_list/user_list.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
-import 'package:holz_logistik_backend/repository/user_repository.dart';
+import 'package:holz_logistik/category/screens/notes/notes.dart';
+import 'package:holz_logistik_backend/repository/note_repository.dart';
+import 'package:holz_logistik_backend/repository/repository.dart';
 
-class UserListPage extends StatelessWidget {
-  const UserListPage({super.key});
+class NotesPage extends StatelessWidget {
+  const NotesPage({super.key});
 
-  static Route<void> route({User? initialUser}) {
+  static Route<void> route({Note? initialNote}) {
     return MaterialPageRoute(
       fullscreenDialog: true,
       builder: (context) => BlocProvider(
-        create: (context) => UserListBloc(
-          userRepository: context.read<UserRepository>(),
+        create: (context) => NotesBloc(
+          noteRepository: context.read<NoteRepository>(),
         ),
-        child: const UserListPage(),
+        child: const NotesPage(),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocProvider(
-      create: (context) => UserListBloc(
-        userRepository: context.read<UserRepository>(),
-      )..add(const UserListSubscriptionRequested()),
+      create: (context) => NotesBloc(
+        noteRepository: context.read<NoteRepository>(),
+      )..add(const NotesSubscriptionRequested()),
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(l10n.userListAppBarTitle),
-          actions: const [
-            UserListFilterButton(),
-          ],
-        ),
-        body: const UserList(),
+        body: const NoteList(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
-          heroTag: 'userListPageFloatingActionButton',
+          heroTag: 'notesPageFloatingActionButton',
           shape: const CircleBorder(),
-          onPressed: () => Navigator.of(context).push(EditUserPage.route()),
+          onPressed: () => Navigator.of(context).push(
+            EditNoteWidget.route(),
+          ),
           child: const Icon(Icons.add),
         ),
       ),
@@ -49,8 +43,8 @@ class UserListPage extends StatelessWidget {
   }
 }
 
-class UserList extends StatelessWidget {
-  const UserList({super.key});
+class NoteList extends StatelessWidget {
+  const NoteList({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,43 +52,40 @@ class UserList extends StatelessWidget {
 
     return MultiBlocListener(
       listeners: [
-        BlocListener<UserListBloc, UserListState>(
+        BlocListener<NotesBloc, NotesState>(
           listenWhen: (previous, current) => previous.status != current.status,
           listener: (context, state) {
-            if (state.status == UserListStatus.failure) {
+            if (state.status == NotesStatus.failure) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
                   SnackBar(
-                    content: Text(l10n.userListErrorSnackbarText),
+                    content: Text(l10n.noteListErrorSnackbarText),
                   ),
                 );
             }
           },
         ),
-        BlocListener<UserListBloc, UserListState>(
+        BlocListener<NotesBloc, NotesState>(
           listenWhen: (previous, current) =>
-              previous.lastDeletedUser != current.lastDeletedUser &&
-              current.lastDeletedUser != null,
+              previous.lastDeletedNote != current.lastDeletedNote &&
+              current.lastDeletedNote != null,
           listener: (context, state) {
-            final deletedUser = state.lastDeletedUser!;
             final messenger = ScaffoldMessenger.of(context);
             messenger
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(
-                    l10n.userListUserDeletedSnackbarText(
-                      deletedUser.name,
-                    ),
+                    l10n.noteListNoteDeletedSnackbarText,
                   ),
                   action: SnackBarAction(
-                    label: l10n.userListUndoDeletionButtonText,
+                    label: l10n.noteListUndoDeletionButtonText,
                     onPressed: () {
                       messenger.hideCurrentSnackBar();
                       context
-                          .read<UserListBloc>()
-                          .add(const UserListUndoDeletionRequested());
+                          .read<NotesBloc>()
+                          .add(const NotesUndoDeletionRequested());
                     },
                   ),
                 ),
@@ -102,17 +93,17 @@ class UserList extends StatelessWidget {
           },
         ),
       ],
-      child: BlocBuilder<UserListBloc, UserListState>(
+      child: BlocBuilder<NotesBloc, NotesState>(
         builder: (context, state) {
-          if (state.users.isEmpty) {
-            if (state.status == UserListStatus.loading) {
+          if (state.notes.isEmpty) {
+            if (state.status == NotesStatus.loading) {
               return const Center(child: CupertinoActivityIndicator());
-            } else if (state.status != UserListStatus.success) {
+            } else if (state.status != NotesStatus.success) {
               return const SizedBox();
             } else {
               return Center(
                 child: Text(
-                  l10n.userListEmptyText,
+                  l10n.noteListEmptyText,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               );
@@ -121,17 +112,19 @@ class UserList extends StatelessWidget {
 
           return CupertinoScrollbar(
             child: ListView.builder(
-              itemCount: state.filteredUsers.length,
+              itemCount: state.notes.length,
               itemBuilder: (_, index) {
-                final user = state.filteredUsers.elementAt(index);
-                return UserListTile(
-                  user: user,
+                final note = state.notes.elementAt(index);
+                return NoteListTile(
+                  note: note,
                   onDismissed: (_) {
-                    context.read<UserListBloc>().add(UserListUserDeleted(user));
+                    context.read<NotesBloc>().add(
+                          NotesNoteDeleted(note),
+                        );
                   },
                   onTap: () {
                     Navigator.of(context).push(
-                      EditUserPage.route(initialUser: user),
+                      EditNoteWidget.route(initialNote: note),
                     );
                   },
                 );

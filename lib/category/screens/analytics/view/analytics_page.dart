@@ -27,13 +27,8 @@ class AnalyticsPage extends StatelessWidget {
         contractRepository: context.read<ContractRepository>(),
       )..add(const AnalyticsSubscriptionRequested()),
       child: Scaffold(
-        body: const Row(
-          children: [
-            SizedBox(width: 20),
-            Expanded(child: ContractList()),
-          ],
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        body: const ContractList(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
           heroTag: 'analyticsPageFloatingActionButton',
           shape: const CircleBorder(),
@@ -128,6 +123,11 @@ class ContractList extends StatelessWidget {
                     context.read<AnalyticsBloc>().add(
                           AnalyticsContractDeleted(contract),
                         );
+                  },
+                  onTap: () {
+                    Navigator.of(context).push(
+                      EditContractWidget.route(initialContract: contract),
+                    );
                   },
                 );
               },

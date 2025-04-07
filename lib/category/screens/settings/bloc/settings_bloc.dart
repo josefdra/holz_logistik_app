@@ -14,6 +14,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   })  : _authenticationRepository = authenticationRepository,
         super(SettingsState()) {
     on<SettingsSubscriptionRequested>(_onSubscriptionRequested);
+    on<SettingsApiKeyChanged>(_onApiKeyChanged);
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -34,5 +35,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         status: SettingsStatus.failure,
       ),
     );
+  }
+
+  void _onApiKeyChanged(
+    SettingsApiKeyChanged event,
+    Emitter<SettingsState> emit,
+  ) {
+    emit(state.copyWith(apiKey: event.apiKey));
   }
 }

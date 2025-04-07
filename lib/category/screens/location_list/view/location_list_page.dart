@@ -26,21 +26,11 @@ class LocationListPage extends StatelessWidget {
       create: (context) => LocationListBloc(
         locationRepository: context.read<LocationRepository>(),
       )..add(const LocationListSubscriptionRequested()),
-      child: Scaffold(
-        body: const Row(
+      child: const Scaffold(
+        body: Row(
           children: [
-            SizedBox(width: 20),
             Expanded(child: LocationList()),
           ],
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: FloatingActionButton(
-          heroTag: 'locationListFloatingActionButton',
-          shape: const CircleBorder(),
-          onPressed: () => Navigator.of(context).push(
-            EditLocationWidget.route(),
-          ),
-          child: const Icon(Icons.add),
         ),
       ),
     );

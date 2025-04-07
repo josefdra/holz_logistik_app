@@ -150,5 +150,53 @@
   "settingsNotAuthenticatedText": "Nicht angemeldet",
   "@settingsNotAuthenticatedText": {
     "description": "Info text shown when the user is not authenticated"
+  },
+  "settingsAppBarTitle": "Einstellungen",
+  "@settingsAppBarTitle": {
+    "description": "App bar title shown in the settings screen"
+  },
+  "settingsPageErrorSnackbarText": "Beim Laden der Einstellungen ist ein Fehler aufgetreten",
+  "@settingsPageErrorSnackbarText": {
+    "description": "Error Snackbar message shown in the settings screen"
+  },
+  "settingsApiKeyLabel": "ApiKey",
+  "@settingsApiKeyLabel": {
+    "description": "Label text shown in the settings screen for the apiKey input field"
+  },
+  "editNoteTextLabel": "Notiz",
+  "@editNoteTextLabel": {
+    "description": "Label text shown when editing a note"
+  },
+  "settingsSaveButtonText": "Speichern",
+  "@settingsSaveButtonText": {
+    "description": "Button text of save apiKey button on Setting screen"
+  },
+  "editNoteAddAppBarTitle": "Neue Notiz",
+  "@editNoteAddAppBarTitle": {
+    "description": "App bar title shown when adding a new note"
+  },
+  "editNoteEditAppBarTitle": "Notiz bearbeiten",
+  "@editNoteEditAppBarTitle": {
+    "description": "App bar title shown when editing a note"
+  },
+  "noteListErrorSnackbarText": "Fehler beim Laden der Notizen",
+  "@noteListErrorSnackbarText": {
+    "description": "Error Snackbar message when there is an error during loading the notes"
+  },
+  "noteListNoteDeletedSnackbarText": "Notiz gelöscht",
+  "@noteListNoteDeletedSnackbarText": {
+    "description": "Snackbar text shown when deleting a note"
+  },
+  "noteListUndoDeletionButtonText": "Rückgängig",
+  "@noteListUndoDeletionButtonText": {
+    "description": "Button text shown to undo deletion of a note"
+  },
+  "noteListEmptyText": "Keine Notizen",
+  "@noteListEmptyText": {
+    "description": "Text shown on notes screen when there is no note"
+  },
+  "mapErrorSnackbarText": "Fehler beim Laden der Karte",
+  "@mapErrorSnackbarText": {
+    "description": "Error message shown when something goes wrong with loading the map"
   }
 }

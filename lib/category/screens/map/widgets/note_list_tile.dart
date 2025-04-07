@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:holz_logistik_backend/repository/contract_repository.dart';
+import 'package:holz_logistik_backend/repository/note_repository.dart';
 
-class ContractListTile extends StatelessWidget {
-  const ContractListTile({
-    required this.contract,
+class NoteListTile extends StatelessWidget {
+  const NoteListTile({
+    required this.note,
     super.key,
     this.onDismissed,
     this.onTap,
   });
 
-  final Contract contract;
+  final Note note;
   final DismissDirectionCallback? onDismissed;
   final VoidCallback? onTap;
 
@@ -18,7 +18,7 @@ class ContractListTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Dismissible(
-      key: Key('contractListTile_dismissible_${contract.id}'),
+      key: Key('noteListTile_dismissible_${note.id}'),
       onDismissed: onDismissed,
       direction: DismissDirection.endToStart,
       background: Container(
@@ -32,15 +32,7 @@ class ContractListTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        title: Text(contract.title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Verfügbare Menge: ${contract.availableQuantity} fm'),
-            Text('Davon zugewiesen: ${contract.bookedQuantity} fm'),
-            Text('Davon abgefahren: ${contract.shippedQuantity} fm'),
-          ],
-        ),
+        title: Text(note.text),
         trailing: IconButton(
           onPressed: () => onDismissed?.call(DismissDirection.endToStart),
           icon: const Icon(Icons.delete),
