@@ -68,13 +68,13 @@ class PhotoLocalStorage extends PhotoApi {
   }
 
   /// Delete a Photo from the database based on [id]
-  Future<int> _deletePhoto(int id) async {
+  Future<int> _deletePhoto(String id) async {
     return _coreLocalStorage.delete(PhotoTable.tableName, id);
   }
 
   /// Delete a Photo based on [id]
   @override
-  Future<int> deletePhoto(int id) async {
+  Future<int> deletePhoto(String id) async {
     final photos = [..._photoStreamController.value];
     final photoIndex = photos.indexWhere((t) => t.id == id);
     if (photoIndex == -1) {

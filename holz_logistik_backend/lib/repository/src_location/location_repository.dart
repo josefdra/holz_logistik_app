@@ -25,7 +25,7 @@ class LocationRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _locationApi.deleteLocation(data['id'] as int);
+      _locationApi.deleteLocation(data['id'] as String);
     } else {
       _locationApi.saveLocation(Location.fromJson(data));
     }
@@ -43,7 +43,7 @@ class LocationRepository {
   ///
   /// If no `location` with the given id exists, a [LocationNotFoundException] 
   /// error is thrown.
-  Future<void> deleteLocation(int id) {
+  Future<void> deleteLocation(String id) {
     _locationApi.deleteLocation(id);
     final data = {
       'id': id,

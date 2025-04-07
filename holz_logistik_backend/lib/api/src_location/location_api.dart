@@ -19,7 +19,7 @@ abstract class LocationApi {
   ///
   /// If no `location` with the given id exists, a [LocationNotFoundException] 
   /// error is thrown.
-  Future<void> deleteLocation(int id);
+  Future<void> deleteLocation(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

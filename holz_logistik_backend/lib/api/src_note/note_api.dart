@@ -19,7 +19,7 @@ abstract class NoteApi {
   ///
   /// If no `note` with the given id exists, a [NoteNotFoundException] error is
   /// thrown.
-  Future<void> deleteNote(int id);
+  Future<void> deleteNote(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

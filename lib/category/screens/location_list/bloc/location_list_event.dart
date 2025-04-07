@@ -1,34 +1,38 @@
 part of 'location_list_bloc.dart';
 
-sealed class UserListEvent extends Equatable {
-  const UserListEvent();
+EventTransformer<E> debounce<E>(Duration duration) {
+  return (events, mapper) => events.debounce(duration).switchMap(mapper);
+}
+
+sealed class LocationListEvent extends Equatable {
+  const LocationListEvent();
 
   @override
   List<Object> get props => [];
 }
 
-final class UserListSubscriptionRequested extends UserListEvent {
-  const UserListSubscriptionRequested();
+final class LocationListSubscriptionRequested extends LocationListEvent {
+  const LocationListSubscriptionRequested();
 }
 
-final class UserListUserDeleted extends UserListEvent {
-  const UserListUserDeleted(this.user);
+final class LocationListLocationDeleted extends LocationListEvent {
+  const LocationListLocationDeleted(this.location);
 
-  final User user;
+  final Location location;
 
   @override
-  List<Object> get props => [user];
+  List<Object> get props => [location];
 }
 
-final class UserListUndoDeletionRequested extends UserListEvent {
-  const UserListUndoDeletionRequested();
+final class LocationListUndoDeletionRequested extends LocationListEvent {
+  const LocationListUndoDeletionRequested();
 }
 
-class UserListFilterChanged extends UserListEvent {
-  const UserListFilterChanged(this.filter);
+class LocationListSearchQueryChanged extends LocationListEvent {
+  const LocationListSearchQueryChanged(this.searchQuery);
 
-  final UserListFilter filter;
+  final String searchQuery;
 
   @override
-  List<Object> get props => [filter];
+  List<Object> get props => [searchQuery];
 }

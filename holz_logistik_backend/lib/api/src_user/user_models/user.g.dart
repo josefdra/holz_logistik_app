@@ -7,7 +7,7 @@ part of 'user.dart';
 // **************************************************************************
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       role: $enumDecode(_$RoleEnumMap, json['role']),
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       name: json['name'] as String,

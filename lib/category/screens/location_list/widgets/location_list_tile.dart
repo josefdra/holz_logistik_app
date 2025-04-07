@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:holz_logistik_backend/repository/user_repository.dart';
+import 'package:holz_logistik/category/screens/location_list/location_list.dart';
+import 'package:holz_logistik_backend/repository/location_repository.dart';
 
-class UserListTile extends StatelessWidget {
-  const UserListTile({
-    required this.user,
+class LocationListTile extends StatelessWidget {
+  const LocationListTile({
+    required this.location,
     super.key,
     this.onDismissed,
     this.onTap,
   });
 
-  final User user;
+  final Location location;
   final DismissDirectionCallback? onDismissed;
   final VoidCallback? onTap;
 
@@ -18,7 +19,7 @@ class UserListTile extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Dismissible(
-      key: Key('todoListTile_dismissible_${user.id}'),
+      key: Key('locationListTile_dismissible_${location.id}'),
       onDismissed: onDismissed,
       direction: DismissDirection.endToStart,
       background: Container(
@@ -32,15 +33,18 @@ class UserListTile extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        title: Text(
-          user.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        leading: SizedBox(
+          width: 50,
+          height: 50,
+          child: LocationListTileAvatar(location: location),
         ),
-        subtitle: Text(
-          user.role.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        title: Text(location.partieNr),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Menge: ${location.currentQuantity} fm'),
+            Text('Davon ÜS: ${location.currentOversizeQuantity} fm'),
+          ],
         ),
         trailing: IconButton(
           onPressed: () => onDismissed?.call(DismissDirection.endToStart),

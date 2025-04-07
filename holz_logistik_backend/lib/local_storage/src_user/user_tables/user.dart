@@ -19,7 +19,7 @@ class UserTable {
   /// SQL statement for creating the users table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
-      $columnId INTEGER PRIMARY KEY NOT NULL,
+      $columnId TEXT PRIMARY KEY NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnRole INTEGER NOT NULL,
       $columnName TEXT NOT NULL

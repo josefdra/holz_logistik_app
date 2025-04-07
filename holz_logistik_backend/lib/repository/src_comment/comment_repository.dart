@@ -25,7 +25,7 @@ class CommentRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _commentApi.deleteComment(data['id'] as int);
+      _commentApi.deleteComment(data['id'] as String);
     } else {
       _commentApi.saveComment(Comment.fromJson(data));
     }
@@ -43,7 +43,7 @@ class CommentRepository {
   ///
   /// If no `comment` with the given id exists, a [CommentNotFoundException] 
   /// error is thrown.
-  Future<void> deleteComment(int id) {
+  Future<void> deleteComment(String id) {
     _commentApi.deleteComment(id);
     final data = {
       'id': id,

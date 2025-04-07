@@ -7,7 +7,7 @@ part of 'sawmill.dart';
 // **************************************************************************
 
 Sawmill _$SawmillFromJson(Map<String, dynamic> json) => Sawmill(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       name: json['name'] as String,
     );

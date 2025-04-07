@@ -19,7 +19,7 @@ abstract class CommentApi {
   ///
   /// If no `comment` with the given id exists, a [CommentNotFoundException] 
   /// error is thrown.
-  Future<void> deleteComment(int id);
+  Future<void> deleteComment(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

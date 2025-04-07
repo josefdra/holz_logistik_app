@@ -25,7 +25,7 @@ class NoteRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _noteApi.deleteNote(data['id'] as int);
+      _noteApi.deleteNote(data['id'] as String);
     } else {
       _noteApi.saveNote(Note.fromJson(data));
     }
@@ -43,7 +43,7 @@ class NoteRepository {
   ///
   /// If no `note` with the given id exists, a [NoteNotFoundException] error is
   /// thrown.
-  Future<void> deleteNote(int id) {
+  Future<void> deleteNote(String id) {
     _noteApi.deleteNote(id);
     final data = {
       'id': id,

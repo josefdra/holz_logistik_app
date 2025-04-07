@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/api/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'user.g.dart';
 
@@ -52,10 +53,19 @@ class User extends Equatable {
     required this.name,
   });
 
+  /// {@macro user_item}
+  User.empty({
+    String? id,
+    this.role = Role.basic,
+    DateTime? lastEdit,
+    this.name = '',
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now();
+
   /// The id of the `user`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// The `user`role.
   ///
@@ -76,7 +86,7 @@ class User extends Equatable {
   ///
   /// {@macro user_item}
   User copyWith({
-    int? id,
+    String? id,
     Role? role,
     DateTime? lastEdit,
     String? name,

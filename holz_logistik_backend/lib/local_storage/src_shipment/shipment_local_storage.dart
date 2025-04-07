@@ -36,20 +36,28 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Initialization
   Future<void> _init() async {
-    final shipmentsJson = await _coreLocalStorage.getAll(ShipmentTable.tableName);
+    final shipmentsJson = await _coreLocalStorage.getAll(
+      ShipmentTable.tableName,
+    );
     final shipments = shipmentsJson
-        .map((shipment) => Shipment.fromJson(Map<String, dynamic>.from(shipment)))
+        .map(
+          (shipment) => Shipment.fromJson(Map<String, dynamic>.from(shipment)),
+        )
         .toList();
     _shipmentStreamController.add(shipments);
   }
 
   /// Get the `shipment`s from the [_shipmentStreamController]
   @override
-  Stream<List<Shipment>> getShipments() => _shipmentStreamController.asBroadcastStream();
+  Stream<List<Shipment>> getShipments() =>
+      _shipmentStreamController.asBroadcastStream();
 
   /// Insert or Update a `shipment` to the database based on [shipmentData]
   Future<int> _insertOrUpdateShipment(Map<String, dynamic> shipmentData) async {
-    return _coreLocalStorage.insertOrUpdate(ShipmentTable.tableName, shipmentData);
+    return _coreLocalStorage.insertOrUpdate(
+      ShipmentTable.tableName,
+      shipmentData,
+    );
   }
 
   /// Insert or Update a [shipment]
@@ -64,17 +72,25 @@ class ShipmentLocalStorage extends ShipmentApi {
     }
 
     _shipmentStreamController.add(shipments);
-    return _insertOrUpdateShipment(shipment.toJson());
+
+    final jsonShipment = {
+      ...shipment.toJson()
+        ..remove('user')
+        ..remove('contract'),
+      'userId': shipment.user.id,
+      'contractId': shipment.contract.id,
+    };
+    return _insertOrUpdateShipment(jsonShipment);
   }
 
   /// Delete a Shipment from the database based on [id]
-  Future<int> _deleteShipment(int id) async {
+  Future<int> _deleteShipment(String id) async {
     return _coreLocalStorage.delete(ShipmentTable.tableName, id);
   }
 
   /// Delete a Shipment based on [id]
   @override
-  Future<int> deleteShipment(int id) async {
+  Future<int> deleteShipment(String id) async {
     final shipments = [..._shipmentStreamController.value];
     final shipmentIndex = shipments.indexWhere((t) => t.id == id);
     if (shipmentIndex == -1) {

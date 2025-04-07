@@ -1,14 +1,17 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/general/models/json_map.dart';
+import 'package:holz_logistik_backend/general/models/json_map.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'contract.g.dart';
 
 /// {@template contract_item}
 /// A single `contract` item.
 ///
-/// Contains a [id], [role], time of the [lastEdit] and [name].
+/// Contains a [id], the [done] status, time of the [lastEdit], the [title],
+/// [additionalInfo], the [availableQuantity], the [bookedQuantity] and the
+/// [shippedQuantity].
 ///
 /// [Contract]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -29,10 +32,23 @@ class Contract extends Equatable {
     required this.shippedQuantity,
   });
 
+  /// {@macro contract_item}
+  Contract.empty({
+    String? id,
+    this.done = false,
+    DateTime? lastEdit,
+    this.title = '',
+    this.additionalInfo = '',
+    this.availableQuantity = 0,
+    this.bookedQuantity = 0,
+    this.shippedQuantity = 0,
+  })  : id = id ?? const Uuid().v4(),
+        lastEdit = lastEdit ?? DateTime.now();
+
   /// The id of the `contract`.
   ///
   /// Cannot be empty.
-  final int id;
+  final String id;
 
   /// If the contract is done.
   ///
@@ -73,7 +89,7 @@ class Contract extends Equatable {
   ///
   /// {@macro contract_item}
   Contract copyWith({
-    int? id,
+    String? id,
     bool? done,
     DateTime? lastEdit,
     String? title,

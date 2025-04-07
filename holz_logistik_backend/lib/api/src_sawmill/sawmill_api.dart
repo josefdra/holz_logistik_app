@@ -19,7 +19,7 @@ abstract class SawmillApi {
   ///
   /// If no `sawmill` with the given id exists, a [SawmillNotFoundException] 
   /// error is thrown.
-  Future<void> deleteSawmill(int id);
+  Future<void> deleteSawmill(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

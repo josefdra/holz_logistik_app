@@ -19,7 +19,7 @@ abstract class UserApi {
   ///
   /// If no `user` with the given id exists, a [UserNotFoundException] error is
   /// thrown.
-  Future<void> deleteUser(int id);
+  Future<void> deleteUser(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();

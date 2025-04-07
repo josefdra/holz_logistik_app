@@ -39,8 +39,9 @@ class ContractLocalStorage extends ContractApi {
     final contractsJson =
         await _coreLocalStorage.getAll(ContractTable.tableName);
     final contracts = contractsJson
-        .map((contract) =>
-            Contract.fromJson(Map<String, dynamic>.from(contract)))
+        .map(
+          (contract) => Contract.fromJson(Map<String, dynamic>.from(contract)),
+        )
         .toList();
     _contractStreamController.add(contracts);
   }
@@ -53,7 +54,9 @@ class ContractLocalStorage extends ContractApi {
   /// Insert or Update a `contract` to the database based on [contractData]
   Future<int> _insertOrUpdateContract(Map<String, dynamic> contractData) async {
     return _coreLocalStorage.insertOrUpdate(
-        ContractTable.tableName, contractData);
+      ContractTable.tableName,
+      contractData,
+    );
   }
 
   /// Insert or Update a [contract]
@@ -72,13 +75,13 @@ class ContractLocalStorage extends ContractApi {
   }
 
   /// Delete a Contract from the database based on [id]
-  Future<int> _deleteContract(int id) async {
+  Future<int> _deleteContract(String id) async {
     return _coreLocalStorage.delete(ContractTable.tableName, id);
   }
 
   /// Delete a Contract based on [id]
   @override
-  Future<int> deleteContract(int id) async {
+  Future<int> deleteContract(String id) async {
     final contracts = [..._contractStreamController.value];
     final contractIndex = contracts.indexWhere((c) => c.id == id);
     if (contractIndex == -1) {

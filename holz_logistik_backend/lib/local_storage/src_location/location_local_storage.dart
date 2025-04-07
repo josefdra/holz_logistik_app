@@ -15,7 +15,9 @@ class LocationLocalStorage extends LocationApi {
     // Register the table with the core database
     _coreLocalStorage
       ..registerTable(LocationTable.createTable)
-      ..registerMigration(_migrateLocationTable);
+      ..registerMigration(_migrateLocationTable)
+      ..registerTable(LocationSawmillJunctionTable.createTable)
+      ..registerMigration(_migrateLocationSawmillTable);
 
     _init();
   }
@@ -24,6 +26,15 @@ class LocationLocalStorage extends LocationApi {
   late final _locationStreamController = BehaviorSubject<List<Location>>.seeded(
     const [],
   );
+
+  /// Migration function for location table
+  Future<void> _migrateLocationSawmillTable(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    // Migration logic here if needed
+  }
 
   /// Migration function for location table
   Future<void> _migrateLocationTable(
@@ -39,8 +50,9 @@ class LocationLocalStorage extends LocationApi {
     final locationsJson =
         await _coreLocalStorage.getAll(LocationTable.tableName);
     final locations = locationsJson
-        .map((location) =>
-            Location.fromJson(Map<String, dynamic>.from(location)))
+        .map(
+          (location) => Location.fromJson(Map<String, dynamic>.from(location)),
+        )
         .toList();
     _locationStreamController.add(locations);
   }
@@ -50,10 +62,22 @@ class LocationLocalStorage extends LocationApi {
   Stream<List<Location>> get locations =>
       _locationStreamController.asBroadcastStream();
 
+  /// Insert or Update a `location` `sawmill` junction to the database
+  Future<int> _insertOrUpdateLocationSawmillJunction(
+    Map<String, dynamic> junctionData,
+  ) async {
+    return _coreLocalStorage.insertOrUpdate(
+      LocationSawmillJunctionTable.tableName,
+      junctionData,
+    );
+  }
+
   /// Insert or Update a `location` to the database based on [locationData]
   Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
     return _coreLocalStorage.insertOrUpdate(
-        LocationTable.tableName, locationData);
+      LocationTable.tableName,
+      locationData,
+    );
   }
 
   /// Insert or Update a [location]
@@ -68,17 +92,39 @@ class LocationLocalStorage extends LocationApi {
     }
 
     _locationStreamController.add(locations);
-    return _insertOrUpdateLocation(location.toJson());
+    final jsonLocation = {
+      ...location.toJson()
+        ..remove('contract')
+        ..remove('sawmills')
+        ..remove('oversizeSawmills')
+        ..remove('photos')
+        ..remove('shipments'),
+      'contractId': location.contract.id,
+    };
+    final allSawmills = [
+      ...location.sawmills.map(
+        (s) =>
+            {'locationId': location.id, 'sawmillId': s.id, 'isOversize': false},
+      ),
+      ...location.oversizeSawmills.map(
+        (s) =>
+            {'locationId': location.id, 'sawmillId': s.id, 'isOversize': true},
+      ),
+    ];
+    for (final sawmillRelation in allSawmills) {
+      _insertOrUpdateLocationSawmillJunction(sawmillRelation);
+    }
+    return _insertOrUpdateLocation(jsonLocation);
   }
 
   /// Delete a Location from the database based on [id]
-  Future<int> _deleteLocation(int id) async {
+  Future<int> _deleteLocation(String id) async {
     return _coreLocalStorage.delete(LocationTable.tableName, id);
   }
 
   /// Delete a Location based on [id]
   @override
-  Future<int> deleteLocation(int id) async {
+  Future<int> deleteLocation(String id) async {
     final locations = [..._locationStreamController.value];
     final locationIndex = locations.indexWhere((l) => l.id == id);
     if (locationIndex == -1) {

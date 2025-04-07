@@ -25,7 +25,7 @@ class ShipmentRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _shipmentApi.deleteShipment(data['id'] as int);
+      _shipmentApi.deleteShipment(data['id'] as String);
     } else {
       _shipmentApi.saveShipment(Shipment.fromJson(data));
     }
@@ -43,7 +43,7 @@ class ShipmentRepository {
   ///
   /// If no `shipment` with the given id exists, a [ShipmentNotFoundException] 
   /// error is thrown.
-  Future<void> deleteShipment(int id) {
+  Future<void> deleteShipment(String id) {
     _shipmentApi.deleteShipment(id);
     final data = {
       'id': id,

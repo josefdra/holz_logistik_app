@@ -25,10 +25,11 @@ class CommentTable {
   /// SQL statement for creating the comments table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
-      $columnId INTEGER PRIMARY KEY NOT NULL,
+      $columnId TEXT PRIMARY KEY NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnText TEXT NOT NULL,
       $columnUserId TEXT NOT NULL,
+      $columnNoteId TEXT NOT NULL,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId}),
       FOREIGN KEY ($columnNoteId) REFERENCES ${NoteTable.tableName}(${NoteTable.columnId})
     )

@@ -1,32 +1,32 @@
-import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/api/note_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
-import 'package:holz_logistik_backend/local_storage/user_local_storage.dart';
+import 'package:holz_logistik_backend/local_storage/note_local_storage.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:sqflite/sqflite.dart';
 
-/// {@template user_local_storage}
-/// A flutter implementation of the user UserLocalStorage that uses
+/// {@template note_local_storage}
+/// A flutter implementation of the note NoteLocalStorage that uses
 /// CoreLocalStorage and sqflite.
 /// {@endtemplate}
-class UserLocalStorage extends UserApi {
-  /// {@macro user_local_storage}
-  UserLocalStorage({required CoreLocalStorage coreLocalStorage})
+class NoteLocalStorage extends NoteApi {
+  /// {@macro note_local_storage}
+  NoteLocalStorage({required CoreLocalStorage coreLocalStorage})
       : _coreLocalStorage = coreLocalStorage {
     // Register the table with the core database
     _coreLocalStorage
-      ..registerTable(UserTable.createTable)
-      ..registerMigration(_migrateUserTable);
+      ..registerTable(NoteTable.createTable)
+      ..registerMigration(_migrateNoteTable);
 
     _init();
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _userStreamController = BehaviorSubject<List<User>>.seeded(
+  late final _noteStreamController = BehaviorSubject<List<Note>>.seeded(
     const [],
   );
 
-  /// Migration function for user table
-  Future<void> _migrateUserTable(
+  /// Migration function for note table
+  Future<void> _migrateNoteTable(
     Database db,
     int oldVersion,
     int newVersion,
@@ -36,59 +36,65 @@ class UserLocalStorage extends UserApi {
 
   /// Initialization
   Future<void> _init() async {
-    final usersJson = await _coreLocalStorage.getAll(UserTable.tableName);
-    final users = usersJson
-        .map((user) => User.fromJson(Map<String, dynamic>.from(user)))
+    final notesJson = await _coreLocalStorage.getAll(NoteTable.tableName);
+    final notes = notesJson
+        .map((note) => Note.fromJson(Map<String, dynamic>.from(note)))
         .toList();
-    _userStreamController.add(users);
+    _noteStreamController.add(notes);
   }
 
-  /// Get the `user`s from the [_userStreamController]
+  /// Get the `note`s from the [_noteStreamController]
   @override
-  Stream<List<User>> get users => _userStreamController.asBroadcastStream();
+  Stream<List<Note>> get notes => _noteStreamController.asBroadcastStream();
 
-  /// Insert or Update a `user` to the database based on [userData]
-  Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
-    return _coreLocalStorage.insertOrUpdate(UserTable.tableName, userData);
+  /// Insert or Update a `note` to the database based on [noteData]
+  Future<int> _insertOrUpdateNote(Map<String, dynamic> noteData) async {
+    return _coreLocalStorage.insertOrUpdate(NoteTable.tableName, noteData);
   }
 
-  /// Insert or Update a [user]
+  /// Insert or Update a [note]
   @override
-  Future<int> saveUser(User user) {
-    final users = [..._userStreamController.value];
-    final userIndex = users.indexWhere((t) => t.id == user.id);
-    if (userIndex >= 0) {
-      users[userIndex] = user;
+  Future<int> saveNote(Note note) {
+    final notes = [..._noteStreamController.value];
+    final noteIndex = notes.indexWhere((t) => t.id == note.id);
+    if (noteIndex >= 0) {
+      notes[noteIndex] = note;
     } else {
-      users.add(user);
+      notes.add(note);
     }
 
-    _userStreamController.add(users);
-    return _insertOrUpdateUser(user.toJson());
+    _noteStreamController.add(notes);
+    final jsonNote = {
+      ...note.toJson()
+        ..remove('user')
+        ..remove('comments'),
+      'userId': note.user.id,
+    };
+    return _insertOrUpdateNote(jsonNote);
   }
 
-  /// Delete a User from the database based on [id]
-  Future<int> _deleteUser(int id) async {
-    return _coreLocalStorage.delete(UserTable.tableName, id);
+  /// Delete a Note from the database based on [id]
+  Future<int> _deleteNote(String id) async {
+    return _coreLocalStorage.delete(NoteTable.tableName, id);
   }
 
-  /// Delete a User based on [id]
+  /// Delete a Note based on [id]
   @override
-  Future<int> deleteUser(int id) async {
-    final users = [..._userStreamController.value];
-    final userIndex = users.indexWhere((t) => t.id == id);
-    if (userIndex == -1) {
-      throw UserNotFoundException();
+  Future<int> deleteNote(String id) async {
+    final notes = [..._noteStreamController.value];
+    final noteIndex = notes.indexWhere((t) => t.id == id);
+    if (noteIndex == -1) {
+      throw NoteNotFoundException();
     } else {
-      users.removeAt(userIndex);
-      _userStreamController.add(users);
-      return _deleteUser(id);
+      notes.removeAt(noteIndex);
+      _noteStreamController.add(notes);
+      return _deleteNote(id);
     }
   }
 
-  /// Close the [_userStreamController]
+  /// Close the [_noteStreamController]
   @override
   Future<void> close() {
-    return _userStreamController.close();
+    return _noteStreamController.close();
   }
 }

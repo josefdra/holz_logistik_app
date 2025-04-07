@@ -25,7 +25,7 @@ final class UserListState extends Equatable {
   }) {
     return UserListState(
       status: status != null ? status() : this.status,
-      users: users != null ? users() : this.users,
+      users: users != null ? sortByLastEdit(users()) : this.users,
       filter: filter != null ? filter() : this.filter,
       lastDeletedUser:
           lastDeletedUser != null ? lastDeletedUser() : this.lastDeletedUser,

@@ -25,7 +25,7 @@ class UserRepository {
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _userApi.deleteUser(data['id'] as int);
+      _userApi.deleteUser(data['id'] as String);
     } else {
       _userApi.saveUser(User.fromJson(data));
     }
@@ -43,7 +43,7 @@ class UserRepository {
   ///
   /// If no `user` with the given id exists, a [UserNotFoundException] error is
   /// thrown.
-  Future<void> deleteUser(int id) {
+  Future<void> deleteUser(String id) {
     _userApi.deleteUser(id);
     final data = {
       'id': id,

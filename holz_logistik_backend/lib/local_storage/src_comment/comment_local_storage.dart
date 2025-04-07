@@ -51,7 +51,9 @@ class CommentLocalStorage extends CommentApi {
   /// Insert or Update a `comment` to the database based on [commentData]
   Future<int> _insertOrUpdateComment(Map<String, dynamic> commentData) async {
     return _coreLocalStorage.insertOrUpdate(
-        CommentTable.tableName, commentData);
+      CommentTable.tableName,
+      commentData,
+    );
   }
 
   /// Insert or Update a [comment]
@@ -66,17 +68,21 @@ class CommentLocalStorage extends CommentApi {
     }
 
     _commentStreamController.add(comments);
-    return _insertOrUpdateComment(comment.toJson());
+    final jsonComment = {
+      ...comment.toJson()..remove('user'),
+      'userId': comment.user.id,
+    };
+    return _insertOrUpdateComment(jsonComment);
   }
 
   /// Delete a Comment from the database based on [id]
-  Future<int> _deleteComment(int id) async {
+  Future<int> _deleteComment(String id) async {
     return _coreLocalStorage.delete(CommentTable.tableName, id);
   }
 
   /// Delete a Comment based on [id]
   @override
-  Future<int> deleteComment(int id) async {
+  Future<int> deleteComment(String id) async {
     final comments = [..._commentStreamController.value];
     final commentIndex = comments.indexWhere((t) => t.id == id);
     if (commentIndex == -1) {
