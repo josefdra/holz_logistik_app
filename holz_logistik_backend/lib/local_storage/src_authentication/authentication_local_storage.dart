@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:holz_logistik_backend/api/authentication_api.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:rxdart/subjects.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// {@template authentication_local_storage}
@@ -20,11 +21,16 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   final SharedPreferences _plugin;
 
   // StreamController to broadcast updates on authentication
-  final _authenticationStreamController = StreamController<User?>.broadcast();
+  final _authenticationStreamController =
+      BehaviorSubject<User>.seeded(User.empty());
 
   /// Stream of authenticated user
   @override
-  Stream<User?> get authenticatedUser => _authenticationStreamController.stream;
+  Stream<User> get authenticatedUser => _authenticationStreamController.stream;
+
+  /// Authenticated user
+  @override
+  User get currentUser => getUser();
 
   String? _getValue(String key) => _plugin.getString(key);
 
@@ -36,6 +42,22 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
       final user = User.fromJson(userJson);
       _authenticationStreamController.add(user);
+    } else {
+      final user = User.empty();
+      _authenticationStreamController.add(user);
+    }
+  }
+
+  /// Gets the current authenticated user. Returns an emtpy new user if empty.
+  User getUser() {
+    final storageData = _getValue(_authCollectionKey);
+
+    if (storageData != null) {
+      final userJson = jsonDecode(storageData) as Map<String, dynamic>;
+
+      return User.fromJson(userJson);
+    } else {
+      return User.empty();
     }
   }
 

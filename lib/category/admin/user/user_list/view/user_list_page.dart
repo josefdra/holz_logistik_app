@@ -36,13 +36,8 @@ class UserListPage extends StatelessWidget {
             UserListFilterButton(),
           ],
         ),
-        body: const Row(
-          children: [
-            SizedBox(width: 20),
-            Expanded(child: UserList()),
-          ],
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        body: const UserList(),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
           heroTag: 'userListPageFloatingActionButton',
           shape: const CircleBorder(),

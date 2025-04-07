@@ -13,8 +13,9 @@ class AuthenticationBloc
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
   })  : _authenticationRepository = authenticationRepository,
-        super(const AuthenticationState.unauthenticated()) {
+        super(AuthenticationState.unauthenticated()) {
     on<AuthenticationSubscriptionRequested>(_onSubscriptionRequested);
+    on<AuthenticationVerificationRequested>(_onVerificationRequested);
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -26,8 +27,34 @@ class AuthenticationBloc
     return emit.onEach(
       _authenticationRepository.authenticatedUser,
       onData: (user) async {
-        if (user == null) {
-          emit(const AuthenticationState.unauthenticated());
+        if (user.name == '') {
+          emit(AuthenticationState.unauthenticated());
+        } else {
+          switch (user.role) {
+            case Role.basic:
+              emit(AuthenticationState.basic(user));
+            case Role.privileged:
+              emit(AuthenticationState.privileged(user));
+            case Role.admin:
+              emit(AuthenticationState.admin(user));
+          }
+        }
+      },
+      onError: addError,
+    );
+  }
+
+  Future<void> _onVerificationRequested(
+    AuthenticationVerificationRequested event,
+    Emitter<AuthenticationState> emit,
+  ) async {
+    await _authenticationRepository.requestAuthentication(event.apiKey);
+
+    return emit.onEach(
+      _authenticationRepository.authenticatedUser,
+      onData: (user) async {
+        if (user.name == '') {
+          emit(AuthenticationState.unauthenticated());
         } else {
           switch (user.role) {
             case Role.basic:

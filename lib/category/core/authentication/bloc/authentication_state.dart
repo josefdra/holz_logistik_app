@@ -6,24 +6,24 @@ enum AuthenticationStatus { unauthenticated, basic, privileged, admin }
 ///
 /// The user will be null if it is unauthenticated
 final class AuthenticationState extends Equatable {
-  const AuthenticationState._({
+  AuthenticationState._({
     this.status = AuthenticationStatus.unauthenticated,
-    this.user,
-  });
+    User? user,
+  }) : user = user ?? User.empty();
 
   /// The user is unathenticated
-  const AuthenticationState.unauthenticated() : this._();
+  AuthenticationState.unauthenticated() : this._();
 
   /// The user has basic rights
-  const AuthenticationState.basic(User user)
+  AuthenticationState.basic(User user)
       : this._(status: AuthenticationStatus.basic, user: user);
 
   /// The user has privileged rights
-  const AuthenticationState.privileged(User user)
+  AuthenticationState.privileged(User user)
       : this._(status: AuthenticationStatus.privileged, user: user);
 
   /// The user has admin rights
-  const AuthenticationState.admin(User user)
+  AuthenticationState.admin(User user)
       : this._(status: AuthenticationStatus.admin, user: user);
 
   /// The current authentication status
@@ -32,7 +32,7 @@ final class AuthenticationState extends Equatable {
   /// The current user
   ///
   /// Will be null if the user is not authenticated
-  final User? user;
+  final User user;
 
   @override
   List<Object?> get props => [status, user];

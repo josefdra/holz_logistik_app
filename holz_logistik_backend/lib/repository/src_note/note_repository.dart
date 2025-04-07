@@ -20,7 +20,7 @@ class NoteRepository {
   final NoteSyncService _noteSyncService;
 
   /// Provides a [Stream] of all notes.
-  Stream<List<Note>> getNotes() => _noteApi.notes;
+  Stream<List<Note>> get notes => _noteApi.notes;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

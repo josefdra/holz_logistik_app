@@ -10,7 +10,10 @@ abstract class AuthenticationApi {
   /// Provides a [Stream] of the current authenticated user.
   /// 
   /// Will return null if unauthenticated
-  Stream<User?> get authenticatedUser;
+  Stream<User> get authenticatedUser;
+
+  /// Provides the current authenticated user.
+  User get currentUser;
 
   /// Adds the authentication of [user].
   Future<void> updateAuthentication(User user);
