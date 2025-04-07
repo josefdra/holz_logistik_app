@@ -35,6 +35,7 @@ class LocationListPage extends StatelessWidget {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
+          heroTag: 'locationListFloatingActionButton',
           shape: const CircleBorder(),
           onPressed: () => Navigator.of(context).push(
             EditLocationWidget.route(),

@@ -55,6 +55,7 @@ class EditContractView extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'editContractWidgetFloatingActionButton',
         shape: const ContinuousRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(32)),
         ),
@@ -76,8 +77,6 @@ class EditContractView extends StatelessWidget {
                 _TitleField(),
                 _AdditionalInfoField(),
                 _AvailableQuantityField(),
-                _BookedQuantityField(),
-                _ShippedQuantityField(),
               ],
             ),
           ),
@@ -191,75 +190,11 @@ class _AvailableQuantityField extends StatelessWidget {
         DecimalInputFormatter(),
       ],
       onChanged: (value) {
-        context
-            .read<EditContractBloc>()
-            .add(EditContractAvailableQuantityChanged(double.parse(value)));
-      },
-    );
-  }
-}
-
-class _BookedQuantityField extends StatelessWidget {
-  const _BookedQuantityField();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    final state = context.watch<EditContractBloc>().state;
-    final hintText = state.initialContract?.bookedQuantity.toString() ?? '';
-
-    return TextFormField(
-      key: const Key('editContractView_bookedQuantity_textFormField'),
-      initialValue: state.bookedQuantity.toString(),
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editContractBookedQuantityLabel,
-        hintText: hintText,
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      maxLength: 20,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(20),
-        DecimalInputFormatter(),
-      ],
-      onChanged: (value) {
-        context
-            .read<EditContractBloc>()
-            .add(EditContractBookedQuantityChanged(double.parse(value)));
-      },
-    );
-  }
-}
-
-class _ShippedQuantityField extends StatelessWidget {
-  const _ShippedQuantityField();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    final state = context.watch<EditContractBloc>().state;
-    final hintText = state.initialContract?.shippedQuantity.toString() ?? '';
-
-    return TextFormField(
-      key: const Key('editContractView_shippedQuantity_textFormField'),
-      initialValue: state.shippedQuantity.toString(),
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editContractShippedQuantityLabel,
-        hintText: hintText,
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      maxLength: 20,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(20),
-        DecimalInputFormatter(),
-      ],
-      onChanged: (value) {
-        context
-            .read<EditContractBloc>()
-            .add(EditContractShippedQuantityChanged(double.parse(value)));
+        if (value.isNotEmpty) {
+          context
+              .read<EditContractBloc>()
+              .add(EditContractAvailableQuantityChanged(double.parse(value)));
+        }
       },
     );
   }

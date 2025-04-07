@@ -35,6 +35,7 @@ class AnalyticsPage extends StatelessWidget {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
+          heroTag: 'analyticsPageFloatingActionButton',
           shape: const CircleBorder(),
           onPressed: () => Navigator.of(context).push(
             EditContractWidget.route(),
