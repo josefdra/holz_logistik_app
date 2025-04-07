@@ -68,7 +68,11 @@ class CommentLocalStorage extends CommentApi {
     }
 
     _commentStreamController.add(comments);
-    return _insertOrUpdateComment(comment.toJson());
+    final jsonComment = {
+      ...comment.toJson()..remove('user'),
+      'userId': comment.user.id,
+    };
+    return _insertOrUpdateComment(jsonComment);
   }
 
   /// Delete a Comment from the database based on [id]

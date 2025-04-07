@@ -1,4 +1,5 @@
 import 'package:holz_logistik_backend/local_storage/contract_local_storage.dart';
+import 'package:holz_logistik_backend/local_storage/sawmill_local_storage.dart';
 
 /// Provides constants and utilities for working with
 /// the "locations" database table.
@@ -66,6 +67,34 @@ class LocationTable {
       $columnCurrentPieceCount INTEGER NOT NULL,
       $columnContractId TEXT NOT NULL,
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId})
+    )
+  ''';
+}
+
+/// Provides the junction between location and sawmill table
+class LocationSawmillJunctionTable {
+  /// The name of the database table
+  static const String tableName = 'locationSawmillJunction';
+
+  /// The column name for the locationId.
+  static const String columnLocationId = 'locationId';
+
+  /// The column name for the sawmillId.
+  static const String columnSawmillId = 'sawmillId';
+
+  /// The column that stores if the relation is for oversize sawmills.
+  static const String columnIsOversize = 'isOversize';
+
+  /// SQL statement for creating the locationSawmillJunction table with the 
+  /// defined schema.
+  static const String createTable = '''
+    CREATE TABLE $tableName (
+      $columnLocationId TEXT NOT NULL,
+      $columnSawmillId TEXT NOT NULL,
+      $columnIsOversize INTEGER NOT NULL,
+      PRIMARY KEY ($columnLocationId, $columnSawmillId),
+      FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId}) ON DELETE CASCADE,
+      FOREIGN KEY ($columnSawmillId) REFERENCES ${SawmillTable.tableName}(${SawmillTable.columnId}) ON DELETE CASCADE
     )
   ''';
 }

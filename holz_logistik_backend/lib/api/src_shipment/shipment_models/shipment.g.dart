@@ -14,6 +14,7 @@ Shipment _$ShipmentFromJson(Map<String, dynamic> json) => Shipment(
       pieceCount: (json['pieceCount'] as num).toInt(),
       user: User.fromJson(json['user'] as Map<String, dynamic>),
       contract: Contract.fromJson(json['contract'] as Map<String, dynamic>),
+      locationId: json['locationId'] as String,
     );
 
 Map<String, dynamic> _$ShipmentToJson(Shipment instance) => <String, dynamic>{
@@ -24,4 +25,5 @@ Map<String, dynamic> _$ShipmentToJson(Shipment instance) => <String, dynamic>{
       'pieceCount': instance.pieceCount,
       'user': instance.user,
       'contract': instance.contract,
+      'locationId': instance.locationId,
     };

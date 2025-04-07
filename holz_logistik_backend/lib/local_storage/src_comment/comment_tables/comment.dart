@@ -29,6 +29,7 @@ class CommentTable {
       $columnLastEdit TEXT NOT NULL,
       $columnText TEXT NOT NULL,
       $columnUserId TEXT NOT NULL,
+      $columnNoteId TEXT NOT NULL,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId}),
       FOREIGN KEY ($columnNoteId) REFERENCES ${NoteTable.tableName}(${NoteTable.columnId})
     )

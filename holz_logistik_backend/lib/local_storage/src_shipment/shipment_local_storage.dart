@@ -72,7 +72,15 @@ class ShipmentLocalStorage extends ShipmentApi {
     }
 
     _shipmentStreamController.add(shipments);
-    return _insertOrUpdateShipment(shipment.toJson());
+
+    final jsonShipment = {
+      ...shipment.toJson()
+        ..remove('user')
+        ..remove('contract'),
+      'userId': shipment.user.id,
+      'contractId': shipment.contract.id,
+    };
+    return _insertOrUpdateShipment(jsonShipment);
   }
 
   /// Delete a Shipment from the database based on [id]

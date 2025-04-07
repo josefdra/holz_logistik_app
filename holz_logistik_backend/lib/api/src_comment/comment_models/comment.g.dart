@@ -11,7 +11,7 @@ Comment _$CommentFromJson(Map<String, dynamic> json) => Comment(
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       text: json['text'] as String,
       user: User.fromJson(json['user'] as Map<String, dynamic>),
-      note: Note.fromJson(json['note'] as Map<String, dynamic>),
+      noteId: json['noteId'] as String,
     );
 
 Map<String, dynamic> _$CommentToJson(Comment instance) => <String, dynamic>{
@@ -19,5 +19,5 @@ Map<String, dynamic> _$CommentToJson(Comment instance) => <String, dynamic>{
       'lastEdit': instance.lastEdit.toIso8601String(),
       'text': instance.text,
       'user': instance.user,
-      'note': instance.note,
+      'noteId': instance.noteId,
     };

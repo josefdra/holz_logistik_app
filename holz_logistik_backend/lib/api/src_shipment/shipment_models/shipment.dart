@@ -12,7 +12,7 @@ part 'shipment.g.dart';
 /// A single `shipment` item.
 ///
 /// Contains a [id], time of the [lastEdit], [quantity], [oversizeQuantity],
-/// [pieceCount], [user] and [contract].
+/// [pieceCount], [user], [contract] and [locationId].
 ///
 /// [Shipment]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -30,6 +30,7 @@ class Shipment extends Equatable {
     required this.pieceCount,
     required this.user,
     required this.contract,
+    required this.locationId,
   });
 
   /// {@macro shipment_item}
@@ -41,6 +42,7 @@ class Shipment extends Equatable {
     this.pieceCount = 0,
     User? user,
     Contract? contract,
+    this.locationId = '',
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now(),
         user = user ?? User.empty(),
@@ -81,6 +83,11 @@ class Shipment extends Equatable {
   /// Cannot be empty.
   final Contract contract;
 
+  /// The locationId of the `shipment`.
+  ///
+  /// Cannot be empty.
+  final String locationId;
+
   /// Returns a copy of this `shipment` with the given values updated.
   ///
   /// {@macro shipment_item}
@@ -92,6 +99,7 @@ class Shipment extends Equatable {
     int? pieceCount,
     User? user,
     Contract? contract,
+    String? locationId,
   }) {
     return Shipment(
       id: id ?? this.id,
@@ -101,6 +109,7 @@ class Shipment extends Equatable {
       pieceCount: pieceCount ?? this.pieceCount,
       user: user ?? this.user,
       contract: contract ?? this.contract,
+      locationId: locationId ?? this.locationId,
     );
   }
 
@@ -119,5 +128,6 @@ class Shipment extends Equatable {
         pieceCount,
         user,
         contract,
+        locationId,
       ];
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/admin/user/user_list/view/view.dart';
 import 'package:holz_logistik/category/core/home/home.dart';
+import 'package:holz_logistik/category/screens/analytics/analytics.dart';
 import 'package:holz_logistik/category/screens/location_list/view/view.dart';
 
 class HomePage extends StatelessWidget {
@@ -40,7 +41,7 @@ class HomeView extends StatelessWidget {
           Center(child: Text('Karte')),
           Center(child: Text('Notizen')),
           Center(child: Text('Abfuhren')),
-          Center(child: Text('Analyse')),
+          AnalyticsPage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

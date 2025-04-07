@@ -32,6 +32,9 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       photos: (json['photos'] as List<dynamic>)
           .map((e) => Photo.fromJson(e as Map<String, dynamic>))
           .toList(),
+      shipments: (json['shipments'] as List<dynamic>)
+          .map((e) => Shipment.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
@@ -52,4 +55,5 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'sawmills': instance.sawmills,
       'oversizeSawmills': instance.oversizeSawmills,
       'photos': instance.photos,
+      'shipments': instance.shipments,
     };

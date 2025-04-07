@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:holz_logistik_backend/api/photo_api.dart';
 import 'package:holz_logistik_backend/api/sawmill_api.dart';
+import 'package:holz_logistik_backend/api/shipment_api.dart';
 import 'package:holz_logistik_backend/api/src_contract/contract_models/contract.dart';
 import 'package:holz_logistik_backend/general/models/json_map.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -15,8 +16,8 @@ part 'location.g.dart';
 /// Contains a [id], [done], time of the [lastEdit], [latitude], [longitude],
 /// [partieNr], [additionalInfo], [initialQuantity], [initialOversizeQuantity],
 /// [initialPieceCount], [currentQuantity], [currentOversizeQuantity],
-/// [currentPieceCount], [contract], [sawmills], [oversizeSawmills] and
-/// [photos].
+/// [currentPieceCount], [contract], [sawmills], [oversizeSawmills],
+/// [photos] and [shipments].
 ///
 /// [Location]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -44,6 +45,7 @@ class Location extends Equatable {
     required this.sawmills,
     required this.oversizeSawmills,
     required this.photos,
+    required this.shipments,
   });
 
   /// {@macro location_item}
@@ -65,6 +67,7 @@ class Location extends Equatable {
     this.sawmills = const [],
     this.oversizeSawmills = const [],
     this.photos = const [],
+    this.shipments = const [],
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now(),
         contract = contract ?? Contract.empty();
@@ -152,6 +155,11 @@ class Location extends Equatable {
   /// Cannot be empty.
   final List<Photo> photos;
 
+  /// The shipments associated with the `location`.
+  ///
+  /// Cannot be empty.
+  final List<Shipment> shipments;
+
   /// Returns a copy of this `location` with the given values updated.
   ///
   /// {@macro location_item}
@@ -173,6 +181,7 @@ class Location extends Equatable {
     List<Sawmill>? sawmills,
     List<Sawmill>? oversizeSawmills,
     List<Photo>? photos,
+    List<Shipment>? shipments,
   }) {
     return Location(
       id: id ?? this.id,
@@ -194,6 +203,7 @@ class Location extends Equatable {
       sawmills: sawmills ?? this.sawmills,
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
       photos: photos ?? this.photos,
+      shipments: shipments ?? this.shipments,
     );
   }
 
@@ -220,5 +230,6 @@ class Location extends Equatable {
         currentPieceCount,
         contract,
         photos,
+        shipments,
       ];
 }

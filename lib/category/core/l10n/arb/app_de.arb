@@ -97,5 +97,54 @@
   "editLocationAdditionalInfoLabel": "Zusätzliche Info",
   "@editLocationAdditionalInfoLabel": {
     "description": "Label text shown for additionalInfo when creating or editing a location"
+  },
+  "editContractAddAppBarTitle": "Vertrag hinzufügen",
+  "@editContractAddAppBarTitle": {
+    "description": "Title text shown in the app bar when creating a contract"
+  },
+  "editContractEditAppBarTitle": "Vertrag bearbeiten",
+  "@editContractEditAppBarTitle": {
+    "description": "Title text shown in the app bar when editing a contract"
+  },
+  "editContractTitleLabel": "Titel",
+  "@editContractTitleLabel": {
+    "description": "Label text shown for title when creating or editing a contract"
+  },
+  "editContractAdditionalInfoLabel": "Zusätzliche Info",
+  "@editContractAdditionalInfoLabel": {
+    "description": "Label text shown for additionalInfo when creating or editing a contract"
+  },
+  "editContractAvailableQuantityLabel": "Verfügbare Menge",
+  "@editContractAvailableQuantityLabel": {
+    "description": "Label text shown for availableQuantity when creating or editing a contract"
+  },
+  "editContractBookedQuantityLabel": "Gebuchte Menge",
+  "@editContractBookedQuantityLabel": {
+    "description": "Label text shown for bookedQuantity when creating or editing a contract"
+  },
+  "editContractShippedQuantityLabel": "Abgefahrene Menge",
+  "@editContractShippedQuantityLabel": {
+    "description": "Label text shown for shippedQuantity when creating or editing a contract"
+  },
+  "contractListErrorSnackbarText": "Fehler beim Laden der Verträge",
+  "@contractListErrorSnackbarText": {
+    "description": "Snackbar text shown when an error occurs during loading the contracts"
+  },
+  "contractListContractDeletedSnackbarText": "Vertrag \"{contractTitle}\" gelöscht.",
+  "@contractListContractDeletedSnackbarText": {
+    "description": "Snackbar text shown when a contract is deleted from the Analytics Page",
+    "placeholders": {
+      "contractTitle": {
+        "description": "The title of the contract that was deleted"
+      }
+    }
+  },
+  "contractListUndoDeletionButtonText": "Rückgängig",
+  "@contractListUndoDeletionButtonText": {
+    "description": "Button text shown in the snackbar that undoes a deletion of a contract"
+  },
+  "contractListEmptyText": "Keine Verträge verfügbar",
+  "@contractListEmptyText": {
+    "description": "Info text shown when there are no contracts"
   }
 }
