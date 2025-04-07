@@ -1,0 +1,1 @@
+/Users/josefdra/dev/projects/holz_logistik/build/app/intermediates/cxx/RelWithDebInfo/30l10vc6/obj/arm64-v8a

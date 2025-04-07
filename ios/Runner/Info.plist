@@ -57,5 +57,11 @@
 	    <key>NSAllowsArbitraryLoads</key>
 	    <true/>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Diese App braucht Standort-Zugriff für die Karten Funktion.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Diese App braucht Standort-Zugriff für die Karten Funktion.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Diese App braucht Standort-Zugriff für die Karten Funktion.</string>
 </dict>
 </plist>

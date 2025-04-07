@@ -71,13 +71,27 @@ class Map extends StatelessWidget {
           return Stack(
             children: [
               FlutterMap(
-                mapController: MapController(),
-                options: const MapOptions(
-                  initialCenter: LatLng(47.9831, 11.9050),
-                  initialZoom: 10,
-                  interactionOptions: InteractionOptions(
+                mapController: context.read<MapBloc>().mapController,
+                options: MapOptions(
+                  initialCenter: const LatLng(47.9831, 11.9050),
+                  initialZoom: 15,
+                  interactionOptions: const InteractionOptions(
                     rotationThreshold: 30,
                   ),
+                  onTap: (tapPosition, point) => context.read<MapBloc>().add(
+                        MapMapTap(position: point),
+                      ),
+                  onMapEvent: (event) {
+                    if (event is MapEventMoveStart) {
+                      if (event.source == MapEventSource.dragStart ||
+                          event.source ==
+                              MapEventSource.multiFingerGestureStart) {
+                        context
+                            .read<MapBloc>()
+                            .add(const MapDisableTrackingMode());
+                      }
+                    }
+                  },
                 ),
                 children: [
                   TileLayer(
@@ -85,15 +99,49 @@ class Map extends StatelessWidget {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.draexl_it.holz_logistik',
                   ),
+                  MarkerLayer(
+                    markers: [
+                      if (state.userLocation != null)
+                        Marker(
+                          width: 25,
+                          height: 25,
+                          point: state.userLocation!,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(51),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (state.addMarkerMode == true &&
+                          state.newMarkerPosition != null)
+                        Marker(
+                          width: 50,
+                          height: 50,
+                          point: state.newMarkerPosition!,
+                          child:
+                              const Icon(Icons.location_on, color: Colors.red),
+                        ),
+                    ],
+                  ),
                 ],
               ),
               Positioned(
-                bottom: 16,
-                right: 16,
+                bottom: 10,
+                right: 10,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // North orientation button
                     FloatingActionButton(
                       onPressed: () => context.read<MapBloc>().add(
                             const MapResetMapRotation(),
@@ -101,7 +149,7 @@ class Map extends StatelessWidget {
                       heroTag: 'mapPageNorthButton',
                       child: const Icon(Icons.navigation),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     FloatingActionButton(
                       onPressed: () => context.read<MapBloc>().add(
                             const MapCenterToPosition(),
@@ -109,7 +157,7 @@ class Map extends StatelessWidget {
                       heroTag: 'mapPageCenterPositionButton',
                       child: const Icon(Icons.my_location),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     if (state.addMarkerMode)
                       FloatingActionButton(
                         onPressed: () => context
@@ -118,18 +166,23 @@ class Map extends StatelessWidget {
                         heroTag: 'mapPageCancelAddMarkerModeButton',
                         child: const Icon(Icons.close),
                       ),
-                    if (state.addMarkerMode) const SizedBox(height: 8),
+                    if (state.addMarkerMode) const SizedBox(height: 10),
                     FloatingActionButton(
                       onPressed: state.addMarkerMode
-                          ? () => Navigator.of(context).push(
+                          ? () {
+                              context
+                                  .read<MapBloc>()
+                                  .add(const MapToggleAddMarkerMode());
+                              Navigator.of(context).push(
                                 EditLocationWidget.route(
-                                  newMarker: state.newMarker,
+                                  newMarkerPosition: state.newMarkerPosition,
                                 ),
-                              )
+                              );
+                            }
                           : () => context
                               .read<MapBloc>()
                               .add(const MapToggleAddMarkerMode()),
-                      heroTag: 'addButton',
+                      heroTag: 'mapPageAddMarkerButton',
                       child: Icon(
                         state.addMarkerMode ? Icons.check : Icons.add_location,
                       ),
@@ -137,14 +190,20 @@ class Map extends StatelessWidget {
                   ],
                 ),
               ),
+              const Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Center(child: Text('© OpenStreetMap')),
+              ),
               Positioned(
-                bottom: 16,
-                left: 16,
+                bottom: 10,
+                left: 10,
                 child: FloatingActionButton(
                   onPressed: () => context
                       .read<MapBloc>()
                       .add(const MapToggleMarkerInfoMode()),
-                  heroTag: 'infoButton',
+                  heroTag: 'mapPageShownInfoButton',
                   child: Icon(
                     state.showInfoMode ? Icons.info_outline : Icons.info,
                   ),

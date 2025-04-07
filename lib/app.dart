@@ -79,8 +79,7 @@ class App extends StatelessWidget {
         RepositoryProvider(
           create: (_) => NoteRepository(
             noteApi: noteApi,
-            noteSyncService:
-                NoteSyncService(coreSyncService: coreSyncService),
+            noteSyncService: NoteSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
         ),

@@ -8,28 +8,37 @@ final class MapState extends Equatable {
     this.addMarkerMode = false,
     this.showInfoMode = false,
     this.markers = const [],
-    this.newMarker,
+    this.userLocation,
+    this.trackingMode = true,
+    this.newMarkerPosition,
   });
 
   final MapStatus status;
   final bool addMarkerMode;
   final bool showInfoMode;
   final List<Marker> markers;
-  final Marker? newMarker;
+  final LatLng? userLocation;
+  final bool trackingMode;
+  final LatLng? newMarkerPosition;
 
   MapState copyWith({
     MapStatus? status,
     bool? addMarkerMode,
     bool? showInfoMode,
     List<Marker>? markers,
-    Marker? newMarker,
+    LatLng? userLocation,
+    Marker? userLocationMarker,
+    bool? trackingMode,
+    LatLng? newMarkerPosition,
   }) {
     return MapState(
       status: status ?? this.status,
       addMarkerMode: addMarkerMode ?? this.addMarkerMode,
       showInfoMode: showInfoMode ?? this.showInfoMode,
       markers: markers ?? this.markers,
-      newMarker: newMarker ?? this.newMarker,
+      userLocation: userLocation ?? this.userLocation,
+      trackingMode: trackingMode ?? this.trackingMode,
+      newMarkerPosition: newMarkerPosition ?? this.newMarkerPosition,
     );
   }
 
@@ -39,6 +48,8 @@ final class MapState extends Equatable {
         addMarkerMode,
         showInfoMode,
         markers,
-        newMarker,
+        userLocation,
+        trackingMode,
+        newMarkerPosition,
       ];
 }

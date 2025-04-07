@@ -13,36 +13,42 @@ final class MapSubscriptionRequested extends MapEvent {
 
 class MapResetMapRotation extends MapEvent {
   const MapResetMapRotation();
-
-  final int filter = 1;
-
-  @override
-  List<Object> get props => [filter];
 }
 
 class MapCenterToPosition extends MapEvent {
   const MapCenterToPosition();
-
-  final int filter = 1;
-
-  @override
-  List<Object> get props => [filter];
 }
 
 class MapToggleAddMarkerMode extends MapEvent {
   const MapToggleAddMarkerMode();
-
-  final int filter = 1;
-
-  @override
-  List<Object> get props => [filter];
 }
 
 class MapToggleMarkerInfoMode extends MapEvent {
   const MapToggleMarkerInfoMode();
+}
 
-  final int filter = 1;
+class MapLocationUpdated extends MapEvent {
+  const MapLocationUpdated({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  final double latitude;
+  final double longitude;
 
   @override
-  List<Object> get props => [filter];
+  List<Object> get props => [latitude, longitude];
+}
+
+class MapDisableTrackingMode extends MapEvent {
+  const MapDisableTrackingMode();
+}
+
+class MapMapTap extends MapEvent {
+  const MapMapTap({required this.position});
+
+  final LatLng position;
+
+  @override
+  List<Object> get props => [position];
 }

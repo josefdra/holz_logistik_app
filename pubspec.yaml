@@ -18,6 +18,8 @@ dependencies:
     path: holz_logistik_backend
   intl: any
   latlong2: ^0.9.1
+  location: ^8.0.0
+  permission_handler: ^11.4.0
   shared_preferences: ^2.5.3
   stream_transform: ^2.1.1
 
