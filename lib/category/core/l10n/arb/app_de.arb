@@ -146,5 +146,9 @@
   "contractListEmptyText": "Keine Verträge verfügbar",
   "@contractListEmptyText": {
     "description": "Info text shown when there are no contracts"
+  },
+  "settingsNotAuthenticatedText": "Nicht angemeldet",
+  "@settingsNotAuthenticatedText": {
+    "description": "Info text shown when the user is not authenticated"
   }
 }

@@ -20,11 +20,11 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   final SharedPreferences _plugin;
 
   // StreamController to broadcast updates on authentication
-  final _authenticationStreamController = StreamController<User?>.broadcast();
+  final _authenticationStreamController = StreamController<User>.broadcast();
 
   /// Stream of authenticated user
   @override
-  Stream<User?> get authenticatedUser => _authenticationStreamController.stream;
+  Stream<User> get authenticatedUser => _authenticationStreamController.stream;
 
   String? _getValue(String key) => _plugin.getString(key);
 
@@ -35,6 +35,9 @@ class AuthenticationLocalStorage extends AuthenticationApi {
       final userJson = jsonDecode(storageData) as Map<String, dynamic>;
 
       final user = User.fromJson(userJson);
+      _authenticationStreamController.add(user);
+    } else {
+      final user = User.empty();
       _authenticationStreamController.add(user);
     }
   }

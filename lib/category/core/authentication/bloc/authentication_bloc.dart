@@ -13,7 +13,7 @@ class AuthenticationBloc
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
   })  : _authenticationRepository = authenticationRepository,
-        super(const AuthenticationState.unauthenticated()) {
+        super(AuthenticationState.unauthenticated()) {
     on<AuthenticationSubscriptionRequested>(_onSubscriptionRequested);
   }
 
@@ -26,8 +26,8 @@ class AuthenticationBloc
     return emit.onEach(
       _authenticationRepository.authenticatedUser,
       onData: (user) async {
-        if (user == null) {
-          emit(const AuthenticationState.unauthenticated());
+        if (user.name == '') {
+          emit(AuthenticationState.unauthenticated());
         } else {
           switch (user.role) {
             case Role.basic:

@@ -22,7 +22,7 @@ class AuthenticationRepository {
   final AuthenticationSyncService _authenticationSyncService;
 
   /// Provides a [Stream] of the authenticated user.
-  Stream<User?> get authenticatedUser => _authenticationApi.authenticatedUser;
+  Stream<User> get authenticatedUser => _authenticationApi.authenticatedUser;
 
   /// Handle updates from Server
   void _handleAuthenticationUpdates(Map<String, dynamic> data) {

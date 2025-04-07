@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/category/admin/user/user_list/view/view.dart';
 import 'package:holz_logistik/category/core/home/home.dart';
 import 'package:holz_logistik/category/screens/analytics/analytics.dart';
 import 'package:holz_logistik/category/screens/location_list/view/view.dart';
+import 'package:holz_logistik/category/screens/settings/view/settings_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -30,7 +30,7 @@ class HomeView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(UserListPage.route()),
+            onPressed: () => Navigator.of(context).push(SettingsPage.route()),
           ),
         ],
       ),

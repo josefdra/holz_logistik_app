@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:holz_logistik_backend/api/sawmill_api.dart';
-import 'package:holz_logistik_backend/sync/sawmill_sync.dart';
+import 'package:holz_logistik_backend/sync/sawmill_sync_service.dart';
 
 /// {@template sawmill_repository}
 /// A repository that handles `sawmill` related requests.
