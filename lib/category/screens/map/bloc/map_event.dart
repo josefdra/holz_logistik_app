@@ -11,15 +11,38 @@ final class MapSubscriptionRequested extends MapEvent {
   const MapSubscriptionRequested();
 }
 
-final class MapNoteDeleted extends MapEvent {
-  const MapNoteDeleted(this.note);
+class MapResetMapRotation extends MapEvent {
+  const MapResetMapRotation();
 
-  final Note note;
+  final int filter = 1;
 
   @override
-  List<Object> get props => [note];
+  List<Object> get props => [filter];
 }
 
-final class MapUndoDeletionRequested extends MapEvent {
-  const MapUndoDeletionRequested();
+class MapCenterToPosition extends MapEvent {
+  const MapCenterToPosition();
+
+  final int filter = 1;
+
+  @override
+  List<Object> get props => [filter];
+}
+
+class MapToggleAddMarkerMode extends MapEvent {
+  const MapToggleAddMarkerMode();
+
+  final int filter = 1;
+
+  @override
+  List<Object> get props => [filter];
+}
+
+class MapToggleMarkerInfoMode extends MapEvent {
+  const MapToggleMarkerInfoMode();
+
+  final int filter = 1;
+
+  @override
+  List<Object> get props => [filter];
 }

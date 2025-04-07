@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/edit_location.dart';
 import 'package:holz_logistik_backend/repository/location_repository.dart';
@@ -11,7 +12,7 @@ class EditLocationWidget extends StatelessWidget {
     super.key,
   });
 
-  static Route<void> route({Location? initialLocation}) {
+  static Route<void> route({Location? initialLocation, Marker? newMarker}) {
     return MaterialPageRoute(
       builder: (context) => BlocProvider(
         create: (context) => EditLocationBloc(

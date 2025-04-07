@@ -5,30 +5,40 @@ enum MapStatus { initial, loading, success, failure }
 final class MapState extends Equatable {
   const MapState({
     this.status = MapStatus.initial,
-    this.notes = const [],
-    this.lastDeletedNote,
+    this.addMarkerMode = false,
+    this.showInfoMode = false,
+    this.markers = const [],
+    this.newMarker,
   });
 
   final MapStatus status;
-  final List<Note> notes;
-  final Note? lastDeletedNote;
+  final bool addMarkerMode;
+  final bool showInfoMode;
+  final List<Marker> markers;
+  final Marker? newMarker;
 
   MapState copyWith({
     MapStatus? status,
-    List<Note>? notes,
-    Note? lastDeletedNote,
+    bool? addMarkerMode,
+    bool? showInfoMode,
+    List<Marker>? markers,
+    Marker? newMarker,
   }) {
     return MapState(
       status: status ?? this.status,
-      notes: notes != null ? sortByLastEdit(notes) : this.notes,
-      lastDeletedNote: lastDeletedNote ?? this.lastDeletedNote,
+      addMarkerMode: addMarkerMode ?? this.addMarkerMode,
+      showInfoMode: showInfoMode ?? this.showInfoMode,
+      markers: markers ?? this.markers,
+      newMarker: newMarker ?? this.newMarker,
     );
   }
 
   @override
   List<Object?> get props => [
         status,
-        notes,
-        lastDeletedNote,
+        addMarkerMode,
+        showInfoMode,
+        markers,
+        newMarker,
       ];
 }

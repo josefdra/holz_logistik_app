@@ -20,7 +20,7 @@ class LocationRepository {
   final LocationSyncService _locationSyncService;
 
   /// Provides a [Stream] of all locations.
-  Stream<List<Location>> getLocations() => _locationApi.locations;
+  Stream<List<Location>> get locations => _locationApi.locations;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

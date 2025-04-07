@@ -34,7 +34,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     emit(state.copyWith(status: () => LocationListStatus.loading));
 
     await emit.forEach<List<Location>>(
-      _locationRepository.getLocations(),
+      _locationRepository.locations,
       onData: (locations) => state.copyWith(
         status: () => LocationListStatus.success,
         locations: () => locations,
