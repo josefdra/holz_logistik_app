@@ -20,12 +20,20 @@ class CommentRepository {
   final CommentSyncService _commentSyncService;
 
   /// Provides a [Stream] of all comments.
-  Stream<List<Comment>> getComments() => _commentApi.comments;
+  Stream<Map<String, List<Comment>>> get commentsByNote =>
+      _commentApi.commentsByNote;
+
+  /// Provides all current comments
+  Map<String, List<Comment>> get currentCommentsByNote =>
+      _commentApi.currentCommentsByNote;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _commentApi.deleteComment(data['id'] as String);
+      _commentApi.deleteComment(
+        id: data['id'] as String,
+        noteId: data['noteId'] as String,
+      );
     } else {
       _commentApi.saveComment(Comment.fromJson(data));
     }
@@ -40,11 +48,8 @@ class CommentRepository {
   }
 
   /// Deletes the `comment` with the given id.
-  ///
-  /// If no `comment` with the given id exists, a [CommentNotFoundException] 
-  /// error is thrown.
-  Future<void> deleteComment(String id) {
-    _commentApi.deleteComment(id);
+  Future<void> deleteComment({required String id, required String noteId}) {
+    _commentApi.deleteComment(id: id, noteId: noteId);
     final data = {
       'id': id,
       'deleted': true,

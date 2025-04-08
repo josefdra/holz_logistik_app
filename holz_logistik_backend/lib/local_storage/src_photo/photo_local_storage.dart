@@ -21,8 +21,9 @@ class PhotoLocalStorage extends PhotoApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _photoStreamController = BehaviorSubject<List<Photo>>.seeded(
-    const [],
+  late final _photoStreamController =
+      BehaviorSubject<Map<String, List<Photo>>>.seeded(
+    const {},
   );
 
   /// Migration function for photo table
@@ -37,33 +38,48 @@ class PhotoLocalStorage extends PhotoApi {
   /// Initialization
   Future<void> _init() async {
     final photosJson = await _coreLocalStorage.getAll(PhotoTable.tableName);
-    final photos = photosJson
-        .map((photo) => Photo.fromJson(Map<String, dynamic>.from(photo)))
-        .toList();
-    _photoStreamController.add(photos);
+
+    final photosByLocationId = <String, List<Photo>>{};
+
+    for (final photoData in photosJson) {
+      final photo = Photo.fromJson(Map<String, dynamic>.from(photoData));
+
+      if (!photosByLocationId.containsKey(photo.locationId)) {
+        photosByLocationId[photo.locationId] = [];
+      }
+
+      photosByLocationId[photo.locationId]!.add(photo);
+    }
+    _photoStreamController.add(photosByLocationId);
   }
 
-  /// Get the `photo`s from the [_photoStreamController]
   @override
-  Stream<List<Photo>> get photos => _photoStreamController.asBroadcastStream();
+  Stream<Map<String, List<Photo>>> get photosByLocation =>
+      _photoStreamController.asBroadcastStream();
+
+  @override
+  Map<String, List<Photo>> get currentPhotosByLocation =>
+      _photoStreamController.value;
 
   /// Insert or Update a `photo` to the database based on [photoData]
   Future<int> _insertOrUpdatePhoto(Map<String, dynamic> photoData) async {
-    return _coreLocalStorage.insertOrUpdate(PhotoTable.tableName, photoData);
+    return _coreLocalStorage.insertOrUpdate(
+      PhotoTable.tableName,
+      photoData,
+    );
   }
 
   /// Insert or Update a [photo]
   @override
   Future<int> savePhoto(Photo photo) {
-    final photos = [..._photoStreamController.value];
-    final photoIndex = photos.indexWhere((t) => t.id == photo.id);
-    if (photoIndex >= 0) {
-      photos[photoIndex] = photo;
-    } else {
-      photos.add(photo);
+    final currentPhotosByLocation = _photoStreamController.value;
+    if (!currentPhotosByLocation.containsKey(photo.locationId)) {
+      currentPhotosByLocation[photo.locationId] = [];
     }
 
-    _photoStreamController.add(photos);
+    currentPhotosByLocation[photo.locationId]!.add(photo);
+    _photoStreamController.add(currentPhotosByLocation);
+
     return _insertOrUpdatePhoto(photo.toJson());
   }
 
@@ -72,18 +88,22 @@ class PhotoLocalStorage extends PhotoApi {
     return _coreLocalStorage.delete(PhotoTable.tableName, id);
   }
 
-  /// Delete a Photo based on [id]
+  /// Delete a Photo based on [id] and [locationId]
   @override
-  Future<int> deletePhoto(String id) async {
-    final photos = [..._photoStreamController.value];
-    final photoIndex = photos.indexWhere((t) => t.id == id);
-    if (photoIndex == -1) {
-      throw PhotoNotFoundException();
-    } else {
-      photos.removeAt(photoIndex);
-      _photoStreamController.add(photos);
-      return _deletePhoto(id);
+  Future<int> deletePhoto({
+    required String id,
+    required String locationId,
+  }) async {
+    final currentPhotosByLocation = _photoStreamController.value;
+
+    currentPhotosByLocation[locationId]!.removeWhere((p) => p.id == id);
+
+    if (currentPhotosByLocation[locationId]!.isEmpty) {
+      currentPhotosByLocation.remove(locationId);
     }
+    _photoStreamController.add(currentPhotosByLocation);
+
+    return _deletePhoto(id);
   }
 
   /// Close the [_photoStreamController]

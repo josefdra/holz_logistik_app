@@ -21,8 +21,8 @@ class UserLocalStorage extends UserApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _userStreamController = BehaviorSubject<List<User>>.seeded(
-    const [],
+  late final _userStreamController = BehaviorSubject<Map<String, User>>.seeded(
+    const {},
   );
 
   /// Migration function for user table
@@ -37,15 +37,22 @@ class UserLocalStorage extends UserApi {
   /// Initialization
   Future<void> _init() async {
     final usersJson = await _coreLocalStorage.getAll(UserTable.tableName);
-    final users = usersJson
-        .map((user) => User.fromJson(Map<String, dynamic>.from(user)))
-        .toList();
-    _userStreamController.add(users);
+    final usersMap = <String, User>{};
+
+    for (final userJson in usersJson) {
+      final user = User.fromJson(Map<String, dynamic>.from(userJson));
+      usersMap[user.id] = user;
+    }
+
+    _userStreamController.add(usersMap);
   }
 
-  /// Get the `user`s from the [_userStreamController]
   @override
-  Stream<List<User>> get users => _userStreamController.asBroadcastStream();
+  Stream<Map<String, User>> get users =>
+      _userStreamController.asBroadcastStream();
+
+  @override
+  Map<String, User> get currentUsers => _userStreamController.value;
 
   /// Insert or Update a `user` to the database based on [userData]
   Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
@@ -55,14 +62,8 @@ class UserLocalStorage extends UserApi {
   /// Insert or Update a [user]
   @override
   Future<int> saveUser(User user) {
-    final users = [..._userStreamController.value];
-    final userIndex = users.indexWhere((t) => t.id == user.id);
-    if (userIndex >= 0) {
-      users[userIndex] = user;
-    } else {
-      users.add(user);
-    }
-
+    final users = Map<String, User>.from(_userStreamController.value);
+    users[user.id] = user;
     _userStreamController.add(users);
     return _insertOrUpdateUser(user.toJson());
   }
@@ -75,15 +76,10 @@ class UserLocalStorage extends UserApi {
   /// Delete a User based on [id]
   @override
   Future<int> deleteUser(String id) async {
-    final users = [..._userStreamController.value];
-    final userIndex = users.indexWhere((t) => t.id == id);
-    if (userIndex == -1) {
-      throw UserNotFoundException();
-    } else {
-      users.removeAt(userIndex);
-      _userStreamController.add(users);
-      return _deleteUser(id);
-    }
+    final users = Map<String, User>.from(_userStreamController.value)
+      ..remove(id);
+    _userStreamController.add(users);
+    return _deleteUser(id);
   }
 
   /// Close the [_userStreamController]

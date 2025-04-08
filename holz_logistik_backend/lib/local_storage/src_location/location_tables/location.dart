@@ -53,7 +53,7 @@ class LocationTable {
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
-      $columnDone INTEGER NOT NULL,
+      $columnDone BOOLEAN NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnLatitude REAL NOT NULL,
       $columnLongitude REAL NOT NULL,

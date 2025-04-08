@@ -8,7 +8,10 @@ abstract class UserApi {
   const UserApi();
 
   /// Provides a [Stream] of all users.
-  Stream<List<User>> get users;
+  Stream<Map<String, User>> get users;
+
+  /// Provides all current users.
+  Map<String, User> get currentUsers;
 
   /// Saves or updates a [user].
   ///
@@ -16,14 +19,8 @@ abstract class UserApi {
   Future<void> saveUser(User user);
 
   /// Deletes the `user` with the given [id].
-  ///
-  /// If no `user` with the given id exists, a [UserNotFoundException] error is
-  /// thrown.
   Future<void> deleteUser(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();
 }
-
-/// Error thrown when a [User] with a given id is not found.
-class UserNotFoundException implements Exception {}

@@ -8,7 +8,7 @@ part of 'location.dart';
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       id: json['id'] as String,
-      done: json['done'] as bool,
+      done: Location._boolFromInt((json['done'] as num).toInt()),
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
@@ -22,24 +22,18 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       currentOversizeQuantity:
           (json['currentOversizeQuantity'] as num).toDouble(),
       currentPieceCount: (json['currentPieceCount'] as num).toInt(),
-      contract: Contract.fromJson(json['contract'] as Map<String, dynamic>),
-      sawmills: (json['sawmills'] as List<dynamic>)
-          .map((e) => Sawmill.fromJson(e as Map<String, dynamic>))
+      contractId: json['contractId'] as String,
+      sawmillIds: (json['sawmillIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
           .toList(),
-      oversizeSawmills: (json['oversizeSawmills'] as List<dynamic>)
-          .map((e) => Sawmill.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      photos: (json['photos'] as List<dynamic>)
-          .map((e) => Photo.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      shipments: (json['shipments'] as List<dynamic>)
-          .map((e) => Shipment.fromJson(e as Map<String, dynamic>))
+      oversizeSawmillIds: (json['oversizeSawmillIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
           .toList(),
     );
 
 Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'id': instance.id,
-      'done': instance.done,
+      'done': Location._boolToInt(instance.done),
       'lastEdit': instance.lastEdit.toIso8601String(),
       'latitude': instance.latitude,
       'longitude': instance.longitude,
@@ -51,9 +45,7 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'currentQuantity': instance.currentQuantity,
       'currentOversizeQuantity': instance.currentOversizeQuantity,
       'currentPieceCount': instance.currentPieceCount,
-      'contract': instance.contract,
-      'sawmills': instance.sawmills,
-      'oversizeSawmills': instance.oversizeSawmills,
-      'photos': instance.photos,
-      'shipments': instance.shipments,
+      'contractId': instance.contractId,
+      'sawmillIds': instance.sawmillIds,
+      'oversizeSawmillIds': instance.oversizeSawmillIds,
     };

@@ -8,7 +8,10 @@ abstract class PhotoApi {
   const PhotoApi();
 
   /// Provides a [Stream] of all photos.
-  Stream<List<Photo>> get photos;
+  Stream<Map<String, List<Photo>>> get photosByLocation;
+
+  /// Provides all current photos.
+  Map<String, List<Photo>> get currentPhotosByLocation;
 
   /// Saves or updates a [photo].
   ///
@@ -16,14 +19,8 @@ abstract class PhotoApi {
   Future<void> savePhoto(Photo photo);
 
   /// Deletes the `photo` with the given [id].
-  ///
-  /// If no `photo` with the given id exists, a [PhotoNotFoundException] 
-  /// error is thrown.
-  Future<void> deletePhoto(String id);
+  Future<void> deletePhoto({required String id, required String locationId});
 
   /// Closes the client and frees up any resources.
   Future<void> close();
 }
-
-/// Error thrown when a [Photo] with a given id is not found.
-class PhotoNotFoundException implements Exception {}

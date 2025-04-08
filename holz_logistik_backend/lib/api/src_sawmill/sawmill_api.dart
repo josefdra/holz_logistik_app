@@ -10,20 +10,17 @@ abstract class SawmillApi {
   /// Provides a [Stream] of all sawmills.
   Stream<List<Sawmill>> get sawmills;
 
+  /// Provides all current sawmills
+  List<Sawmill> get currentSawmills;
+
   /// Saves or updates a [sawmill].
   ///
   /// If a [sawmill] with the same id already exists, it will be updated.
   Future<void> saveSawmill(Sawmill sawmill);
 
   /// Deletes the `sawmill` with the given [id].
-  ///
-  /// If no `sawmill` with the given id exists, a [SawmillNotFoundException] 
-  /// error is thrown.
   Future<void> deleteSawmill(String id);
 
   /// Closes the client and frees up any resources.
   Future<void> close();
 }
-
-/// Error thrown when a [Sawmill] with a given id is not found.
-class SawmillNotFoundException implements Exception {}

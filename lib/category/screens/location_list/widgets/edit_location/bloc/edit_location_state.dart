@@ -13,6 +13,7 @@ final class EditLocationState extends Equatable {
   EditLocationState({
     this.status = EditLocationStatus.initial,
     this.initialLocation,
+    this.newMarkerPosition,
     this.partieNr = '',
     this.additionalInfo = '',
     this.initialQuantity = 0.0,
@@ -29,6 +30,7 @@ final class EditLocationState extends Equatable {
 
   final EditLocationStatus status;
   final Location? initialLocation;
+  final LatLng? newMarkerPosition;
   final String partieNr;
   final String additionalInfo;
   final double initialQuantity;
@@ -47,6 +49,7 @@ final class EditLocationState extends Equatable {
   EditLocationState copyWith({
     EditLocationStatus? status,
     Location? initialLocation,
+    LatLng? newMarkerPosition,
     String? partieNr,
     String? additionalInfo,
     double? initialQuantity,
@@ -63,6 +66,7 @@ final class EditLocationState extends Equatable {
     return EditLocationState(
       status: status ?? this.status,
       initialLocation: initialLocation ?? this.initialLocation,
+      newMarkerPosition: newMarkerPosition ?? this.newMarkerPosition,
       partieNr: partieNr ?? this.partieNr,
       additionalInfo: additionalInfo ?? this.additionalInfo,
       initialQuantity: initialQuantity ?? this.initialQuantity,
@@ -84,6 +88,7 @@ final class EditLocationState extends Equatable {
   List<Object?> get props => [
         status,
         initialLocation,
+        newMarkerPosition,
         partieNr,
         additionalInfo,
         initialQuantity,

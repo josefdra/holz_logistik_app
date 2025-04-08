@@ -20,7 +20,10 @@ class UserRepository {
   final UserSyncService _userSyncService;
 
   /// Provides a [Stream] of all users.
-  Stream<List<User>> getUsers() => _userApi.users;
+  Stream<Map<String, User>> get users => _userApi.users;
+
+  /// Provides a the current users.
+  Map<String, User> get currentUsers => _userApi.currentUsers;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
@@ -40,9 +43,6 @@ class UserRepository {
   }
 
   /// Deletes the `user` with the given id.
-  ///
-  /// If no `user` with the given id exists, a [UserNotFoundException] error is
-  /// thrown.
   Future<void> deleteUser(String id) {
     _userApi.deleteUser(id);
     final data = {

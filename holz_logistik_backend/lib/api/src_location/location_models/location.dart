@@ -1,8 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/photo_api.dart';
-import 'package:holz_logistik_backend/api/sawmill_api.dart';
-import 'package:holz_logistik_backend/api/shipment_api.dart';
-import 'package:holz_logistik_backend/api/src_contract/contract_models/contract.dart';
 import 'package:holz_logistik_backend/general/models/json_map.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
@@ -16,8 +12,8 @@ part 'location.g.dart';
 /// Contains a [id], [done], time of the [lastEdit], [latitude], [longitude],
 /// [partieNr], [additionalInfo], [initialQuantity], [initialOversizeQuantity],
 /// [initialPieceCount], [currentQuantity], [currentOversizeQuantity],
-/// [currentPieceCount], [contract], [sawmills], [oversizeSawmills],
-/// [photos] and [shipments].
+/// [currentPieceCount], [contractId], [sawmillIds] and 
+/// [oversizeSawmillIds].
 ///
 /// [Location]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -41,11 +37,9 @@ class Location extends Equatable {
     required this.currentQuantity,
     required this.currentOversizeQuantity,
     required this.currentPieceCount,
-    required this.contract,
-    required this.sawmills,
-    required this.oversizeSawmills,
-    required this.photos,
-    required this.shipments,
+    required this.contractId,
+    required this.sawmillIds,
+    required this.oversizeSawmillIds,
   });
 
   /// {@macro location_item}
@@ -63,14 +57,11 @@ class Location extends Equatable {
     this.currentQuantity = 0,
     this.currentOversizeQuantity = 0,
     this.currentPieceCount = 0,
-    Contract? contract,
-    this.sawmills = const [],
-    this.oversizeSawmills = const [],
-    this.photos = const [],
-    this.shipments = const [],
+    this.contractId = '',
+    this.sawmillIds = const [],
+    this.oversizeSawmillIds = const [],
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now(),
-        contract = contract ?? Contract.empty();
+        lastEdit = lastEdit ?? DateTime.now();
 
   /// The id of the `location`.
   ///
@@ -80,6 +71,10 @@ class Location extends Equatable {
   /// The done status of the `location`.
   ///
   /// Cannot be empty.
+  @JsonKey(
+    fromJson: _boolFromInt,
+    toJson: _boolToInt,
+  )
   final bool done;
 
   /// The time the `location` was last modified.
@@ -138,27 +133,17 @@ class Location extends Equatable {
   /// The contract recommended for the `location`.
   ///
   /// Cannot be empty.
-  final Contract contract;
+  final String contractId;
 
-  /// The list of recommended sawmills for the `location`.
+  /// The sawmillIds associated with the `location`.
   ///
   /// Cannot be empty.
-  final List<Sawmill> sawmills;
+  final List<String>? sawmillIds;
 
-  /// The list of recommended oversize sawmills for the `location`.
+  /// The oversizeSawmillIds associated with the `location`.
   ///
   /// Cannot be empty.
-  final List<Sawmill> oversizeSawmills;
-
-  /// The local photo urls for the `location`.
-  ///
-  /// Cannot be empty.
-  final List<Photo> photos;
-
-  /// The shipments associated with the `location`.
-  ///
-  /// Cannot be empty.
-  final List<Shipment> shipments;
+  final List<String>? oversizeSawmillIds;
 
   /// Returns a copy of this `location` with the given values updated.
   ///
@@ -177,11 +162,9 @@ class Location extends Equatable {
     double? currentQuantity,
     double? currentOversizeQuantity,
     int? currentPieceCount,
-    Contract? contract,
-    List<Sawmill>? sawmills,
-    List<Sawmill>? oversizeSawmills,
-    List<Photo>? photos,
-    List<Shipment>? shipments,
+    String? contractId,
+    List<String>? sawmillIds,
+    List<String>? oversizeSawmillIds,
   }) {
     return Location(
       id: id ?? this.id,
@@ -199,11 +182,10 @@ class Location extends Equatable {
       currentOversizeQuantity:
           currentOversizeQuantity ?? this.currentOversizeQuantity,
       currentPieceCount: currentPieceCount ?? this.currentPieceCount,
-      contract: contract ?? this.contract,
-      sawmills: sawmills ?? this.sawmills,
-      oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
-      photos: photos ?? this.photos,
-      shipments: shipments ?? this.shipments,
+      contractId: contractId ?? this.contractId,
+      sawmillIds: sawmillIds ?? this.sawmillIds,
+      oversizeSawmillIds:
+          oversizeSawmillIds ?? this.oversizeSawmillIds,
     );
   }
 
@@ -212,6 +194,14 @@ class Location extends Equatable {
 
   /// Converts this [Location] into a [JsonMap].
   JsonMap toJson() => _$LocationToJson(this);
+
+  /// Converts an integer to a boolean.
+  /// 0 is considered false, anything else is true.
+  static bool _boolFromInt(int value) => value != 0;
+
+  /// Converts a boolean to an integer.
+  /// true is converted to 1, false to 0.
+  static int _boolToInt(bool value) => value ? 1 : 0;
 
   @override
   List<Object> get props => [
@@ -228,8 +218,8 @@ class Location extends Equatable {
         currentQuantity,
         currentOversizeQuantity,
         currentPieceCount,
-        contract,
-        photos,
-        shipments,
+        contractId,
+        sawmillIds!,
+        oversizeSawmillIds!,
       ];
 }

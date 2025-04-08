@@ -26,11 +26,11 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
   ) async {
     emit(state.copyWith(status: AnalyticsStatus.loading));
 
-    await emit.forEach<List<Contract>>(
-      _contractRepository.contracts,
+    await emit.forEach<Map<String, Contract>>(
+      _contractRepository.activeContracts,
       onData: (contracts) => state.copyWith(
         status: AnalyticsStatus.success,
-        contracts: contracts,
+        contracts: contracts.values.toList(),
       ),
       onError: (_, __) => state.copyWith(
         status: AnalyticsStatus.failure,
@@ -43,7 +43,10 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
     Emitter<AnalyticsState> emit,
   ) async {
     emit(state.copyWith(lastDeletedContract: event.contract));
-    await _contractRepository.deleteContract(event.contract.id);
+    await _contractRepository.deleteContract(
+      id: event.contract.id,
+      done: event.contract.done,
+    );
   }
 
   Future<void> _onUndoDeletionRequested(

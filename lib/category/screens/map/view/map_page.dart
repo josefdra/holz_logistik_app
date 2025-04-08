@@ -132,6 +132,7 @@ class Map extends StatelessWidget {
                           child:
                               const Icon(Icons.location_on, color: Colors.red),
                         ),
+                      ...state.markers,
                     ],
                   ),
                 ],

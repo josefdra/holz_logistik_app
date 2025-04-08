@@ -8,22 +8,19 @@ abstract class CommentApi {
   const CommentApi();
 
   /// Provides a [Stream] of all comments.
-  Stream<List<Comment>> get comments;
+  Stream<Map<String, List<Comment>>> get commentsByNote;
+
+  /// Provides all current comments
+  Map<String, List<Comment>> get currentCommentsByNote;
 
   /// Saves or updates a [comment].
   ///
   /// If a [comment] with the same id already exists, it will be updated.
   Future<void> saveComment(Comment comment);
 
-  /// Deletes the `comment` with the given [id].
-  ///
-  /// If no `comment` with the given id exists, a [CommentNotFoundException] 
-  /// error is thrown.
-  Future<void> deleteComment(String id);
+  /// Deletes the `comment` with the given [id] and [noteId].
+  Future<void> deleteComment({required String id, required String noteId});
 
   /// Closes the client and frees up any resources.
   Future<void> close();
 }
-
-/// Error thrown when a [Comment] with a given id is not found.
-class CommentNotFoundException implements Exception {}

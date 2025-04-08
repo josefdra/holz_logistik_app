@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/edit_location.dart';
-import 'package:holz_logistik_backend/repository/location_repository.dart';
+import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
 
 class EditLocationWidget extends StatelessWidget {
@@ -20,7 +20,11 @@ class EditLocationWidget extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => EditLocationBloc(
           locationsRepository: context.read<LocationRepository>(),
+          contractRepository: context.read<ContractRepository>(),
+          sawmillRepository: context.read<SawmillRepository>(),
+          photoRepository: context.read<PhotoRepository>(),
           initialLocation: initialLocation,
+          newMarkerPosition: newMarkerPosition,
         ),
         child: const EditLocationWidget(),
       ),

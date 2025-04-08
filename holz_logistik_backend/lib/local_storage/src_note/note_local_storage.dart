@@ -43,9 +43,11 @@ class NoteLocalStorage extends NoteApi {
     _noteStreamController.add(notes);
   }
 
-  /// Get the `note`s from the [_noteStreamController]
   @override
   Stream<List<Note>> get notes => _noteStreamController.asBroadcastStream();
+
+  @override
+  List<Note> get currentNotes => _noteStreamController.value;
 
   /// Insert or Update a `note` to the database based on [noteData]
   Future<int> _insertOrUpdateNote(Map<String, dynamic> noteData) async {
@@ -56,7 +58,7 @@ class NoteLocalStorage extends NoteApi {
   @override
   Future<int> saveNote(Note note) {
     final notes = [..._noteStreamController.value];
-    final noteIndex = notes.indexWhere((t) => t.id == note.id);
+    final noteIndex = notes.indexWhere((n) => n.id == note.id);
     if (noteIndex >= 0) {
       notes[noteIndex] = note;
     } else {
@@ -64,13 +66,8 @@ class NoteLocalStorage extends NoteApi {
     }
 
     _noteStreamController.add(notes);
-    final jsonNote = {
-      ...note.toJson()
-        ..remove('user')
-        ..remove('comments'),
-      'userId': note.user.id,
-    };
-    return _insertOrUpdateNote(jsonNote);
+
+    return _insertOrUpdateNote(note.toJson());
   }
 
   /// Delete a Note from the database based on [id]
@@ -82,7 +79,7 @@ class NoteLocalStorage extends NoteApi {
   @override
   Future<int> deleteNote(String id) async {
     final notes = [..._noteStreamController.value];
-    final noteIndex = notes.indexWhere((t) => t.id == id);
+    final noteIndex = notes.indexWhere((n) => n.id == id);
     if (noteIndex == -1) {
       throw NoteNotFoundException();
     } else {
