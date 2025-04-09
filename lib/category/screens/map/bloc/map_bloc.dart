@@ -53,7 +53,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       _locationRepository.activeLocations,
       onData: (locations) => state.copyWith(
         status: MapStatus.success,
-        markers: markersFromLocations(locations),
+        locations: locations,
       ),
       onError: (_, __) => state.copyWith(
         status: MapStatus.failure,

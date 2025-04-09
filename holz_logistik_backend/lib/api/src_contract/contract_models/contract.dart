@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/general/models/json_map.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
@@ -53,6 +53,10 @@ class Contract extends Equatable {
   /// If the contract is done.
   ///
   /// Cannot be empty.
+  @JsonKey(
+    fromJson: TypeConverters.boolFromInt,
+    toJson: TypeConverters.boolToInt,
+  )
   final bool done;
 
   /// The time the `contract` was last modified.

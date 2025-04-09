@@ -34,9 +34,11 @@ final class EditLocationInitialQuantityChanged extends EditLocationEvent {
   List<Object> get props => [initialQuantity];
 }
 
-final class EditLocationInitalOversizeQuantityChanged
+final class EditLocationInitialOversizeQuantityChanged
     extends EditLocationEvent {
-  const EditLocationInitalOversizeQuantityChanged(this.initialOversizeQuantity);
+  const EditLocationInitialOversizeQuantityChanged(
+    this.initialOversizeQuantity,
+  );
 
   final double initialOversizeQuantity;
 
@@ -53,43 +55,22 @@ final class EditLocationInitialPieceCountChanged extends EditLocationEvent {
   List<Object> get props => [initialPieceCount];
 }
 
-final class EditLocationCurrentQuantityChanged extends EditLocationEvent {
-  const EditLocationCurrentQuantityChanged(this.currentQuantity);
-
-  final double currentQuantity;
-
-  @override
-  List<Object> get props => [currentQuantity];
-}
-
-final class EditLocationCurrentOversizeQuantityChanged
-    extends EditLocationEvent {
-  const EditLocationCurrentOversizeQuantityChanged(
-    this.currentOversizeQuantity,
-  );
-
-  final double currentOversizeQuantity;
-
-  @override
-  List<Object> get props => [currentOversizeQuantity];
-}
-
-final class EditLocationCurrentPieceCountChanged extends EditLocationEvent {
-  const EditLocationCurrentPieceCountChanged(this.currentPieceCount);
-
-  final int currentPieceCount;
-
-  @override
-  List<Object> get props => [currentPieceCount];
-}
-
 final class EditLocationContractChanged extends EditLocationEvent {
-  const EditLocationContractChanged(this.contract);
+  const EditLocationContractChanged(this.contractId);
 
-  final Contract contract;
+  final String contractId;
 
   @override
-  List<Object> get props => [contract];
+  List<Object> get props => [contractId];
+}
+
+final class EditLocationNewSawmillChanged extends EditLocationEvent {
+  const EditLocationNewSawmillChanged(this.newSawmill);
+
+  final Sawmill newSawmill;
+
+  @override
+  List<Object> get props => [newSawmill];
 }
 
 final class EditLocationSawmillsChanged extends EditLocationEvent {
@@ -117,6 +98,10 @@ final class EditLocationPhotosChanged extends EditLocationEvent {
 
   @override
   List<Object> get props => [photos];
+}
+
+final class EditLocationNewSawmillSubmitted extends EditLocationEvent {
+  const EditLocationNewSawmillSubmitted();
 }
 
 final class EditLocationSubmitted extends EditLocationEvent {

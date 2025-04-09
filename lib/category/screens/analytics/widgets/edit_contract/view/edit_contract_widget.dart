@@ -173,15 +173,13 @@ class _AvailableQuantityField extends StatelessWidget {
     final l10n = context.l10n;
 
     final state = context.watch<EditContractBloc>().state;
-    final hintText = state.initialContract?.availableQuantity.toString() ?? '';
 
     return TextFormField(
       key: const Key('editContractView_availableQuantity_textFormField'),
-      initialValue: state.availableQuantity.toString(),
+      initialValue: state.initialContract?.availableQuantity.toString() ?? '',
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editContractAvailableQuantityLabel,
-        hintText: hintText,
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       maxLength: 20,

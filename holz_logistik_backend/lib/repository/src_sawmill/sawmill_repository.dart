@@ -20,7 +20,7 @@ class SawmillRepository {
   final SawmillSyncService _sawmillSyncService;
 
   /// Provides a [Stream] of all sawmills.
-  Stream<List<Sawmill>> get samwmills => _sawmillApi.sawmills;
+  Stream<List<Sawmill>> get sawmills => _sawmillApi.sawmills;
 
   /// Provides all current sawmills
   List<Sawmill> get currentSawmills => _sawmillApi.currentSawmills;

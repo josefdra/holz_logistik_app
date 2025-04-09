@@ -19,14 +19,17 @@ final class EditLocationState extends Equatable {
     this.initialQuantity = 0.0,
     this.initialOversizeQuantity = 0.0,
     this.initialPieceCount = 0,
-    this.currentQuantity = 0.0,
-    this.currentOversizeQuantity = 0.0,
-    this.currentPieceCount = 0,
-    Contract? contract,
+    this.contractId = '',
     this.sawmills = const [],
     this.oversizeSawmills = const [],
     this.photos = const [],
-  }) : contract = contract ?? Contract.empty();
+    this.newSawmill,
+    MultiSelectController<Sawmill>? sawmillController,
+    MultiSelectController<Sawmill>? oversizeSawmillController,
+  })  : sawmillController =
+            sawmillController ?? MultiSelectController<Sawmill>(),
+        oversizeSawmillController =
+            oversizeSawmillController ?? MultiSelectController<Sawmill>();
 
   final EditLocationStatus status;
   final Location? initialLocation;
@@ -36,13 +39,13 @@ final class EditLocationState extends Equatable {
   final double initialQuantity;
   final double initialOversizeQuantity;
   final int initialPieceCount;
-  final double currentQuantity;
-  final double currentOversizeQuantity;
-  final int currentPieceCount;
-  final Contract contract;
+  final String contractId;
   final List<Sawmill> sawmills;
   final List<Sawmill> oversizeSawmills;
   final List<Photo> photos;
+  final Sawmill? newSawmill;
+  final MultiSelectController<Sawmill> sawmillController;
+  final MultiSelectController<Sawmill> oversizeSawmillController;
 
   bool get isNewLocation => initialLocation == null;
 
@@ -55,13 +58,11 @@ final class EditLocationState extends Equatable {
     double? initialQuantity,
     double? initialOversizeQuantity,
     int? initialPieceCount,
-    double? currentQuantity,
-    double? currentOversizeQuantity,
-    int? currentPieceCount,
-    Contract? contract,
+    String? contractId,
     List<Sawmill>? sawmills,
     List<Sawmill>? oversizeSawmills,
     List<Photo>? photos,
+    Sawmill? newSawmill,
   }) {
     return EditLocationState(
       status: status ?? this.status,
@@ -73,14 +74,13 @@ final class EditLocationState extends Equatable {
       initialOversizeQuantity:
           initialOversizeQuantity ?? this.initialOversizeQuantity,
       initialPieceCount: initialPieceCount ?? this.initialPieceCount,
-      currentQuantity: currentQuantity ?? this.currentQuantity,
-      currentOversizeQuantity:
-          currentOversizeQuantity ?? this.currentOversizeQuantity,
-      currentPieceCount: currentPieceCount ?? this.currentPieceCount,
-      contract: contract ?? this.contract,
+      contractId: contractId ?? this.contractId,
       sawmills: sawmills ?? this.sawmills,
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
       photos: photos ?? this.photos,
+      newSawmill: newSawmill,
+      sawmillController: sawmillController,
+      oversizeSawmillController: oversizeSawmillController,
     );
   }
 
@@ -94,12 +94,12 @@ final class EditLocationState extends Equatable {
         initialQuantity,
         initialOversizeQuantity,
         initialPieceCount,
-        currentQuantity,
-        currentOversizeQuantity,
-        currentPieceCount,
-        contract,
+        contractId,
         sawmills,
         oversizeSawmills,
         photos,
+        newSawmill,
+        sawmillController,
+        oversizeSawmillController,
       ];
 }
