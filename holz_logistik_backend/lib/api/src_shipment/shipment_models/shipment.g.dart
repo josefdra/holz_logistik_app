@@ -12,8 +12,8 @@ Shipment _$ShipmentFromJson(Map<String, dynamic> json) => Shipment(
       quantity: (json['quantity'] as num).toDouble(),
       oversizeQuantity: (json['oversizeQuantity'] as num).toDouble(),
       pieceCount: (json['pieceCount'] as num).toInt(),
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      contract: Contract.fromJson(json['contract'] as Map<String, dynamic>),
+      userId: json['userId'] as String,
+      contractId: json['contractId'] as String,
       locationId: json['locationId'] as String,
     );
 
@@ -23,7 +23,7 @@ Map<String, dynamic> _$ShipmentToJson(Shipment instance) => <String, dynamic>{
       'quantity': instance.quantity,
       'oversizeQuantity': instance.oversizeQuantity,
       'pieceCount': instance.pieceCount,
-      'user': instance.user,
-      'contract': instance.contract,
+      'userId': instance.userId,
+      'contractId': instance.contractId,
       'locationId': instance.locationId,
     };

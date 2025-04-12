@@ -21,7 +21,8 @@ class CommentSyncService {
       StreamController<Map<String, dynamic>>.broadcast();
 
   /// Stream of comment updates from external sources
-  Stream<Map<String, dynamic>> get commentUpdates => _commentUpdateController.stream;
+  Stream<Map<String, dynamic>> get commentUpdates =>
+      _commentUpdateController.stream;
 
   void _handleCommentUpdate(dynamic data) {
     try {

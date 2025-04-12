@@ -8,7 +8,7 @@ part of 'contract.dart';
 
 Contract _$ContractFromJson(Map<String, dynamic> json) => Contract(
       id: json['id'] as String,
-      done: json['done'] as bool,
+      done: TypeConverters.boolFromInt((json['done'] as num).toInt()),
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       title: json['title'] as String,
       additionalInfo: json['additionalInfo'] as String,
@@ -19,7 +19,7 @@ Contract _$ContractFromJson(Map<String, dynamic> json) => Contract(
 
 Map<String, dynamic> _$ContractToJson(Contract instance) => <String, dynamic>{
       'id': instance.id,
-      'done': instance.done,
+      'done': TypeConverters.boolToInt(instance.done),
       'lastEdit': instance.lastEdit.toIso8601String(),
       'title': instance.title,
       'additionalInfo': instance.additionalInfo,

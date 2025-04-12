@@ -50,10 +50,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     emit(state.copyWith(status: MapStatus.loading));
 
     await emit.forEach<List<Location>>(
-      _locationRepository.locations,
+      _locationRepository.activeLocations,
       onData: (locations) => state.copyWith(
         status: MapStatus.success,
-        markers: markersFromLocations(locations),
+        locations: locations,
       ),
       onError: (_, __) => state.copyWith(
         status: MapStatus.failure,
@@ -76,7 +76,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     mapController.rotate(0);
 
     if (state.trackingMode && state.userLocation != null) {
-      mapController.move(state.userLocation!, mapController.camera.zoom);
+      mapController.move(state.userLocation!, 15);
     }
   }
 

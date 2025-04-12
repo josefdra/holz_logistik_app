@@ -21,8 +21,9 @@ class CommentLocalStorage extends CommentApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _commentStreamController = BehaviorSubject<List<Comment>>.seeded(
-    const [],
+  late final _commentStreamController =
+      BehaviorSubject<Map<String, List<Comment>>>.seeded(
+    const {},
   );
 
   /// Migration function for comment table
@@ -37,16 +38,28 @@ class CommentLocalStorage extends CommentApi {
   /// Initialization
   Future<void> _init() async {
     final commentsJson = await _coreLocalStorage.getAll(CommentTable.tableName);
-    final comments = commentsJson
-        .map((comment) => Comment.fromJson(Map<String, dynamic>.from(comment)))
-        .toList();
-    _commentStreamController.add(comments);
+
+    final commentsByNoteId = <String, List<Comment>>{};
+
+    for (final commentData in commentsJson) {
+      final comment = Comment.fromJson(Map<String, dynamic>.from(commentData));
+
+      if (!commentsByNoteId.containsKey(comment.noteId)) {
+        commentsByNoteId[comment.noteId] = [];
+      }
+
+      commentsByNoteId[comment.noteId]!.add(comment);
+    }
+    _commentStreamController.add(commentsByNoteId);
   }
 
-  /// Get the `comment`s from the [_commentStreamController]
   @override
-  Stream<List<Comment>> get comments =>
+  Stream<Map<String, List<Comment>>> get commentsByNote =>
       _commentStreamController.asBroadcastStream();
+
+  @override
+  Map<String, List<Comment>> get currentCommentsByNote =>
+      _commentStreamController.value;
 
   /// Insert or Update a `comment` to the database based on [commentData]
   Future<int> _insertOrUpdateComment(Map<String, dynamic> commentData) async {
@@ -59,20 +72,15 @@ class CommentLocalStorage extends CommentApi {
   /// Insert or Update a [comment]
   @override
   Future<int> saveComment(Comment comment) {
-    final comments = [..._commentStreamController.value];
-    final commentIndex = comments.indexWhere((t) => t.id == comment.id);
-    if (commentIndex >= 0) {
-      comments[commentIndex] = comment;
-    } else {
-      comments.add(comment);
+    final currentCommentsByNote = _commentStreamController.value;
+    if (!currentCommentsByNote.containsKey(comment.noteId)) {
+      currentCommentsByNote[comment.noteId] = [];
     }
 
-    _commentStreamController.add(comments);
-    final jsonComment = {
-      ...comment.toJson()..remove('user'),
-      'userId': comment.user.id,
-    };
-    return _insertOrUpdateComment(jsonComment);
+    currentCommentsByNote[comment.noteId]!.add(comment);
+    _commentStreamController.add(currentCommentsByNote);
+
+    return _insertOrUpdateComment(comment.toJson());
   }
 
   /// Delete a Comment from the database based on [id]
@@ -80,18 +88,22 @@ class CommentLocalStorage extends CommentApi {
     return _coreLocalStorage.delete(CommentTable.tableName, id);
   }
 
-  /// Delete a Comment based on [id]
+  /// Delete a Comment based on [id] and [noteId]
   @override
-  Future<int> deleteComment(String id) async {
-    final comments = [..._commentStreamController.value];
-    final commentIndex = comments.indexWhere((t) => t.id == id);
-    if (commentIndex == -1) {
-      throw CommentNotFoundException();
-    } else {
-      comments.removeAt(commentIndex);
-      _commentStreamController.add(comments);
-      return _deleteComment(id);
+  Future<int> deleteComment({
+    required String id,
+    required String noteId,
+  }) async {
+    final currentCommentsByNote = _commentStreamController.value;
+
+    currentCommentsByNote[noteId]!.removeWhere((c) => c.id == id);
+
+    if (currentCommentsByNote[noteId]!.isEmpty) {
+      currentCommentsByNote.remove(noteId);
     }
+    _commentStreamController.add(currentCommentsByNote);
+
+    return _deleteComment(id);
   }
 
   /// Close the [_commentStreamController]

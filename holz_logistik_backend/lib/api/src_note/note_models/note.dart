@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/comment_api.dart';
-import 'package:holz_logistik_backend/api/general.dart';
-import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
@@ -11,7 +9,7 @@ part 'note.g.dart';
 /// {@template note_item}
 /// A single `note` item.
 ///
-/// Contains a [id], time of the [lastEdit], [text], [user] and [comments].
+/// Contains a [id], time of the [lastEdit], [text] and [userId].
 ///
 /// [Note]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -25,8 +23,7 @@ class Note extends Equatable {
     required this.id,
     required this.lastEdit,
     required this.text,
-    required this.user,
-    required this.comments,
+    required this.userId,
   });
 
   /// {@macro note_item}
@@ -34,11 +31,9 @@ class Note extends Equatable {
     String? id,
     DateTime? lastEdit,
     this.text = '',
-    User? user,
-    this.comments = const [],
+    this.userId = '',
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now(),
-        user = user ?? User.empty();
+        lastEdit = lastEdit ?? DateTime.now();
 
   /// The id of the `note`.
   ///
@@ -55,15 +50,10 @@ class Note extends Equatable {
   /// Cannot be empty.
   final String text;
 
-  /// The user that wrote the `note`.
+  /// The userId that is associated with the `note`.
   ///
   /// Cannot be empty.
-  final User user;
-
-  /// The comments to this `note`.
-  ///
-  /// Cannot be empty.
-  final List<Comment> comments;
+  final String userId;
 
   /// Returns a copy of this `note` with the given values updated.
   ///
@@ -72,15 +62,13 @@ class Note extends Equatable {
     String? id,
     DateTime? lastEdit,
     String? text,
-    User? user,
-    List<Comment>? comments,
+    String? userId,
   }) {
     return Note(
       id: id ?? this.id,
       lastEdit: lastEdit ?? this.lastEdit,
       text: text ?? this.text,
-      user: user ?? this.user,
-      comments: comments ?? this.comments,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -91,5 +79,5 @@ class Note extends Equatable {
   JsonMap toJson() => _$NoteToJson(this);
 
   @override
-  List<Object> get props => [id, lastEdit, text, user, comments];
+  List<Object> get props => [id, lastEdit, text, userId];
 }

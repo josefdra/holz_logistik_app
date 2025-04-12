@@ -21,7 +21,12 @@ class ShipmentLocalStorage extends ShipmentApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _shipmentStreamController = BehaviorSubject<List<Shipment>>.seeded(
+  late final _shipmentStreamController =
+      BehaviorSubject<Map<String, List<Shipment>>>.seeded(
+    const {},
+  );
+  late final _allShipemtsStreamController =
+      BehaviorSubject<List<Shipment>>.seeded(
     const [],
   );
 
@@ -36,21 +41,43 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Initialization
   Future<void> _init() async {
-    final shipmentsJson = await _coreLocalStorage.getAll(
-      ShipmentTable.tableName,
-    );
-    final shipments = shipmentsJson
-        .map(
-          (shipment) => Shipment.fromJson(Map<String, dynamic>.from(shipment)),
-        )
-        .toList();
-    _shipmentStreamController.add(shipments);
+    final shipmentsJson =
+        await _coreLocalStorage.getAll(ShipmentTable.tableName);
+
+    final shipmentsByLocationId = <String, List<Shipment>>{};
+    final allShipments = <Shipment>[];
+
+    for (final shipmentData in shipmentsJson) {
+      final shipment =
+          Shipment.fromJson(Map<String, dynamic>.from(shipmentData));
+
+      if (!shipmentsByLocationId.containsKey(shipment.locationId)) {
+        shipmentsByLocationId[shipment.locationId] = [];
+      }
+
+      allShipments.add(shipment);
+      shipmentsByLocationId[shipment.locationId]!.add(shipment);
+    }
+
+    _allShipemtsStreamController.add(allShipments);
+    _shipmentStreamController.add(shipmentsByLocationId);
   }
 
-  /// Get the `shipment`s from the [_shipmentStreamController]
   @override
-  Stream<List<Shipment>> getShipments() =>
+  Stream<Map<String, List<Shipment>>> get shipmentsByLocation =>
       _shipmentStreamController.asBroadcastStream();
+
+  @override
+  Stream<List<Shipment>> get shipments =>
+      _allShipemtsStreamController.asBroadcastStream();
+
+  @override
+  Map<String, List<Shipment>> get currentShipmentsByLocation =>
+      _shipmentStreamController.value;
+
+  @override
+  List<Shipment> get currentShipments =>
+      _allShipemtsStreamController.value;
 
   /// Insert or Update a `shipment` to the database based on [shipmentData]
   Future<int> _insertOrUpdateShipment(Map<String, dynamic> shipmentData) async {
@@ -63,24 +90,25 @@ class ShipmentLocalStorage extends ShipmentApi {
   /// Insert or Update a [shipment]
   @override
   Future<int> saveShipment(Shipment shipment) {
-    final shipments = [..._shipmentStreamController.value];
-    final shipmentIndex = shipments.indexWhere((t) => t.id == shipment.id);
-    if (shipmentIndex >= 0) {
-      shipments[shipmentIndex] = shipment;
-    } else {
-      shipments.add(shipment);
+    final currentShipmentsByLocation = _shipmentStreamController.value;
+    if (!currentShipmentsByLocation.containsKey(shipment.locationId)) {
+      currentShipmentsByLocation[shipment.locationId] = [];
     }
 
-    _shipmentStreamController.add(shipments);
+    currentShipmentsByLocation[shipment.locationId]!.add(shipment);
+    _shipmentStreamController.add(currentShipmentsByLocation);
 
-    final jsonShipment = {
-      ...shipment.toJson()
-        ..remove('user')
-        ..remove('contract'),
-      'userId': shipment.user.id,
-      'contractId': shipment.contract.id,
-    };
-    return _insertOrUpdateShipment(jsonShipment);
+    final allShipments = [..._allShipemtsStreamController.value];
+    final shipmentIndex = allShipments.indexWhere((s) => s.id == shipment.id);
+
+    if (shipmentIndex >= 0) {
+      allShipments[shipmentIndex] = shipment;
+    } else {
+      allShipments.add(shipment);
+    }
+
+    _allShipemtsStreamController.add(allShipments);
+    return _insertOrUpdateShipment(shipment.toJson());
   }
 
   /// Delete a Shipment from the database based on [id]
@@ -88,18 +116,29 @@ class ShipmentLocalStorage extends ShipmentApi {
     return _coreLocalStorage.delete(ShipmentTable.tableName, id);
   }
 
-  /// Delete a Shipment based on [id]
+  /// Delete a Shipment based on [id] and [locationId]
   @override
-  Future<int> deleteShipment(String id) async {
-    final shipments = [..._shipmentStreamController.value];
-    final shipmentIndex = shipments.indexWhere((t) => t.id == id);
-    if (shipmentIndex == -1) {
-      throw ShipmentNotFoundException();
-    } else {
-      shipments.removeAt(shipmentIndex);
-      _shipmentStreamController.add(shipments);
-      return _deleteShipment(id);
+  Future<int> deleteShipment({
+    required String id,
+    required String locationId,
+  }) async {
+    final currentShipmentsByLocation = _shipmentStreamController.value;
+
+    currentShipmentsByLocation[locationId]!.removeWhere((s) => s.id == id);
+
+    if (currentShipmentsByLocation[locationId]!.isEmpty) {
+      currentShipmentsByLocation.remove(locationId);
     }
+
+    _shipmentStreamController.add(currentShipmentsByLocation);
+
+    final allShipments = [..._allShipemtsStreamController.value];
+    final contractIndex = allShipments.indexWhere((s) => s.id == id);
+
+    allShipments.removeAt(contractIndex);
+    _allShipemtsStreamController.add(allShipments);
+
+    return _deleteShipment(id);
   }
 
   /// Close the [_shipmentStreamController]

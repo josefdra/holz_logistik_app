@@ -1,9 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik_backend/api/photo_api.dart';
-import 'package:holz_logistik_backend/api/src_contract/contract_models/contract.dart';
-import 'package:holz_logistik_backend/api/src_sawmill/sawmill_models/sawmill.dart';
-import 'package:holz_logistik_backend/repository/location_repository.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/model/get_sawmill_ids.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/model/get_sawmills.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/model/save_photos.dart';
+import 'package:holz_logistik_backend/repository/repository.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:multi_dropdown/multi_dropdown.dart';
 
 part 'edit_location_event.dart';
 part 'edit_location_state.dart';
@@ -11,47 +13,54 @@ part 'edit_location_state.dart';
 class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   EditLocationBloc({
     required LocationRepository locationsRepository,
+    required SawmillRepository sawmillRepository,
+    required PhotoRepository photoRepository,
     required Location? initialLocation,
+    required LatLng? newMarkerPosition,
   })  : _locationsRepository = locationsRepository,
+        _sawmillRepository = sawmillRepository,
+        _photoRepository = photoRepository,
         super(
           EditLocationState(
             initialLocation: initialLocation,
+            newMarkerPosition: newMarkerPosition,
             partieNr: initialLocation?.partieNr ?? '',
             additionalInfo: initialLocation?.additionalInfo ?? '',
             initialQuantity: initialLocation?.initialQuantity ?? 0.0,
             initialOversizeQuantity:
                 initialLocation?.initialOversizeQuantity ?? 0.0,
             initialPieceCount: initialLocation?.initialPieceCount ?? 0,
-            currentQuantity: initialLocation?.currentQuantity ?? 0.0,
-            currentOversizeQuantity:
-                initialLocation?.currentOversizeQuantity ?? 0.0,
-            currentPieceCount: initialLocation?.currentPieceCount ?? 0,
-            contract: initialLocation?.contract,
-            sawmills: initialLocation?.sawmills ?? [],
-            oversizeSawmills: initialLocation?.oversizeSawmills ?? [],
-            photos: initialLocation?.photos ?? [],
+            contractId: initialLocation?.contractId ?? '',
+            sawmills:
+                getSawmills(sawmillRepository, initialLocation?.sawmillIds),
+            oversizeSawmills: getSawmills(
+              sawmillRepository,
+              initialLocation?.oversizeSawmillIds,
+            ),
+            photos:
+                photoRepository.currentPhotosByLocation[initialLocation?.id] ??
+                    const [],
           ),
         ) {
     on<EditLocationPartieNrChanged>(_onPartieNrChanged);
     on<EditLocationAdditionalInfoChanged>(_onAdditionalInfoChanged);
     on<EditLocationInitialQuantityChanged>(_onInitialQuantityChanged);
-    on<EditLocationInitalOversizeQuantityChanged>(
+    on<EditLocationInitialOversizeQuantityChanged>(
       _onInitialOversizeQuantityChanged,
     );
     on<EditLocationInitialPieceCountChanged>(_onInitialPieceCountChanged);
-    on<EditLocationCurrentQuantityChanged>(_onCurrentQuantityChanged);
-    on<EditLocationCurrentOversizeQuantityChanged>(
-      _onCurrentOversizeQuantityChanged,
-    );
-    on<EditLocationCurrentPieceCountChanged>(_onCurrentPieceCountChanged);
     on<EditLocationContractChanged>(_onContractChanged);
+    on<EditLocationNewSawmillChanged>(_onNewSawmillChanged);
     on<EditLocationSawmillsChanged>(_onSawmillChanged);
     on<EditLocationOversizeSawmillsChanged>(_onOversizeSawmillChanged);
     on<EditLocationPhotosChanged>(_onPhotosChanged);
+    on<EditLocationNewSawmillSubmitted>(_onNewSawmillSubmitted);
     on<EditLocationSubmitted>(_onSubmitted);
   }
 
   final LocationRepository _locationsRepository;
+  final SawmillRepository _sawmillRepository;
+  final PhotoRepository _photoRepository;
 
   void _onPartieNrChanged(
     EditLocationPartieNrChanged event,
@@ -75,7 +84,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   }
 
   void _onInitialOversizeQuantityChanged(
-    EditLocationInitalOversizeQuantityChanged event,
+    EditLocationInitialOversizeQuantityChanged event,
     Emitter<EditLocationState> emit,
   ) {
     emit(
@@ -90,34 +99,18 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     emit(state.copyWith(initialPieceCount: event.initialPieceCount));
   }
 
-  void _onCurrentQuantityChanged(
-    EditLocationCurrentQuantityChanged event,
-    Emitter<EditLocationState> emit,
-  ) {
-    emit(state.copyWith(currentQuantity: event.currentQuantity));
-  }
-
-  void _onCurrentOversizeQuantityChanged(
-    EditLocationCurrentOversizeQuantityChanged event,
-    Emitter<EditLocationState> emit,
-  ) {
-    emit(
-      state.copyWith(currentOversizeQuantity: event.currentOversizeQuantity),
-    );
-  }
-
-  void _onCurrentPieceCountChanged(
-    EditLocationCurrentPieceCountChanged event,
-    Emitter<EditLocationState> emit,
-  ) {
-    emit(state.copyWith(currentPieceCount: event.currentPieceCount));
-  }
-
   void _onContractChanged(
     EditLocationContractChanged event,
     Emitter<EditLocationState> emit,
   ) {
-    emit(state.copyWith(contract: event.contract));
+    emit(state.copyWith(contractId: event.contractId));
+  }
+
+  void _onNewSawmillChanged(
+    EditLocationNewSawmillChanged event,
+    Emitter<EditLocationState> emit,
+  ) {
+    emit(state.copyWith(newSawmill: event.newSawmill));
   }
 
   void _onSawmillChanged(
@@ -141,26 +134,44 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     emit(state.copyWith(photos: event.photos));
   }
 
+  Future<void> _onNewSawmillSubmitted(
+    EditLocationNewSawmillSubmitted event,
+    Emitter<EditLocationState> emit,
+  ) async {
+    await _sawmillRepository.saveSawmill(state.newSawmill!);
+    state.sawmillController.addItem(
+      DropdownItem(label: state.newSawmill!.name, value: state.newSawmill!),
+    );
+    state.oversizeSawmillController.addItem(
+      DropdownItem(label: state.newSawmill!.name, value: state.newSawmill!),
+    );
+
+    emit(state.copyWith());
+  }
+
   Future<void> _onSubmitted(
     EditLocationSubmitted event,
     Emitter<EditLocationState> emit,
   ) async {
     emit(state.copyWith(status: EditLocationStatus.loading));
-    final location = (state.initialLocation ?? Location.empty()).copyWith(
+    final location = (state.initialLocation ??
+            Location.empty(
+              latitude: state.newMarkerPosition!.latitude,
+              longitude: state.newMarkerPosition!.longitude,
+            ))
+        .copyWith(
       lastEdit: DateTime.now(),
       partieNr: state.partieNr,
       additionalInfo: state.additionalInfo,
       initialQuantity: state.initialQuantity,
       initialOversizeQuantity: state.initialOversizeQuantity,
       initialPieceCount: state.initialPieceCount,
-      currentQuantity: state.currentQuantity,
-      currentOversizeQuantity: state.currentOversizeQuantity,
-      currentPieceCount: state.currentPieceCount,
-      contract: state.contract,
-      sawmills: state.sawmills,
-      oversizeSawmills: state.oversizeSawmills,
-      photos: state.photos,
+      contractId: state.contractId,
+      sawmillIds: getSawmillIds(state.sawmills),
+      oversizeSawmillIds: getSawmillIds(state.oversizeSawmills),
     );
+
+    savePhotos(_photoRepository, state.photos);
 
     try {
       await _locationsRepository.saveLocation(location);
@@ -168,5 +179,8 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     } catch (e) {
       emit(state.copyWith(status: EditLocationStatus.failure));
     }
+
+    state.sawmillController.dispose();
+    state.oversizeSawmillController.dispose();
   }
 }

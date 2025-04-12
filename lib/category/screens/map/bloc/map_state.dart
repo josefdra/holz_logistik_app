@@ -7,7 +7,7 @@ final class MapState extends Equatable {
     this.status = MapStatus.initial,
     this.addMarkerMode = false,
     this.showInfoMode = false,
-    this.markers = const [],
+    this.locations = const [],
     this.userLocation,
     this.trackingMode = true,
     this.newMarkerPosition,
@@ -16,7 +16,7 @@ final class MapState extends Equatable {
   final MapStatus status;
   final bool addMarkerMode;
   final bool showInfoMode;
-  final List<Marker> markers;
+  final List<Location> locations;
   final LatLng? userLocation;
   final bool trackingMode;
   final LatLng? newMarkerPosition;
@@ -25,7 +25,7 @@ final class MapState extends Equatable {
     MapStatus? status,
     bool? addMarkerMode,
     bool? showInfoMode,
-    List<Marker>? markers,
+    List<Location>? locations,
     LatLng? userLocation,
     Marker? userLocationMarker,
     bool? trackingMode,
@@ -35,7 +35,7 @@ final class MapState extends Equatable {
       status: status ?? this.status,
       addMarkerMode: addMarkerMode ?? this.addMarkerMode,
       showInfoMode: showInfoMode ?? this.showInfoMode,
-      markers: markers ?? this.markers,
+      locations: locations ?? this.locations,
       userLocation: userLocation ?? this.userLocation,
       trackingMode: trackingMode ?? this.trackingMode,
       newMarkerPosition: newMarkerPosition ?? this.newMarkerPosition,
@@ -47,7 +47,7 @@ final class MapState extends Equatable {
         status,
         addMarkerMode,
         showInfoMode,
-        markers,
+        locations,
         userLocation,
         trackingMode,
         newMarkerPosition,

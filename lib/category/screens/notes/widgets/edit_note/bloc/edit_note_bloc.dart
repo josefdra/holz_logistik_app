@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik_backend/api/api.dart';
-import 'package:holz_logistik_backend/repository/note_repository.dart';
+import 'package:holz_logistik_backend/repository/repository.dart';
 
 part 'edit_note_event.dart';
 part 'edit_note_state.dart';
@@ -17,8 +16,6 @@ class EditNoteBloc extends Bloc<EditNoteEvent, EditNoteState> {
           EditNoteState(
             initialNote: initialNote,
             text: initialNote?.text ?? '',
-            user: initialNote?.user ?? User.empty(),
-            comments: initialNote?.comments ?? const [],
           ),
         ) {
     on<EditNoteTextChanged>(_onTextChanged);
@@ -43,8 +40,7 @@ class EditNoteBloc extends Bloc<EditNoteEvent, EditNoteState> {
     final note = (state.initialNote ?? Note.empty()).copyWith(
       lastEdit: DateTime.now(),
       text: state.text,
-      user: _authenticatedUser,
-      comments: state.comments,
+      userId: _authenticatedUser.id,
     );
 
     try {

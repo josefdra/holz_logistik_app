@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:holz_logistik_backend/repository/location_repository.dart';
 
@@ -13,17 +11,18 @@ class LocationListTileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return location.photos.isNotEmpty
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: Image.file(
-              File(location.photos.first.localPhotoUrl),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  _buildLetterAvatar(context),
-            ),
-          )
-        : _buildLetterAvatar(context);
+    // return location.photos.isNotEmpty
+    //     ? ClipRRect(
+    //         borderRadius: BorderRadius.circular(4),
+    //         child: Image.file(
+    //           File(location.photos.first.localPhotoUrl),
+    //           fit: BoxFit.cover,
+    //           errorBuilder: (context, error, stackTrace) =>
+    //               _buildLetterAvatar(context),
+    //         ),
+    //       )
+    //     :
+    return _buildLetterAvatar(context);
   }
 
   Widget _buildLetterAvatar(BuildContext context) {
@@ -34,9 +33,7 @@ class LocationListTileAvatar extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        location.sawmills.isNotEmpty
-            ? location.sawmills.first.name[0].toUpperCase()
-            : '?',
+        '?',
         style: TextStyle(
           color: Theme.of(context).colorScheme.primary,
           fontSize: 24,

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/location_details_widget/view/view.dart';
 import 'package:holz_logistik/category/screens/map/map.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
@@ -132,6 +133,27 @@ class Map extends StatelessWidget {
                           child:
                               const Icon(Icons.location_on, color: Colors.red),
                         ),
+                      ...state.locations.map(
+                        (location) => Marker(
+                          width: 50,
+                          height: 50,
+                          point: LatLng(location.latitude, location.longitude),
+                          child: GestureDetector(
+                            onTap: () => showDialog<LocationDetailsWidget>(
+                              context: context,
+                              builder: (context) => LocationDetailsWidget(
+                                location: location,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.location_pin,
+                              color:
+                                  location.started ? Colors.green : Colors.red,
+                              size: 50,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ],

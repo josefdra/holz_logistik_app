@@ -22,6 +22,9 @@ class NoteRepository {
   /// Provides a [Stream] of all notes.
   Stream<List<Note>> get notes => _noteApi.notes;
 
+  /// Provides all current notes
+  List<Note> get currentNotes => _noteApi.currentNotes;
+
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
@@ -40,9 +43,6 @@ class NoteRepository {
   }
 
   /// Deletes the `note` with the given id.
-  ///
-  /// If no `note` with the given id exists, a [NoteNotFoundException] error is
-  /// thrown.
   Future<void> deleteNote(String id) {
     _noteApi.deleteNote(id);
     final data = {

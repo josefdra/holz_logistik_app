@@ -20,12 +20,20 @@ class PhotoRepository {
   final PhotoSyncService _photoSyncService;
 
   /// Provides a [Stream] of all photos.
-  Stream<List<Photo>> getPhotos() => _photoApi.photos;
+  Stream<Map<String, List<Photo>>> get photosByLocation =>
+      _photoApi.photosByLocation;
+
+  /// Provides all current photos
+  Map<String, List<Photo>> get currentPhotosByLocation =>
+      _photoApi.currentPhotosByLocation;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _photoApi.deletePhoto(data['id'] as String);
+      _photoApi.deletePhoto(
+        id: data['id'] as String,
+        locationId: data['locationId'] as String,
+      );
     } else {
       _photoApi.savePhoto(Photo.fromJson(data));
     }
@@ -40,11 +48,8 @@ class PhotoRepository {
   }
 
   /// Deletes the `photo` with the given id.
-  ///
-  /// If no `photo` with the given id exists, a [PhotoNotFoundException] error 
-  /// is thrown.
-  Future<void> deletePhoto(String id) {
-    _photoApi.deletePhoto(id);
+  Future<void> deletePhoto({required String id, required String locationId}) {
+    _photoApi.deletePhoto(id: id, locationId: locationId);
     final data = {
       'id': id,
       'deleted': true,

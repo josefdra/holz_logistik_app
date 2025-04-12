@@ -1,9 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/photo_api.dart';
-import 'package:holz_logistik_backend/api/sawmill_api.dart';
-import 'package:holz_logistik_backend/api/shipment_api.dart';
-import 'package:holz_logistik_backend/api/src_contract/contract_models/contract.dart';
-import 'package:holz_logistik_backend/general/models/json_map.dart';
+import 'package:holz_logistik_backend/general/models/json.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
@@ -13,11 +9,10 @@ part 'location.g.dart';
 /// {@template location_item}
 /// A single `location` item.
 ///
-/// Contains a [id], [done], time of the [lastEdit], [latitude], [longitude],
+/// Contains a [id], [done], [started], [lastEdit], [latitude], [longitude],
 /// [partieNr], [additionalInfo], [initialQuantity], [initialOversizeQuantity],
-/// [initialPieceCount], [currentQuantity], [currentOversizeQuantity],
-/// [currentPieceCount], [contract], [sawmills], [oversizeSawmills],
-/// [photos] and [shipments].
+/// [initialPieceCount], [contractId], [sawmillIds] and
+/// [oversizeSawmillIds].
 ///
 /// [Location]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -30,6 +25,7 @@ class Location extends Equatable {
   const Location({
     required this.id,
     required this.done,
+    required this.started,
     required this.lastEdit,
     required this.latitude,
     required this.longitude,
@@ -38,14 +34,9 @@ class Location extends Equatable {
     required this.initialQuantity,
     required this.initialOversizeQuantity,
     required this.initialPieceCount,
-    required this.currentQuantity,
-    required this.currentOversizeQuantity,
-    required this.currentPieceCount,
-    required this.contract,
-    required this.sawmills,
-    required this.oversizeSawmills,
-    required this.photos,
-    required this.shipments,
+    required this.contractId,
+    required this.sawmillIds,
+    required this.oversizeSawmillIds,
   });
 
   /// {@macro location_item}
@@ -60,17 +51,12 @@ class Location extends Equatable {
     this.initialQuantity = 0,
     this.initialOversizeQuantity = 0,
     this.initialPieceCount = 0,
-    this.currentQuantity = 0,
-    this.currentOversizeQuantity = 0,
-    this.currentPieceCount = 0,
-    Contract? contract,
-    this.sawmills = const [],
-    this.oversizeSawmills = const [],
-    this.photos = const [],
-    this.shipments = const [],
+    this.contractId = '',
+    this.sawmillIds = const [],
+    this.oversizeSawmillIds = const [],
+    this.started = false,
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now(),
-        contract = contract ?? Contract.empty();
+        lastEdit = lastEdit ?? DateTime.now();
 
   /// The id of the `location`.
   ///
@@ -80,7 +66,20 @@ class Location extends Equatable {
   /// The done status of the `location`.
   ///
   /// Cannot be empty.
+  @JsonKey(
+    fromJson: TypeConverters.boolFromInt,
+    toJson: TypeConverters.boolToInt,
+  )
   final bool done;
+
+  /// The started status of the `location`.
+  ///
+  /// Cannot be empty.
+  @JsonKey(
+    fromJson: TypeConverters.boolFromInt,
+    toJson: TypeConverters.boolToInt,
+  )
+  final bool started;
 
   /// The time the `location` was last modified.
   final DateTime lastEdit;
@@ -120,45 +119,20 @@ class Location extends Equatable {
   /// Cannot be empty.
   final int initialPieceCount;
 
-  /// The current quantity of the `location`.
-  ///
-  /// Cannot be empty.
-  final double currentQuantity;
-
-  /// The current oversize quantity of the `location`.
-  ///
-  /// Cannot be empty.
-  final double currentOversizeQuantity;
-
-  /// The current piece count of the `location`.
-  ///
-  /// Cannot be empty.
-  final int currentPieceCount;
-
   /// The contract recommended for the `location`.
   ///
   /// Cannot be empty.
-  final Contract contract;
+  final String contractId;
 
-  /// The list of recommended sawmills for the `location`.
+  /// The sawmillIds associated with the `location`.
   ///
   /// Cannot be empty.
-  final List<Sawmill> sawmills;
+  final List<String>? sawmillIds;
 
-  /// The list of recommended oversize sawmills for the `location`.
+  /// The oversizeSawmillIds associated with the `location`.
   ///
   /// Cannot be empty.
-  final List<Sawmill> oversizeSawmills;
-
-  /// The local photo urls for the `location`.
-  ///
-  /// Cannot be empty.
-  final List<Photo> photos;
-
-  /// The shipments associated with the `location`.
-  ///
-  /// Cannot be empty.
-  final List<Shipment> shipments;
+  final List<String>? oversizeSawmillIds;
 
   /// Returns a copy of this `location` with the given values updated.
   ///
@@ -166,6 +140,7 @@ class Location extends Equatable {
   Location copyWith({
     String? id,
     bool? done,
+    bool? started,
     DateTime? lastEdit,
     double? latitude,
     double? longitude,
@@ -174,18 +149,14 @@ class Location extends Equatable {
     double? initialQuantity,
     double? initialOversizeQuantity,
     int? initialPieceCount,
-    double? currentQuantity,
-    double? currentOversizeQuantity,
-    int? currentPieceCount,
-    Contract? contract,
-    List<Sawmill>? sawmills,
-    List<Sawmill>? oversizeSawmills,
-    List<Photo>? photos,
-    List<Shipment>? shipments,
+    String? contractId,
+    List<String>? sawmillIds,
+    List<String>? oversizeSawmillIds,
   }) {
     return Location(
       id: id ?? this.id,
       done: done ?? this.done,
+      started: started ?? this.started,
       lastEdit: lastEdit ?? this.lastEdit,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -195,15 +166,9 @@ class Location extends Equatable {
       initialOversizeQuantity:
           initialOversizeQuantity ?? this.initialOversizeQuantity,
       initialPieceCount: initialPieceCount ?? this.initialPieceCount,
-      currentQuantity: currentQuantity ?? this.currentQuantity,
-      currentOversizeQuantity:
-          currentOversizeQuantity ?? this.currentOversizeQuantity,
-      currentPieceCount: currentPieceCount ?? this.currentPieceCount,
-      contract: contract ?? this.contract,
-      sawmills: sawmills ?? this.sawmills,
-      oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
-      photos: photos ?? this.photos,
-      shipments: shipments ?? this.shipments,
+      contractId: contractId ?? this.contractId,
+      sawmillIds: sawmillIds ?? this.sawmillIds,
+      oversizeSawmillIds: oversizeSawmillIds ?? this.oversizeSawmillIds,
     );
   }
 
@@ -217,6 +182,7 @@ class Location extends Equatable {
   List<Object> get props => [
         id,
         done,
+        started,
         lastEdit,
         latitude,
         longitude,
@@ -225,11 +191,8 @@ class Location extends Equatable {
         initialQuantity,
         initialOversizeQuantity,
         initialPieceCount,
-        currentQuantity,
-        currentOversizeQuantity,
-        currentPieceCount,
-        contract,
-        photos,
-        shipments,
+        contractId,
+        sawmillIds!,
+        oversizeSawmillIds!,
       ];
 }

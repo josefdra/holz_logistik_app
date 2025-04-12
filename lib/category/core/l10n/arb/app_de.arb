@@ -198,5 +198,33 @@
   "mapErrorSnackbarText": "Fehler beim Laden der Karte",
   "@mapErrorSnackbarText": {
     "description": "Error message shown when something goes wrong with loading the map"
+  },
+  "editLocationInitialQuantityLabel": "Menge (fm)",
+  "@editLocationInitialQuantityLabel": {
+    "description": "Label shown for the initial quantity input field on edit location widget"
+  },
+  "editLocationInitialOversizeQuantityLabel": "Davon ÜS (fm)",
+  "@editLocationInitialOversizeQuantityLabel": {
+    "description": "Label shown for the initial oversize quantity input field on edit location widget"
+  },
+  "editLocationInitialPieceCountLabel": "Stückzahl",
+  "@editLocationInitialPieceCountLabel": {
+    "description": "Label shown for the initial piece count input field on edit location widget"
+  },
+  "editLocationContractLabel": "Vertrag",
+  "@editLocationContractLabel": {
+    "description": "Label shown for the contract input field on edit location widget"
+  },
+  "editLocationSawmillsLabel": "Sägewerke",
+  "@editLocationSawmillsLabel": {
+    "description": "Label shown for the sawmill input field on edit location widget"
+  },
+  "editLocationOversizeSawmillsLabel": "Sägewerke ÜS",
+  "@editLocationOversizeSawmillLabel": {
+    "description": "Label shown for the oversize sawmill input field on edit location widget"
+  },
+  "editLocationNewSawmillLabel": "Neues Sägewerk erstellen",
+  "@editLocationNewSawmillLabel": {
+    "description": "Label shown for creating a new sawmill on edit location widget"
   }
 }

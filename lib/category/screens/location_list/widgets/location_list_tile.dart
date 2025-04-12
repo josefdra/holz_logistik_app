@@ -42,8 +42,8 @@ class LocationListTile extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Menge: ${location.currentQuantity} fm'),
-            Text('Davon ÜS: ${location.currentOversizeQuantity} fm'),
+            Text('Menge: ${location.initialQuantity} fm'),
+            Text('Davon ÜS: ${location.initialOversizeQuantity} fm'),
           ],
         ),
         trailing: IconButton(

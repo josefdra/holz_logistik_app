@@ -19,13 +19,28 @@ class ContractRepository {
   final ContractApi _contractApi;
   final ContractSyncService _contractSyncService;
 
-  /// Provides a [Stream] of all contracts.
-  Stream<List<Contract>> get contracts => _contractApi.contracts;
+  /// Provides a [Stream] of active contracts.
+  Stream<Map<String, Contract>> get activeContracts =>
+      _contractApi.activeContracts;
+
+  /// Provides a [Stream] of done contracts.
+  Stream<Map<String, Contract>> get doneContracts => _contractApi.doneContracts;
+
+  /// Provides the current active contracts.
+  Map<String, Contract> get currentActiveContracts =>
+      _contractApi.currentActiveContracts;
+
+  /// Provides the current finished contracts.
+  Map<String, Contract> get currentDoneContracts =>
+      _contractApi.currentDoneContracts;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _contractApi.deleteContract(data['id'] as String);
+      _contractApi.deleteContract(
+        id: data['id'] as String,
+        done: data['done'] as bool,
+      );
     } else {
       _contractApi.saveContract(Contract.fromJson(data));
     }
@@ -40,11 +55,8 @@ class ContractRepository {
   }
 
   /// Deletes the `contract` with the given id.
-  ///
-  /// If no `contract` with the given id exists, a [ContractNotFoundException] 
-  /// error is thrown.
-  Future<void> deleteContract(String id) {
-    _contractApi.deleteContract(id);
+  Future<void> deleteContract({required String id, required bool done}) {
+    _contractApi.deleteContract(id: id, done: done);
     final data = {
       'id': id,
       'deleted': true,

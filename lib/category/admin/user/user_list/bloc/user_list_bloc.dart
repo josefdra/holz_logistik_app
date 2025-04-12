@@ -27,11 +27,11 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
   ) async {
     emit(state.copyWith(status: () => UserListStatus.loading));
 
-    await emit.forEach<List<User>>(
-      _userRepository.getUsers(),
+    await emit.forEach<Map<String, User>>(
+      _userRepository.users,
       onData: (users) => state.copyWith(
         status: () => UserListStatus.success,
-        users: () => users,
+        users: () => users.values.toList(),
       ),
       onError: (_, __) => state.copyWith(
         status: () => UserListStatus.failure,

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:holz_logistik_backend/api/general.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'web_socket_message.g.dart';

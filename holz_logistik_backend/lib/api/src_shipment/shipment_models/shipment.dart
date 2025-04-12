@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/contract_api.dart';
-import 'package:holz_logistik_backend/api/general.dart';
-import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
@@ -12,7 +10,7 @@ part 'shipment.g.dart';
 /// A single `shipment` item.
 ///
 /// Contains a [id], time of the [lastEdit], [quantity], [oversizeQuantity],
-/// [pieceCount], [user], [contract] and [locationId].
+/// [pieceCount], [userId], [contractId] and [locationId].
 ///
 /// [Shipment]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -28,8 +26,8 @@ class Shipment extends Equatable {
     required this.quantity,
     required this.oversizeQuantity,
     required this.pieceCount,
-    required this.user,
-    required this.contract,
+    required this.userId,
+    required this.contractId,
     required this.locationId,
   });
 
@@ -40,13 +38,11 @@ class Shipment extends Equatable {
     this.quantity = 0.0,
     this.oversizeQuantity = 0.0,
     this.pieceCount = 0,
-    User? user,
-    Contract? contract,
+    this.userId = '',
+    this.contractId = '',
     this.locationId = '',
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now(),
-        user = user ?? User.empty(),
-        contract = contract ?? Contract.empty();
+        lastEdit = lastEdit ?? DateTime.now();
 
   /// The id of the `shipment`.
   ///
@@ -73,15 +69,15 @@ class Shipment extends Equatable {
   /// Cannot be empty.
   final int pieceCount;
 
-  /// The user that created the `shipment`.
+  /// The userId of the `shipment`.
   ///
   /// Cannot be empty.
-  final User user;
+  final String userId;
 
-  /// The name of the `shipment`.
+  /// The contractId of the `shipment`.
   ///
   /// Cannot be empty.
-  final Contract contract;
+  final String contractId;
 
   /// The locationId of the `shipment`.
   ///
@@ -97,8 +93,8 @@ class Shipment extends Equatable {
     double? quantity,
     double? oversizeQuantity,
     int? pieceCount,
-    User? user,
-    Contract? contract,
+    String? userId,
+    String? contractId,
     String? locationId,
   }) {
     return Shipment(
@@ -107,8 +103,8 @@ class Shipment extends Equatable {
       quantity: quantity ?? this.quantity,
       oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
       pieceCount: pieceCount ?? this.pieceCount,
-      user: user ?? this.user,
-      contract: contract ?? this.contract,
+      userId: userId ?? this.userId,
+      contractId: contractId ?? this.contractId,
       locationId: locationId ?? this.locationId,
     );
   }
@@ -126,8 +122,8 @@ class Shipment extends Equatable {
         quantity,
         oversizeQuantity,
         pieceCount,
-        user,
-        contract,
+        userId,
+        contractId,
         locationId,
       ];
 }

@@ -34,7 +34,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     emit(state.copyWith(status: () => LocationListStatus.loading));
 
     await emit.forEach<List<Location>>(
-      _locationRepository.locations,
+      _locationRepository.activeLocations,
       onData: (locations) => state.copyWith(
         status: () => LocationListStatus.success,
         locations: () => locations,
@@ -50,7 +50,10 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     Emitter<LocationListState> emit,
   ) async {
     emit(state.copyWith(lastDeletedLocation: () => event.location));
-    await _locationRepository.deleteLocation(event.location.id);
+    await _locationRepository.deleteLocation(
+      id: event.location.id,
+      done: event.location.done,
+    );
   }
 
   Future<void> _onUndoDeletionRequested(

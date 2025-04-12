@@ -43,10 +43,12 @@ class SawmillLocalStorage extends SawmillApi {
     _sawmillStreamController.add(sawmills);
   }
 
-  /// Get the `sawmill`s from the [_sawmillStreamController]
   @override
   Stream<List<Sawmill>> get sawmills =>
       _sawmillStreamController.asBroadcastStream();
+
+  @override
+  List<Sawmill> get currentSawmills => _sawmillStreamController.value;
 
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
   Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {
@@ -60,7 +62,7 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Future<int> saveSawmill(Sawmill sawmill) {
     final sawmills = [..._sawmillStreamController.value];
-    final sawmillIndex = sawmills.indexWhere((t) => t.id == sawmill.id);
+    final sawmillIndex = sawmills.indexWhere((s) => s.id == sawmill.id);
     if (sawmillIndex >= 0) {
       sawmills[sawmillIndex] = sawmill;
     } else {
@@ -80,14 +82,11 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Future<int> deleteSawmill(String id) async {
     final sawmills = [..._sawmillStreamController.value];
-    final sawmillIndex = sawmills.indexWhere((t) => t.id == id);
-    if (sawmillIndex == -1) {
-      throw SawmillNotFoundException();
-    } else {
-      sawmills.removeAt(sawmillIndex);
-      _sawmillStreamController.add(sawmills);
-      return _deleteSawmill(id);
-    }
+    final sawmillIndex = sawmills.indexWhere((s) => s.id == id);
+
+    sawmills.removeAt(sawmillIndex);
+    _sawmillStreamController.add(sawmills);
+    return _deleteSawmill(id);
   }
 
   /// Close the [_sawmillStreamController]

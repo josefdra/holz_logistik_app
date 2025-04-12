@@ -21,8 +21,13 @@ class ContractLocalStorage extends ContractApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _contractStreamController = BehaviorSubject<List<Contract>>.seeded(
-    const [],
+  late final _activeContractStreamController =
+      BehaviorSubject<Map<String, Contract>>.seeded(
+    const {},
+  );
+  late final _doneContractStreamController =
+      BehaviorSubject<Map<String, Contract>>.seeded(
+    const {},
   );
 
   /// Migration function for contract table
@@ -34,22 +39,50 @@ class ContractLocalStorage extends ContractApi {
     // Migration logic here if needed
   }
 
-  /// Initialization
-  Future<void> _init() async {
-    final contractsJson =
-        await _coreLocalStorage.getAll(ContractTable.tableName);
-    final contracts = contractsJson
-        .map(
-          (contract) => Contract.fromJson(Map<String, dynamic>.from(contract)),
-        )
-        .toList();
-    _contractStreamController.add(contracts);
+  Future<Map<String, Contract>> _getContractsByCondition({
+    required bool isDone,
+  }) async {
+    final db = await _coreLocalStorage.database;
+
+    final contractsJson = await db.query(
+      ContractTable.tableName,
+      where: '${ContractTable.columnDone} = ?',
+      whereArgs: [if (isDone) 1 else 0],
+    );
+
+    final contractsMap = <String, Contract>{};
+    for (final contractJson in contractsJson) {
+      final contract =
+          Contract.fromJson(Map<String, dynamic>.from(contractJson));
+      contractsMap[contract.id] = contract;
+    }
+    return contractsMap;
   }
 
-  /// Get the `contract`s from the [_contractStreamController]
+  /// Initialization
+  Future<void> _init() async {
+    final activeContracts = await _getContractsByCondition(isDone: false);
+    final doneContracts = await _getContractsByCondition(isDone: true);
+
+    _activeContractStreamController.add(activeContracts);
+    _doneContractStreamController.add(doneContracts);
+  }
+
   @override
-  Stream<List<Contract>> get contracts =>
-      _contractStreamController.asBroadcastStream();
+  Stream<Map<String, Contract>> get activeContracts =>
+      _activeContractStreamController.asBroadcastStream();
+
+  @override
+  Stream<Map<String, Contract>> get doneContracts =>
+      _doneContractStreamController.asBroadcastStream();
+
+  @override
+  Map<String, Contract> get currentActiveContracts =>
+      _activeContractStreamController.value;
+
+  @override
+  Map<String, Contract> get currentDoneContracts =>
+      _doneContractStreamController.value;
 
   /// Insert or Update a `contract` to the database based on [contractData]
   Future<int> _insertOrUpdateContract(Map<String, dynamic> contractData) async {
@@ -62,15 +95,18 @@ class ContractLocalStorage extends ContractApi {
   /// Insert or Update a [contract]
   @override
   Future<int> saveContract(Contract contract) {
-    final contracts = [..._contractStreamController.value];
-    final contractIndex = contracts.indexWhere((c) => c.id == contract.id);
-    if (contractIndex >= 0) {
-      contracts[contractIndex] = contract;
+    late final BehaviorSubject<Map<String, Contract>> controller;
+
+    if (contract.done == false) {
+      controller = _activeContractStreamController;
     } else {
-      contracts.add(contract);
+      controller = _doneContractStreamController;
     }
 
-    _contractStreamController.add(contracts);
+    final contracts = Map<String, Contract>.from(controller.value);
+    contracts[contract.id] = contract;
+    controller.add(contracts);
+
     return _insertOrUpdateContract(contract.toJson());
   }
 
@@ -79,23 +115,27 @@ class ContractLocalStorage extends ContractApi {
     return _coreLocalStorage.delete(ContractTable.tableName, id);
   }
 
-  /// Delete a Contract based on [id]
+  /// Delete a Contract based on [id] and [done] status
   @override
-  Future<int> deleteContract(String id) async {
-    final contracts = [..._contractStreamController.value];
-    final contractIndex = contracts.indexWhere((c) => c.id == id);
-    if (contractIndex == -1) {
-      throw ContractNotFoundException();
+  Future<int> deleteContract({required String id, required bool done}) async {
+    late final BehaviorSubject<Map<String, Contract>> controller;
+
+    if (done == false) {
+      controller = _activeContractStreamController;
     } else {
-      contracts.removeAt(contractIndex);
-      _contractStreamController.add(contracts);
-      return _deleteContract(id);
+      controller = _doneContractStreamController;
     }
+
+    final contracts = Map<String, Contract>.from(controller.value)..remove(id);
+    controller.add(contracts);
+
+    return _deleteContract(id);
   }
 
-  /// Close the [_contractStreamController]
+  /// Close the both controllers
   @override
   Future<void> close() {
-    return _contractStreamController.close();
+    _activeContractStreamController.close();
+    return _doneContractStreamController.close();
   }
 }

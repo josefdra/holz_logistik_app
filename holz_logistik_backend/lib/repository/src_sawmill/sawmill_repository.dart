@@ -20,7 +20,10 @@ class SawmillRepository {
   final SawmillSyncService _sawmillSyncService;
 
   /// Provides a [Stream] of all sawmills.
-  Stream<List<Sawmill>> getSawmills() => _sawmillApi.sawmills;
+  Stream<List<Sawmill>> get sawmills => _sawmillApi.sawmills;
+
+  /// Provides all current sawmills
+  List<Sawmill> get currentSawmills => _sawmillApi.currentSawmills;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
@@ -40,9 +43,6 @@ class SawmillRepository {
   }
 
   /// Deletes the `sawmill` with the given id.
-  ///
-  /// If no `sawmill` with the given id exists, a [SawmillNotFoundException] 
-  /// error is thrown.
   Future<void> deleteSawmill(String id) {
     _sawmillApi.deleteSawmill(id);
     final data = {

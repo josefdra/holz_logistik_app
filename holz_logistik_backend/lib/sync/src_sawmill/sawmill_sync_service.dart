@@ -21,7 +21,8 @@ class SawmillSyncService {
       StreamController<Map<String, dynamic>>.broadcast();
 
   /// Stream of sawmill updates from external sources
-  Stream<Map<String, dynamic>> get sawmillUpdates => _sawmillUpdateController.stream;
+  Stream<Map<String, dynamic>> get sawmillUpdates =>
+      _sawmillUpdateController.stream;
 
   void _handleSawmillUpdate(dynamic data) {
     try {

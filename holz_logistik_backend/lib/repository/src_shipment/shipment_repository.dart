@@ -20,12 +20,26 @@ class ShipmentRepository {
   final ShipmentSyncService _shipmentSyncService;
 
   /// Provides a [Stream] of all shipments.
-  Stream<List<Shipment>> getShipments() => _shipmentApi.getShipments();
+  Stream<List<Shipment>> get allShipments => _shipmentApi.shipments;
+
+  /// Provides a [Stream] of all shipments by location.
+  Stream<Map<String, List<Shipment>>> get shipmentsByLocation =>
+      _shipmentApi.shipmentsByLocation;
+
+  /// Provides all current shipments
+  List<Shipment> get currentShipments => _shipmentApi.currentShipments;
+
+  /// Provides all current shipments by location
+  Map<String, List<Shipment>> get currentShipmentsByLocation =>
+      _shipmentApi.currentShipmentsByLocation;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _shipmentApi.deleteShipment(data['id'] as String);
+      _shipmentApi.deleteShipment(
+        id: data['id'] as String,
+        locationId: data['locationId'] as String,
+      );
     } else {
       _shipmentApi.saveShipment(Shipment.fromJson(data));
     }
@@ -40,11 +54,11 @@ class ShipmentRepository {
   }
 
   /// Deletes the `shipment` with the given id.
-  ///
-  /// If no `shipment` with the given id exists, a [ShipmentNotFoundException] 
-  /// error is thrown.
-  Future<void> deleteShipment(String id) {
-    _shipmentApi.deleteShipment(id);
+  Future<void> deleteShipment({
+    required String id,
+    required String locationId,
+  }) {
+    _shipmentApi.deleteShipment(id: id, locationId: locationId);
     final data = {
       'id': id,
       'deleted': true,

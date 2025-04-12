@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/api/general.dart';
-import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
@@ -10,7 +9,7 @@ part 'comment.g.dart';
 /// {@template comment_item}
 /// A single `comment` item.
 ///
-/// Contains a [id], time of the [lastEdit], [text], [user] and the [noteId].
+/// Contains a [id], time of the [lastEdit], [text], [userId] and the [noteId].
 ///
 /// [Comment]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -24,7 +23,7 @@ class Comment extends Equatable {
     required this.id,
     required this.lastEdit,
     required this.text,
-    required this.user,
+    required this.userId,
     required this.noteId,
   });
 
@@ -33,11 +32,10 @@ class Comment extends Equatable {
     String? id,
     DateTime? lastEdit,
     this.text = '',
-    User? user,
+    this.userId = '',
     this.noteId = '',
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now(),
-        user = user ?? User.empty();
+        lastEdit = lastEdit ?? DateTime.now();
 
   /// The id of the `comment`.
   ///
@@ -54,10 +52,10 @@ class Comment extends Equatable {
   /// Cannot be empty.
   final String text;
 
-  /// The user that wrote the `comment`.
+  /// The userId the `comment` is associated with.
   ///
   /// Cannot be empty.
-  final User user;
+  final String userId;
 
   /// The noteId the `comment` is associated with.
   ///
@@ -71,14 +69,14 @@ class Comment extends Equatable {
     String? id,
     DateTime? lastEdit,
     String? text,
-    User? user,
+    String? userId,
     String? noteId,
   }) {
     return Comment(
       id: id ?? this.id,
       lastEdit: lastEdit ?? this.lastEdit,
       text: text ?? this.text,
-      user: user ?? this.user,
+      userId: userId ?? this.userId,
       noteId: noteId ?? this.noteId,
     );
   }
@@ -90,5 +88,5 @@ class Comment extends Equatable {
   JsonMap toJson() => _$CommentToJson(this);
 
   @override
-  List<Object> get props => [id, lastEdit, text, user, noteId];
+  List<Object> get props => [id, lastEdit, text, userId, noteId];
 }

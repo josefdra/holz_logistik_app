@@ -19,13 +19,26 @@ class LocationRepository {
   final LocationApi _locationApi;
   final LocationSyncService _locationSyncService;
 
-  /// Provides a [Stream] of all locations.
-  Stream<List<Location>> get locations => _locationApi.locations;
+  /// Provides a [Stream] of active locations.
+  Stream<List<Location>> get activeLocations => _locationApi.activeLocations;
+
+  /// Provides a [Stream] of done locations.
+  Stream<List<Location>> get doneLocations => _locationApi.doneLocations;
+
+  /// Provides all current active locations
+  List<Location> get currentActiveLocations =>
+      _locationApi.currentActiveLocations;
+
+  /// Provides all current done locations
+  List<Location> get currentDoneLocations => _locationApi.currentDoneLocations;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _locationApi.deleteLocation(data['id'] as String);
+      _locationApi.deleteLocation(
+        id: data['id'] as String,
+        done: data['done'] as bool,
+      );
     } else {
       _locationApi.saveLocation(Location.fromJson(data));
     }
@@ -40,11 +53,8 @@ class LocationRepository {
   }
 
   /// Deletes the `location` with the given id.
-  ///
-  /// If no `location` with the given id exists, a [LocationNotFoundException] 
-  /// error is thrown.
-  Future<void> deleteLocation(String id) {
-    _locationApi.deleteLocation(id);
+  Future<void> deleteLocation({required String id, required bool done}) {
+    _locationApi.deleteLocation(id: id, done: done);
     final data = {
       'id': id,
       'deleted': true,

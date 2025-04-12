@@ -13,6 +13,9 @@ class LocationTable {
   /// The column name for the done status of the location.
   static const String columnDone = 'done';
 
+  /// The column name for the started status of the location.
+  static const String columnStarted = 'started';
+
   /// The column name for the timestamp when a location was last modified.
   static const String columnLastEdit = 'lastEdit';
 
@@ -37,15 +40,6 @@ class LocationTable {
   /// The column name for storing the initial piece count of the location.
   static const String columnInitialPieceCount = 'initialPieceCount';
 
-  /// The column name for storing the current quantity of the location.
-  static const String columnCurrentQuantity = 'currentQuantity';
-
-  /// The column name for storing the current oversize quantity of the location.
-  static const String columnCurrenOversizeQuantity = 'currentOversizeQuantity';
-
-  /// The column name for storing the current piece count of the location.
-  static const String columnCurrentPieceCount = 'currentPieceCount';
-
   /// The column name for storing the contract id of the location.
   static const String columnContractId = 'contractId';
 
@@ -54,6 +48,7 @@ class LocationTable {
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
       $columnDone INTEGER NOT NULL,
+      $columnStarted INTEGER NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnLatitude REAL NOT NULL,
       $columnLongitude REAL NOT NULL,
@@ -62,9 +57,6 @@ class LocationTable {
       $columnInitialQuantity REAL NOT NULL,
       $columnInitialOversizeQuantity REAL NOT NULL,
       $columnInitialPieceCount INTEGER NOT NULL,
-      $columnCurrentQuantity REAL NOT NULL,
-      $columnCurrenOversizeQuantity REAL NOT NULL,
-      $columnCurrentPieceCount INTEGER NOT NULL,
       $columnContractId TEXT NOT NULL,
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId})
     )
@@ -85,14 +77,14 @@ class LocationSawmillJunctionTable {
   /// The column that stores if the relation is for oversize sawmills.
   static const String columnIsOversize = 'isOversize';
 
-  /// SQL statement for creating the locationSawmillJunction table with the 
+  /// SQL statement for creating the locationSawmillJunction table with the
   /// defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnLocationId TEXT NOT NULL,
       $columnSawmillId TEXT NOT NULL,
       $columnIsOversize INTEGER NOT NULL,
-      PRIMARY KEY ($columnLocationId, $columnSawmillId),
+      PRIMARY KEY ($columnLocationId, $columnSawmillId, $columnIsOversize),
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId}) ON DELETE CASCADE,
       FOREIGN KEY ($columnSawmillId) REFERENCES ${SawmillTable.tableName}(${SawmillTable.columnId}) ON DELETE CASCADE
     )

@@ -10,6 +10,9 @@ abstract class NoteApi {
   /// Provides a [Stream] of all notes.
   Stream<List<Note>> get notes;
 
+  /// Provides all current notes
+  List<Note> get currentNotes;
+
   /// Saves or updates a [note].
   ///
   /// If a [note] with the same id already exists, it will be updated.

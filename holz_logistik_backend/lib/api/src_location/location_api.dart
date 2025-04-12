@@ -7,8 +7,17 @@ abstract class LocationApi {
   /// {@macro location_api}
   const LocationApi();
 
-  /// Provides a [Stream] of all locations.
-  Stream<List<Location>> get locations;
+  /// Provides a [Stream] of all active locations.
+  Stream<List<Location>> get activeLocations;
+
+  /// Provides a [Stream] of all done locations.
+  Stream<List<Location>> get doneLocations;
+
+  /// Provides all current active locations
+  List<Location> get currentActiveLocations;
+
+  /// Provides all current done locations
+  List<Location> get currentDoneLocations;
 
   /// Saves or updates a [location].
   ///
@@ -16,14 +25,8 @@ abstract class LocationApi {
   Future<void> saveLocation(Location location);
 
   /// Deletes the `location` with the given [id].
-  ///
-  /// If no `location` with the given id exists, a [LocationNotFoundException] 
-  /// error is thrown.
-  Future<void> deleteLocation(String id);
+  Future<void> deleteLocation({required String id, required bool done});
 
   /// Closes the client and frees up any resources.
   Future<void> close();
 }
-
-/// Error thrown when a [Location] with a given id is not found.
-class LocationNotFoundException implements Exception {}

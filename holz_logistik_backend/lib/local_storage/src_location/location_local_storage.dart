@@ -12,7 +12,7 @@ class LocationLocalStorage extends LocationApi {
   /// {@macro location_local_storage}
   LocationLocalStorage({required CoreLocalStorage coreLocalStorage})
       : _coreLocalStorage = coreLocalStorage {
-    // Register the table with the core database
+    // Register the tables with the core database
     _coreLocalStorage
       ..registerTable(LocationTable.createTable)
       ..registerMigration(_migrateLocationTable)
@@ -23,7 +23,12 @@ class LocationLocalStorage extends LocationApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _locationStreamController = BehaviorSubject<List<Location>>.seeded(
+  late final _activeLocationStreamController =
+      BehaviorSubject<List<Location>>.seeded(
+    const [],
+  );
+  late final _doneLocationStreamController =
+      BehaviorSubject<List<Location>>.seeded(
     const [],
   );
 
@@ -45,76 +50,124 @@ class LocationLocalStorage extends LocationApi {
     // Migration logic here if needed
   }
 
-  /// Initialization
-  Future<void> _init() async {
-    final locationsJson =
-        await _coreLocalStorage.getAll(LocationTable.tableName);
-    final locations = locationsJson
+  Future<List<Location>> _getLocationsByCondition({
+    required bool isDone,
+  }) async {
+    final db = await _coreLocalStorage.database;
+
+    final locationsJson = await db.query(
+      LocationTable.tableName,
+      where: '${LocationTable.columnDone} = ?',
+      whereArgs: [if (isDone) 1 else 0],
+    );
+
+    return locationsJson
         .map(
           (location) => Location.fromJson(Map<String, dynamic>.from(location)),
         )
         .toList();
-    _locationStreamController.add(locations);
   }
 
-  /// Get the `location`s from the [_locationStreamController]
+  /// Initialization
+  Future<void> _init() async {
+    final activeLocations = await _getLocationsByCondition(isDone: false);
+    final doneLocations = await _getLocationsByCondition(isDone: true);
+
+    _activeLocationStreamController.add(activeLocations);
+    _doneLocationStreamController.add(doneLocations);
+  }
+
   @override
-  Stream<List<Location>> get locations =>
-      _locationStreamController.asBroadcastStream();
+  Stream<List<Location>> get activeLocations =>
+      _activeLocationStreamController.asBroadcastStream();
 
-  /// Insert or Update a `location` `sawmill` junction to the database
-  Future<int> _insertOrUpdateLocationSawmillJunction(
-    Map<String, dynamic> junctionData,
-  ) async {
-    return _coreLocalStorage.insertOrUpdate(
-      LocationSawmillJunctionTable.tableName,
-      junctionData,
-    );
-  }
+  @override
+  Stream<List<Location>> get doneLocations =>
+      _doneLocationStreamController.asBroadcastStream();
+
+  @override
+  List<Location> get currentActiveLocations =>
+      _activeLocationStreamController.value;
+
+  @override
+  List<Location> get currentDoneLocations =>
+      _doneLocationStreamController.value;
 
   /// Insert or Update a `location` to the database based on [locationData]
   Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
-    return _coreLocalStorage.insertOrUpdate(
-      LocationTable.tableName,
-      locationData,
-    );
+    final locationId = locationData['id'] as String;
+    final sawmillIds = locationData.remove('sawmillIds') as List<String>;
+    final oversizeSawmillIds =
+        locationData.remove('oversizeSawmillIds') as List<String>;
+
+    final db = await _coreLocalStorage.database;
+
+    return db.transaction<int>((txn) async {
+      final locationResult = await txn.update(
+        LocationTable.tableName,
+        locationData,
+        where: '${LocationTable.columnId} = ?',
+        whereArgs: [locationId],
+      );
+
+      if (locationResult == 0) {
+        await txn.insert(LocationTable.tableName, locationData);
+      }
+
+      await txn.delete(
+        LocationSawmillJunctionTable.tableName,
+        where: '${LocationSawmillJunctionTable.columnLocationId} = ?',
+        whereArgs: [locationId],
+      );
+
+      for (final sawmillId in sawmillIds) {
+        await txn.insert(
+          LocationSawmillJunctionTable.tableName,
+          {
+            LocationSawmillJunctionTable.columnLocationId: locationId,
+            LocationSawmillJunctionTable.columnSawmillId: sawmillId,
+            LocationSawmillJunctionTable.columnIsOversize: 0,
+          },
+        );
+      }
+
+      for (final sawmillId in oversizeSawmillIds) {
+        await txn.insert(
+          LocationSawmillJunctionTable.tableName,
+          {
+            LocationSawmillJunctionTable.columnLocationId: locationId,
+            LocationSawmillJunctionTable.columnSawmillId: sawmillId,
+            LocationSawmillJunctionTable.columnIsOversize: 1,
+          },
+        );
+      }
+
+      return 1;
+    });
   }
 
   /// Insert or Update a [location]
   @override
   Future<int> saveLocation(Location location) {
-    final locations = [..._locationStreamController.value];
-    final locationIndex = locations.indexWhere((t) => t.id == location.id);
+    late final BehaviorSubject<List<Location>> controller;
+
+    if (location.done == false) {
+      controller = _activeLocationStreamController;
+    } else {
+      controller = _doneLocationStreamController;
+    }
+
+    final locations = [...controller.value];
+    final locationIndex = locations.indexWhere((l) => l.id == location.id);
+
     if (locationIndex >= 0) {
       locations[locationIndex] = location;
     } else {
       locations.add(location);
     }
 
-    _locationStreamController.add(locations);
-    final jsonLocation = {
-      ...location.toJson()
-        ..remove('contract')
-        ..remove('sawmills')
-        ..remove('oversizeSawmills')
-        ..remove('photos')
-        ..remove('shipments'),
-      'contractId': location.contract.id,
-    };
-    final allSawmills = [
-      ...location.sawmills.map(
-        (s) =>
-            {'locationId': location.id, 'sawmillId': s.id, 'isOversize': false},
-      ),
-      ...location.oversizeSawmills.map(
-        (s) =>
-            {'locationId': location.id, 'sawmillId': s.id, 'isOversize': true},
-      ),
-    ];
-    for (final sawmillRelation in allSawmills) {
-      _insertOrUpdateLocationSawmillJunction(sawmillRelation);
-    }
-    return _insertOrUpdateLocation(jsonLocation);
+    controller.add(locations);
+    return _insertOrUpdateLocation(location.toJson());
   }
 
   /// Delete a Location from the database based on [id]
@@ -122,23 +175,30 @@ class LocationLocalStorage extends LocationApi {
     return _coreLocalStorage.delete(LocationTable.tableName, id);
   }
 
-  /// Delete a Location based on [id]
+  /// Delete a Location based on [id] and [done] status
   @override
-  Future<int> deleteLocation(String id) async {
-    final locations = [..._locationStreamController.value];
-    final locationIndex = locations.indexWhere((l) => l.id == id);
-    if (locationIndex == -1) {
-      throw LocationNotFoundException();
+  Future<int> deleteLocation({required String id, required bool done}) async {
+    late final BehaviorSubject<List<Location>> controller;
+
+    if (done == false) {
+      controller = _activeLocationStreamController;
     } else {
-      locations.removeAt(locationIndex);
-      _locationStreamController.add(locations);
-      return _deleteLocation(id);
+      controller = _doneLocationStreamController;
     }
+
+    final locations = [...controller.value];
+    final locationIndex = locations.indexWhere((l) => l.id == id);
+
+    locations.removeAt(locationIndex);
+
+    controller.add(locations);
+    return _deleteLocation(id);
   }
 
-  /// Close the [_locationStreamController]
+  /// Close the both controllers
   @override
   Future<void> close() {
-    return _locationStreamController.close();
+    _activeLocationStreamController.close();
+    return _doneLocationStreamController.close();
   }
 }
