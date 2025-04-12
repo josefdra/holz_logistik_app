@@ -49,33 +49,41 @@ class LocationDetailsBloc
                 add(LocationDetailsLocationUpdate(filteredLocations.first)),
           );
 
-      _sawmillRepository.sawmills
-          .map(
-            (sawmills) => sawmills
-                .where(
-                  (sawmill) => state.location.sawmillIds!.contains(sawmill.id),
-                )
-                .toList(),
-          )
-          .listen(
-            (filteredSawmills) =>
-                add(LocationDetailsSawmillUpdate(filteredSawmills)),
-          );
+      _sawmillRepository.sawmills.map(
+        (sawmills) {
+          final sawmillIds = state.location.sawmillIds;
+          if (sawmillIds == null || sawmillIds.isEmpty) {
+            return <Sawmill>[];
+          }
+          return sawmills
+              .where(
+                (sawmill) => state.location.sawmillIds!.contains(sawmill.id),
+              )
+              .toList();
+        },
+      ).listen(
+        (filteredSawmills) =>
+            add(LocationDetailsSawmillUpdate(filteredSawmills)),
+      );
 
-      _sawmillRepository.sawmills
-          .map(
-            (sawmills) => sawmills
-                .where(
-                  (sawmill) =>
-                      state.location.oversizeSawmillIds!.contains(sawmill.id),
-                )
-                .toList(),
-          )
-          .listen(
-            (filteredOversizeSawmills) => add(
-              LocationDetailsOversizeSawmillUpdate(filteredOversizeSawmills),
-            ),
-          );
+      _sawmillRepository.sawmills.map(
+        (sawmills) {
+          final sawmillIds = state.location.sawmillIds;
+          if (sawmillIds == null || sawmillIds.isEmpty) {
+            return <Sawmill>[];
+          }
+          return sawmills
+              .where(
+                (sawmill) =>
+                    state.location.oversizeSawmillIds!.contains(sawmill.id),
+              )
+              .toList();
+        },
+      ).listen(
+        (filteredOversizeSawmills) => add(
+          LocationDetailsOversizeSawmillUpdate(filteredOversizeSawmills),
+        ),
+      );
 
       _shipmentRepository.shipmentsByLocation
           .map(
@@ -87,6 +95,12 @@ class LocationDetailsBloc
             (filteredShipments) =>
                 add(LocationDetailsShipmentUpdate(filteredShipments)),
           );
+
+      emit(
+        state.copyWith(
+          status: LocationDetailsStatus.success,
+        ),
+      );
     } catch (e) {
       emit(
         state.copyWith(

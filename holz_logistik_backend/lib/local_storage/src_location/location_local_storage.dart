@@ -93,6 +93,16 @@ class LocationLocalStorage extends LocationApi {
   List<Location> get currentDoneLocations =>
       _doneLocationStreamController.value;
 
+  /// Insert a junction value to the database based on [junctionData]
+  Future<int> _insertLocationSawmillJunction(
+    Map<String, dynamic> junctionData,
+  ) async {
+    return _coreLocalStorage.insert(
+      LocationSawmillJunctionTable.tableName,
+      junctionData,
+    );
+  }
+
   /// Insert or Update a `location` to the database based on [locationData]
   Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
     final locationId = locationData['id'] as String;
@@ -100,50 +110,28 @@ class LocationLocalStorage extends LocationApi {
     final oversizeSawmillIds =
         locationData.remove('oversizeSawmillIds') as List<String>;
 
-    final db = await _coreLocalStorage.database;
+    for (final sawmillId in sawmillIds) {
+      final junctionData = {
+        LocationSawmillJunctionTable.columnLocationId: locationId,
+        LocationSawmillJunctionTable.columnSawmillId: sawmillId,
+        LocationSawmillJunctionTable.columnIsOversize: 0,
+      };
+      await _insertLocationSawmillJunction(junctionData);
+    }
 
-    return db.transaction<int>((txn) async {
-      final locationResult = await txn.update(
-        LocationTable.tableName,
-        locationData,
-        where: '${LocationTable.columnId} = ?',
-        whereArgs: [locationId],
-      );
+    for (final oversizeSawmillId in oversizeSawmillIds) {
+      final junctionData = {
+        LocationSawmillJunctionTable.columnLocationId: locationId,
+        LocationSawmillJunctionTable.columnSawmillId: oversizeSawmillId,
+        LocationSawmillJunctionTable.columnIsOversize: 1,
+      };
+      await _insertLocationSawmillJunction(junctionData);
+    }
 
-      if (locationResult == 0) {
-        await txn.insert(LocationTable.tableName, locationData);
-      }
-
-      await txn.delete(
-        LocationSawmillJunctionTable.tableName,
-        where: '${LocationSawmillJunctionTable.columnLocationId} = ?',
-        whereArgs: [locationId],
-      );
-
-      for (final sawmillId in sawmillIds) {
-        await txn.insert(
-          LocationSawmillJunctionTable.tableName,
-          {
-            LocationSawmillJunctionTable.columnLocationId: locationId,
-            LocationSawmillJunctionTable.columnSawmillId: sawmillId,
-            LocationSawmillJunctionTable.columnIsOversize: 0,
-          },
-        );
-      }
-
-      for (final sawmillId in oversizeSawmillIds) {
-        await txn.insert(
-          LocationSawmillJunctionTable.tableName,
-          {
-            LocationSawmillJunctionTable.columnLocationId: locationId,
-            LocationSawmillJunctionTable.columnSawmillId: sawmillId,
-            LocationSawmillJunctionTable.columnIsOversize: 1,
-          },
-        );
-      }
-
-      return 1;
-    });
+    return _coreLocalStorage.insertOrUpdate(
+      LocationTable.tableName,
+      locationData,
+    );
   }
 
   /// Insert or Update a [location]

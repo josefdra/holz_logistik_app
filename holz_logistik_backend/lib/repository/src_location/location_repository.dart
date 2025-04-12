@@ -58,6 +58,7 @@ class LocationRepository {
     final data = {
       'id': id,
       'deleted': true,
+      'done': done,
       'timestamp': DateTime.now().toIso8601String(),
     };
 

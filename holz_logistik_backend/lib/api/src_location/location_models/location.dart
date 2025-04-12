@@ -43,6 +43,7 @@ class Location extends Equatable {
   Location.empty({
     String? id,
     this.done = false,
+    this.started = false,
     DateTime? lastEdit,
     this.latitude = 0,
     this.longitude = 0,
@@ -54,7 +55,6 @@ class Location extends Equatable {
     this.contractId = '',
     this.sawmillIds = const [],
     this.oversizeSawmillIds = const [],
-    this.started = false,
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now();
 

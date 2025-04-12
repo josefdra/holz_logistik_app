@@ -347,6 +347,7 @@ class _NewSawmillField extends StatelessWidget {
           ),
         ),
         IconButton(
+          key: const Key('editLocationView_addSawmill_iconButton'),
           onPressed: () => context
               .read<EditLocationBloc>()
               .add(const EditLocationNewSawmillSubmitted()),
@@ -366,6 +367,7 @@ class _SawmillsField extends StatelessWidget {
     final state = context.watch<EditLocationBloc>().state;
 
     return MultiDropdown(
+      key: const Key('editLocationView_sawmill_dropDown'),
       controller: state.sawmillController,
       fieldDecoration: FieldDecoration(
         labelText: l10n.editLocationSawmillsLabel,
@@ -392,6 +394,7 @@ class _OversizeSawmillsField extends StatelessWidget {
     final state = context.watch<EditLocationBloc>().state;
 
     return MultiDropdown(
+      key: const Key('editLocationView_oversizeSawmill_dropDown'),
       controller: state.oversizeSawmillController,
       fieldDecoration: FieldDecoration(
         labelText: l10n.editLocationOversizeSawmillsLabel,

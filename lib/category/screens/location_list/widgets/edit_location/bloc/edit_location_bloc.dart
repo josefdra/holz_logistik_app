@@ -138,6 +138,10 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     EditLocationNewSawmillSubmitted event,
     Emitter<EditLocationState> emit,
   ) async {
+    if (state.newSawmill == null) {
+      return;
+    }
+    
     await _sawmillRepository.saveSawmill(state.newSawmill!);
     state.sawmillController.addItem(
       DropdownItem(label: state.newSawmill!.name, value: state.newSawmill!),
@@ -145,8 +149,6 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     state.oversizeSawmillController.addItem(
       DropdownItem(label: state.newSawmill!.name, value: state.newSawmill!),
     );
-
-    emit(state.copyWith());
   }
 
   Future<void> _onSubmitted(
@@ -179,8 +181,12 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     } catch (e) {
       emit(state.copyWith(status: EditLocationStatus.failure));
     }
+  }
 
+  @override
+  Future<void> close() {
     state.sawmillController.dispose();
     state.oversizeSawmillController.dispose();
+    return super.close();
   }
 }
