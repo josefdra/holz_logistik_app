@@ -121,6 +121,7 @@ class UserList extends StatelessWidget {
 
           return CupertinoScrollbar(
             child: ListView.builder(
+              controller: ScrollController(),
               itemCount: state.filteredUsers.length,
               itemBuilder: (_, index) {
                 final user = state.filteredUsers.elementAt(index);

@@ -114,6 +114,7 @@ class ContractList extends StatelessWidget {
 
           return CupertinoScrollbar(
             child: ListView.builder(
+              controller: ScrollController(),
               itemCount: state.contracts.length,
               itemBuilder: (_, index) {
                 final contract = state.contracts.elementAt(index);

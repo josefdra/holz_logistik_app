@@ -112,6 +112,7 @@ class NoteList extends StatelessWidget {
 
           return CupertinoScrollbar(
             child: ListView.builder(
+              controller: ScrollController(),
               itemCount: state.notes.length,
               itemBuilder: (_, index) {
                 final note = state.notes.elementAt(index);

@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
-import 'package:holz_logistik/category/screens/location_list/widgets/location_details_widget/view/view.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/location_details/view/view.dart';
 import 'package:holz_logistik/category/screens/map/map.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
@@ -192,14 +192,16 @@ class Map extends StatelessWidget {
                     FloatingActionButton(
                       onPressed: state.addMarkerMode
                           ? () {
-                              context
-                                  .read<MapBloc>()
-                                  .add(const MapToggleAddMarkerMode());
-                              Navigator.of(context).push(
-                                EditLocationWidget.route(
-                                  newMarkerPosition: state.newMarkerPosition,
-                                ),
-                              );
+                              if (state.newMarkerPosition != null) {
+                                context
+                                    .read<MapBloc>()
+                                    .add(const MapToggleAddMarkerMode());
+                                Navigator.of(context).push(
+                                  EditLocationWidget.route(
+                                    newMarkerPosition: state.newMarkerPosition,
+                                  ),
+                                );
+                              }
                             }
                           : () => context
                               .read<MapBloc>()

@@ -63,5 +63,10 @@
 	<string>Diese App braucht Standort-Zugriff für die Karten Funktion.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Diese App braucht Standort-Zugriff für die Karten Funktion.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+	  <string>geo</string>
+	  <string>maps</string>
+	</array>
 </dict>
 </plist>

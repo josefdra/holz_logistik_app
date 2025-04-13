@@ -68,6 +68,8 @@ class CoreSyncService {
       final type = message['type'] as String;
       final dynamic data = message['data'];
 
+      print('Received server message. \nType: $type, \nData: $data');
+
       final handler = _messageHandlers[type];
       if (handler != null) {
         handler(data);

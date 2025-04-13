@@ -1,0 +1,19 @@
+import 'dart:io' show Platform;
+
+import 'package:holz_logistik_backend/api/api.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+Future<void> startNavigation(Location loc) async {
+  if (Platform.isAndroid) {
+    final url = Uri.parse(
+      'geo:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}',
+    );
+    await launchUrl(url);
+  } else if (Platform.isIOS) {
+    final url = Uri.parse(
+      // ignore: lines_longer_than_80_chars
+      'maps:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}',
+    );
+    await launchUrl(url);
+  }
+}

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/model/get_sawmill_ids.dart';
 import 'package:holz_logistik/category/screens/location_list/widgets/edit_location/model/get_sawmills.dart';
@@ -42,6 +45,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
                     const [],
           ),
         ) {
+    on<EditLocationInit>(_onInit);
     on<EditLocationPartieNrChanged>(_onPartieNrChanged);
     on<EditLocationAdditionalInfoChanged>(_onAdditionalInfoChanged);
     on<EditLocationInitialQuantityChanged>(_onInitialQuantityChanged);
@@ -55,12 +59,27 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     on<EditLocationOversizeSawmillsChanged>(_onOversizeSawmillChanged);
     on<EditLocationPhotosChanged>(_onPhotosChanged);
     on<EditLocationNewSawmillSubmitted>(_onNewSawmillSubmitted);
+    on<EditLocationSawmillUpdate>(_onSawmillUpdate);
     on<EditLocationSubmitted>(_onSubmitted);
   }
 
   final LocationRepository _locationsRepository;
   final SawmillRepository _sawmillRepository;
   final PhotoRepository _photoRepository;
+
+  late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
+
+  Future<void> _onInit(
+    EditLocationInit event,
+    Emitter<EditLocationState> emit,
+  ) async {
+    if(state.initialLocation != null){
+    }
+
+    _sawmillSubscription = _sawmillRepository.sawmills.listen(
+      (sawmills) => add(EditLocationSawmillUpdate(sawmills)),
+    );
+  }
 
   void _onPartieNrChanged(
     EditLocationPartieNrChanged event,
@@ -141,13 +160,45 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     if (state.newSawmill == null) {
       return;
     }
-    
+
     await _sawmillRepository.saveSawmill(state.newSawmill!);
-    state.sawmillController.addItem(
-      DropdownItem(label: state.newSawmill!.name, value: state.newSawmill!),
+    final newTextEditingController = state.newSawmillController..clear();
+
+    emit(
+      state.copyWith(
+        newSawmillController: newTextEditingController,
+      ),
     );
-    state.oversizeSawmillController.addItem(
-      DropdownItem(label: state.newSawmill!.name, value: state.newSawmill!),
+  }
+
+  Future<void> _onSawmillUpdate(
+    EditLocationSawmillUpdate event,
+    Emitter<EditLocationState> emit,
+  ) async {
+    final newSawmillController = state.sawmillController
+      ..setItems(
+        event.allSawmills
+            .map(
+              (Sawmill sawmill) =>
+                  DropdownItem(label: sawmill.name, value: sawmill),
+            )
+            .toList(),
+      );
+    final newOversizeSawmillController = state.oversizeSawmillController
+      ..setItems(
+        event.allSawmills
+            .map(
+              (Sawmill sawmill) =>
+                  DropdownItem(label: sawmill.name, value: sawmill),
+            )
+            .toList(),
+      );
+
+    emit(
+      state.copyWith(
+        sawmillController: newSawmillController,
+        oversizeSawmillController: newOversizeSawmillController,
+      ),
     );
   }
 
@@ -184,7 +235,9 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   }
 
   @override
-  Future<void> close() {
+  Future<void> close() async {
+    await _sawmillSubscription?.cancel();
+    state.newSawmillController.dispose();
     state.sawmillController.dispose();
     state.oversizeSawmillController.dispose();
     return super.close();

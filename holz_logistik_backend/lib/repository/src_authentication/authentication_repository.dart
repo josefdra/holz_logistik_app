@@ -24,8 +24,13 @@ class AuthenticationRepository {
   /// Provides a [Stream] of the authenticated user.
   Stream<User> get authenticatedUser => _authenticationApi.authenticatedUser;
 
-  /// Provides a the authenticated user.
+  /// Provides the authenticated user.
   User get currentUser => _authenticationApi.currentUser;
+
+  /// Provied the privilege status of the authenticated user
+  bool get userHasElevatedPrivileges =>
+      _authenticationApi.currentUser.role == Role.privileged ||
+      _authenticationApi.currentUser.role == Role.admin;
 
   /// Handle updates from Server
   void _handleAuthenticationUpdates(Map<String, dynamic> data) {

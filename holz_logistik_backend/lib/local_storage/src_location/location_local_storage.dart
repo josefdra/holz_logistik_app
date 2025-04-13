@@ -50,6 +50,27 @@ class LocationLocalStorage extends LocationApi {
     // Migration logic here if needed
   }
 
+  Future<List<String>> _getSawmillIds({
+    required String id,
+    required bool isOversize,
+  }) async {
+    final db = await _coreLocalStorage.database;
+
+    final idsJson = await db.query(
+      LocationSawmillJunctionTable.tableName,
+      where:
+          // ignore: lines_longer_than_80_chars
+          '${LocationSawmillJunctionTable.columnLocationId} = ? AND ${LocationSawmillJunctionTable.columnIsOversize} = ?',
+      whereArgs: [id, if (isOversize) 1 else 0],
+    );
+
+    return idsJson
+        .map(
+          (row) => row[LocationSawmillJunctionTable.columnSawmillId]! as String,
+        )
+        .toList();
+  }
+
   Future<List<Location>> _getLocationsByCondition({
     required bool isDone,
   }) async {
@@ -61,11 +82,26 @@ class LocationLocalStorage extends LocationApi {
       whereArgs: [if (isDone) 1 else 0],
     );
 
-    return locationsJson
+    final locations = locationsJson
         .map(
           (location) => Location.fromJson(Map<String, dynamic>.from(location)),
         )
         .toList();
+
+    for (var i = 0; i < locations.length; i++) {
+      final location = locations[i];
+      final sawmillIds =
+          await _getSawmillIds(id: location.id, isOversize: false);
+      final oversizeSawmillIds =
+          await _getSawmillIds(id: location.id, isOversize: true);
+
+      locations[i] = location.copyWith(
+        sawmillIds: sawmillIds,
+        oversizeSawmillIds: oversizeSawmillIds,
+      );
+    }
+
+    return locations;
   }
 
   /// Initialization
@@ -109,6 +145,12 @@ class LocationLocalStorage extends LocationApi {
     final sawmillIds = locationData.remove('sawmillIds') as List<String>;
     final oversizeSawmillIds =
         locationData.remove('oversizeSawmillIds') as List<String>;
+
+    await _coreLocalStorage.deleteByColumn(
+      LocationSawmillJunctionTable.tableName,
+      LocationSawmillJunctionTable.columnLocationId,
+      locationId,
+    );
 
     for (final sawmillId in sawmillIds) {
       final junctionData = {

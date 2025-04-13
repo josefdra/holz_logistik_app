@@ -136,6 +136,20 @@ class CoreLocalStorage {
     return insert(tableName, data);
   }
 
+  /// Deletes entity of table [tableName] based on [id] of [columnName]
+  Future<int> deleteByColumn(
+    String tableName,
+    String columnName,
+    String id,
+  ) async {
+    final db = await database;
+    return db.delete(
+      tableName,
+      where: '$columnName = ?',
+      whereArgs: [id],
+    );
+  }
+
   /// Deletes entity of table [tableName] based on [id]
   Future<int> delete(String tableName, String id) async {
     final db = await database;

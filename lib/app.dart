@@ -51,6 +51,7 @@ class App extends StatelessWidget {
                 AuthenticationSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => CommentRepository(
@@ -59,6 +60,7 @@ class App extends StatelessWidget {
                 CommentSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => ContractRepository(
@@ -67,6 +69,7 @@ class App extends StatelessWidget {
                 ContractSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => LocationRepository(
@@ -75,6 +78,7 @@ class App extends StatelessWidget {
                 LocationSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => NoteRepository(
@@ -82,6 +86,7 @@ class App extends StatelessWidget {
             noteSyncService: NoteSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => PhotoRepository(
@@ -90,6 +95,7 @@ class App extends StatelessWidget {
                 PhotoSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => SawmillRepository(
@@ -98,6 +104,7 @@ class App extends StatelessWidget {
                 SawmillSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => ShipmentRepository(
@@ -106,6 +113,7 @@ class App extends StatelessWidget {
                 ShipmentSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
         RepositoryProvider(
           create: (_) => UserRepository(
@@ -113,6 +121,7 @@ class App extends StatelessWidget {
             userSyncService: UserSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
+          lazy: false,
         ),
       ],
       child: MultiBlocProvider(

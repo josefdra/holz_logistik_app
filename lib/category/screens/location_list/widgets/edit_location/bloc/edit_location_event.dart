@@ -7,6 +7,10 @@ sealed class EditLocationEvent extends Equatable {
   List<Object> get props => [];
 }
 
+final class EditLocationInit extends EditLocationEvent {
+  const EditLocationInit();
+}
+
 final class EditLocationPartieNrChanged extends EditLocationEvent {
   const EditLocationPartieNrChanged(this.partieNr);
 
@@ -102,6 +106,15 @@ final class EditLocationPhotosChanged extends EditLocationEvent {
 
 final class EditLocationNewSawmillSubmitted extends EditLocationEvent {
   const EditLocationNewSawmillSubmitted();
+}
+
+final class EditLocationSawmillUpdate extends EditLocationEvent {
+  const EditLocationSawmillUpdate(this.allSawmills);
+
+  final List<Sawmill> allSawmills;
+
+  @override
+  List<Object> get props => [allSawmills];
 }
 
 final class EditLocationSubmitted extends EditLocationEvent {

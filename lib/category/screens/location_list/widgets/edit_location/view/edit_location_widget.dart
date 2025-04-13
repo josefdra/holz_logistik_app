@@ -25,7 +25,7 @@ class EditLocationWidget extends StatelessWidget {
           photoRepository: context.read<PhotoRepository>(),
           initialLocation: initialLocation,
           newMarkerPosition: newMarkerPosition,
-        ),
+        )..add(const EditLocationInit()),
         child: const EditLocationWidget(),
       ),
     );
@@ -90,6 +90,7 @@ class EditLocationView extends StatelessWidget {
                 _ContractField(),
                 _NewSawmillField(),
                 _SawmillsField(),
+                SizedBox(height: 10),
                 _OversizeSawmillsField(),
               ],
             ),
@@ -327,8 +328,8 @@ class _NewSawmillField extends StatelessWidget {
       children: [
         Expanded(
           child: TextFormField(
+            controller: state.newSawmillController,
             key: const Key('editLocationView_newSawmill_textFormField'),
-            initialValue: '',
             decoration: InputDecoration(
               enabled: !state.status.isLoadingOrSuccess,
               labelText: l10n.editLocationNewSawmillLabel,
@@ -364,23 +365,24 @@ class _SawmillsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final state = context.watch<EditLocationBloc>().state;
 
-    return MultiDropdown(
-      key: const Key('editLocationView_sawmill_dropDown'),
-      controller: state.sawmillController,
-      fieldDecoration: FieldDecoration(
-        labelText: l10n.editLocationSawmillsLabel,
-        border: const OutlineInputBorder(),
-      ),
-      items: context
-          .read<SawmillRepository>()
-          .currentSawmills
-          .map((item) => DropdownItem(label: item.name, value: item))
-          .toList(),
-      onSelectionChange: (selectedItems) => context
-          .read<EditLocationBloc>()
-          .add(EditLocationSawmillsChanged(selectedItems)),
+    return BlocBuilder<EditLocationBloc, EditLocationState>(
+      builder: (context, state) {
+        return MultiDropdown(
+          controller: state.sawmillController,
+          key: const Key('editLocationView_sawmill_dropDown'),
+          fieldDecoration: FieldDecoration(
+            labelText: l10n.editLocationSawmillsLabel,
+            border: const OutlineInputBorder(),
+          ),
+          items: state.allSawmills
+              .map((item) => DropdownItem(label: item.name, value: item))
+              .toList(),
+          onSelectionChange: (selectedItems) => context
+              .read<EditLocationBloc>()
+              .add(EditLocationSawmillsChanged(selectedItems)),
+        );
+      },
     );
   }
 }
@@ -391,23 +393,24 @@ class _OversizeSawmillsField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final state = context.watch<EditLocationBloc>().state;
 
-    return MultiDropdown(
-      key: const Key('editLocationView_oversizeSawmill_dropDown'),
-      controller: state.oversizeSawmillController,
-      fieldDecoration: FieldDecoration(
-        labelText: l10n.editLocationOversizeSawmillsLabel,
-        border: const OutlineInputBorder(),
-      ),
-      items: context
-          .read<SawmillRepository>()
-          .currentSawmills
-          .map((item) => DropdownItem(label: item.name, value: item))
-          .toList(),
-      onSelectionChange: (selectedItems) => context
-          .read<EditLocationBloc>()
-          .add(EditLocationOversizeSawmillsChanged(selectedItems)),
+    return BlocBuilder<EditLocationBloc, EditLocationState>(
+      builder: (context, state) {
+        return MultiDropdown(
+          controller: state.oversizeSawmillController,
+          key: const Key('editLocationView_oversizeSawmill_dropDown'),
+          fieldDecoration: FieldDecoration(
+            labelText: l10n.editLocationOversizeSawmillsLabel,
+            border: const OutlineInputBorder(),
+          ),
+          items: state.allSawmills
+              .map((item) => DropdownItem(label: item.name, value: item))
+              .toList(),
+          onSelectionChange: (selectedItems) => context
+              .read<EditLocationBloc>()
+              .add(EditLocationOversizeSawmillsChanged(selectedItems)),
+        );
+      },
     );
   }
 }
