@@ -32,6 +32,11 @@ class LocationLocalStorage extends LocationApi {
     const [],
   );
 
+  late final Stream<List<Location>> _broadcastActiveLocations =
+      _activeLocationStreamController.stream;
+  late final Stream<List<Location>> _broadcastDoneLocations =
+      _doneLocationStreamController.stream;
+
   /// Migration function for location table
   Future<void> _migrateLocationSawmillTable(
     Database db,
@@ -58,8 +63,7 @@ class LocationLocalStorage extends LocationApi {
 
     final idsJson = await db.query(
       LocationSawmillJunctionTable.tableName,
-      where:
-          '${LocationSawmillJunctionTable.columnLocationId} = ? '
+      where: '${LocationSawmillJunctionTable.columnLocationId} = ? '
           'AND ${LocationSawmillJunctionTable.columnIsOversize} = ?',
       whereArgs: [id, if (isOversize) 1 else 0],
     );
@@ -114,12 +118,10 @@ class LocationLocalStorage extends LocationApi {
   }
 
   @override
-  Stream<List<Location>> get activeLocations =>
-      _activeLocationStreamController.asBroadcastStream();
+  Stream<List<Location>> get activeLocations => _broadcastActiveLocations;
 
   @override
-  Stream<List<Location>> get doneLocations =>
-      _doneLocationStreamController.asBroadcastStream();
+  Stream<List<Location>> get doneLocations => _broadcastDoneLocations;
 
   @override
   List<Location> get currentActiveLocations =>
@@ -136,7 +138,18 @@ class LocationLocalStorage extends LocationApi {
       id,
     );
 
-    return Location.fromJson(locations.first);
+    final location = Location.fromJson(locations.first);
+
+    final sawmillIds = await _getSawmillIds(id: location.id, isOversize: false);
+    final oversizeSawmillIds =
+        await _getSawmillIds(id: location.id, isOversize: true);
+
+    final updatedLocation = location.copyWith(
+      sawmillIds: sawmillIds,
+      oversizeSawmillIds: oversizeSawmillIds,
+    );
+
+    return updatedLocation;
   }
 
   /// Insert a junction value to the database based on [junctionData]
@@ -152,9 +165,14 @@ class LocationLocalStorage extends LocationApi {
   /// Insert or Update a `location` to the database based on [locationData]
   Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
     final locationId = locationData['id'] as String;
-    final sawmillIds = locationData.remove('sawmillIds') as List<String>;
-    final oversizeSawmillIds =
-        locationData.remove('oversizeSawmillIds') as List<String>;
+    final sawmillIds = locationData.containsKey('sawmillIds')
+        ? locationData.remove('sawmillIds') as List<String>? ?? <String>[]
+        : <String>[];
+
+    final oversizeSawmillIds = locationData.containsKey('oversizeSawmillIds')
+        ? locationData.remove('oversizeSawmillIds') as List<String>? ??
+            <String>[]
+        : <String>[];
 
     await _coreLocalStorage.deleteByColumn(
       LocationSawmillJunctionTable.tableName,

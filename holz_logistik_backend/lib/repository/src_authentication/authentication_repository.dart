@@ -27,11 +27,6 @@ class AuthenticationRepository {
   /// Provides the authenticated user.
   User get currentUser => _authenticationApi.currentUser;
 
-  /// Provied the privilege status of the authenticated user
-  bool get userHasElevatedPrivileges =>
-      _authenticationApi.currentUser.role == Role.privileged ||
-      _authenticationApi.currentUser.role == Role.admin;
-
   /// Handle updates from Server
   void _handleAuthenticationUpdates(Map<String, dynamic> data) {
     if (data['authenticated'] == true || data['authenticated'] == 1) {

@@ -30,6 +30,11 @@ class ContractLocalStorage extends ContractApi {
     const {},
   );
 
+  late final Stream<Map<String, Contract>> _broadcastActiveContracts =
+      _activeContractStreamController.stream;
+  late final Stream<Map<String, Contract>> _broadcastDoneContracts =
+      _doneContractStreamController.stream;
+
   /// Migration function for contract table
   Future<void> _migrateContractTable(
     Database db,
@@ -70,11 +75,10 @@ class ContractLocalStorage extends ContractApi {
 
   @override
   Stream<Map<String, Contract>> get activeContracts =>
-      _activeContractStreamController.asBroadcastStream();
+      _broadcastActiveContracts;
 
   @override
-  Stream<Map<String, Contract>> get doneContracts =>
-      _doneContractStreamController.asBroadcastStream();
+  Stream<Map<String, Contract>> get doneContracts => _broadcastDoneContracts;
 
   @override
   Map<String, Contract> get currentActiveContracts =>

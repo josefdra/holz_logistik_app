@@ -26,6 +26,9 @@ class CommentLocalStorage extends CommentApi {
     const {},
   );
 
+  late final Stream<Map<String, List<Comment>>> _broadcastCommentsByNote =
+      _commentStreamController.stream;
+
   /// Migration function for comment table
   Future<void> _migrateCommentTable(
     Database db,
@@ -55,7 +58,7 @@ class CommentLocalStorage extends CommentApi {
 
   @override
   Stream<Map<String, List<Comment>>> get commentsByNote =>
-      _commentStreamController.asBroadcastStream();
+      _broadcastCommentsByNote;
 
   @override
   Map<String, List<Comment>> get currentCommentsByNote =>

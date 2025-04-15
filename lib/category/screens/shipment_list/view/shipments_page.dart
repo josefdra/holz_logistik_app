@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/screens/shipment_list/shipments.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
-import 'package:holz_logistik_backend/repository/shipment_repository.dart';
 
 class ShipmentsPage extends StatelessWidget {
   const ShipmentsPage({super.key});
@@ -14,6 +13,7 @@ class ShipmentsPage extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => ShipmentsBloc(
           shipmentRepository: context.read<ShipmentRepository>(),
+          locationRepository: context.read<LocationRepository>(),
         ),
         child: const ShipmentsPage(),
       ),
@@ -25,6 +25,7 @@ class ShipmentsPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => ShipmentsBloc(
         shipmentRepository: context.read<ShipmentRepository>(),
+          locationRepository: context.read<LocationRepository>(),
       )..add(const ShipmentsSubscriptionRequested()),
       child: const Scaffold(
         body: ShipmentList(),
@@ -64,6 +65,7 @@ class ShipmentList extends StatelessWidget {
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
+                  duration: const Duration(seconds: 5),
                   content: const Text(
                     'text',
                   ),

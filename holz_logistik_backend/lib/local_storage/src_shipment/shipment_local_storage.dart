@@ -30,6 +30,11 @@ class ShipmentLocalStorage extends ShipmentApi {
     const [],
   );
 
+  late final Stream<Map<String, List<Shipment>>> _broadcastShipmentsByLocation =
+      _shipmentStreamController.stream;
+  late final Stream<List<Shipment>> _broadcastAllShipments =
+      _allShipmentsStreamController.stream;
+
   /// Migration function for shipment table
   Future<void> _migrateShipmentTable(
     Database db,
@@ -65,11 +70,10 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   @override
   Stream<Map<String, List<Shipment>>> get shipmentsByLocation =>
-      _shipmentStreamController.asBroadcastStream();
+      _broadcastShipmentsByLocation;
 
   @override
-  Stream<List<Shipment>> get shipments =>
-      _allShipmentsStreamController.asBroadcastStream();
+  Stream<List<Shipment>> get shipments => _broadcastAllShipments;
 
   @override
   Map<String, List<Shipment>> get currentShipmentsByLocation =>

@@ -145,6 +145,7 @@ class App extends StatelessWidget {
             lazy: false,
             create: (context) => LocationListBloc(
               locationRepository: context.read<LocationRepository>(),
+              shipmentRepository: context.read<ShipmentRepository>(),
             )..add(const LocationListSubscriptionRequested()),
             child: const AppView(),
           ),

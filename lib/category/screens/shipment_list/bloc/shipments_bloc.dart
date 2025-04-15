@@ -11,7 +11,9 @@ part 'shipments_state.dart';
 class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
   ShipmentsBloc({
     required ShipmentRepository shipmentRepository,
+    required LocationRepository locationRepository,
   })  : _shipmentRepository = shipmentRepository,
+        _locationRepository = locationRepository,
         super(const ShipmentsState()) {
     on<ShipmentsSubscriptionRequested>(_onSubscriptionRequested);
     on<ShipmentsShipmentDeleted>(_onShipmentDeleted);
@@ -19,6 +21,7 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
   }
 
   final ShipmentRepository _shipmentRepository;
+  final LocationRepository _locationRepository;
 
   Future<void> _onSubscriptionRequested(
     ShipmentsSubscriptionRequested event,
@@ -47,6 +50,16 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
       id: event.shipment.id,
       locationId: event.shipment.locationId,
     );
+
+    if (_shipmentRepository.currentShipmentsByLocation
+        .containsKey(event.shipment.locationId)) {
+      if (_shipmentRepository
+          .currentShipmentsByLocation[event.shipment.locationId]!.isNotEmpty) {
+        return;
+      }
+    }
+
+    await _locationRepository.unsetStarted(event.shipment.locationId);
   }
 
   Future<void> _onUndoDeletionRequested(
@@ -61,5 +74,7 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     final shipment = state.lastDeletedShipment!;
     emit(state.copyWith());
     await _shipmentRepository.saveShipment(shipment);
+
+    await _locationRepository.setStarted(shipment.locationId);
   }
 }

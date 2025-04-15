@@ -13,7 +13,9 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     required Location location,
     required String userId,
     required ShipmentRepository shipmentRepository,
+    required LocationRepository locationRepository,
   })  : _shipmentRepository = shipmentRepository,
+        _locationRepository = locationRepository,
         super(
           ShipmentFormState(
             currentQuantity: currentQuantity,
@@ -32,6 +34,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
   }
 
   final ShipmentRepository _shipmentRepository;
+  final LocationRepository _locationRepository;
 
   void _onQuantityUpdate(
     ShipmentFormQuantityUpdate event,
@@ -79,6 +82,10 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
       );
 
       _shipmentRepository.saveShipment(shipment);
+
+      if (!state.location.started) {
+        _locationRepository.setStarted(state.location.id);
+      }
 
       emit(
         state.copyWith(

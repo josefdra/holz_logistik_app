@@ -146,8 +146,9 @@ class Map extends StatelessWidget {
                             ),
                             child: Icon(
                               Icons.location_pin,
-                              color:
-                                  location.started ? Colors.green : Colors.red,
+                              color: !location.started
+                                  ? Colors.red
+                                  : const Color.fromARGB(255, 0, 17, 255),
                               size: 50,
                             ),
                           ),

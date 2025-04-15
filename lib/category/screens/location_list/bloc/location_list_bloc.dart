@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
 import 'package:holz_logistik_backend/repository/location_repository.dart';
+import 'package:holz_logistik_backend/repository/src_shipment/shipment_repository.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 part 'location_list_event.dart';
@@ -12,11 +13,12 @@ part 'location_list_state.dart';
 class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   LocationListBloc({
     required LocationRepository locationRepository,
+    required ShipmentRepository shipmentRepository,
   })  : _locationRepository = locationRepository,
+        _shipmentRepository = shipmentRepository,
         super(const LocationListState()) {
     on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
     on<LocationListLocationDeleted>(_onLocationDeleted);
-    on<LocationListUndoDeletionRequested>(_onUndoDeletionRequested);
     on<LocationListSearchQueryChanged>(
       _onSearchQueryChanged,
       transformer: debounce(
@@ -26,6 +28,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   }
 
   final LocationRepository _locationRepository;
+  final ShipmentRepository _shipmentRepository;
 
   Future<void> _onSubscriptionRequested(
     LocationListSubscriptionRequested event,
@@ -54,20 +57,8 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
       id: event.location.id,
       done: event.location.done,
     );
-  }
 
-  Future<void> _onUndoDeletionRequested(
-    LocationListUndoDeletionRequested event,
-    Emitter<LocationListState> emit,
-  ) async {
-    assert(
-      state.lastDeletedLocation != null,
-      'Last deleted location can not be null.',
-    );
-
-    final location = state.lastDeletedLocation!;
-    emit(state.copyWith(lastDeletedLocation: () => null));
-    await _locationRepository.saveLocation(location);
+    await _shipmentRepository.deleteShipmentsByLocationId(event.location.id);
   }
 
   void _onSearchQueryChanged(

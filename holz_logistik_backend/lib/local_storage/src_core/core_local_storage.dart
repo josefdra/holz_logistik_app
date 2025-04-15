@@ -146,6 +146,7 @@ class CoreLocalStorage {
     String id,
   ) async {
     final db = await database;
+    
     return db.delete(
       tableName,
       where: '$columnName = ?',

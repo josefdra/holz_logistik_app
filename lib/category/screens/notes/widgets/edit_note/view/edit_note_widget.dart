@@ -16,7 +16,7 @@ class EditNoteWidget extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => EditNoteBloc(
           authenticatedUser:
-              context.read<AuthenticationRepository>().currentUser,
+              context.watch<AuthenticationRepository>().currentUser,
           notesRepository: context.read<NoteRepository>(),
           initialNote: initialNote,
         ),

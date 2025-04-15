@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
-import 'package:holz_logistik_backend/repository/location_repository.dart';
+import 'package:holz_logistik_backend/repository/repository.dart';
 
 class LocationListPage extends StatelessWidget {
   const LocationListPage({super.key});
@@ -14,6 +14,7 @@ class LocationListPage extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => LocationListBloc(
           locationRepository: context.read<LocationRepository>(),
+          shipmentRepository: context.read<ShipmentRepository>(),
         ),
         child: const LocationListPage(),
       ),
@@ -25,6 +26,7 @@ class LocationListPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => LocationListBloc(
         locationRepository: context.read<LocationRepository>(),
+        shipmentRepository: context.read<ShipmentRepository>(),
       )..add(const LocationListSubscriptionRequested()),
       child: const Scaffold(
         body: Row(
@@ -58,35 +60,6 @@ class LocationList extends StatelessWidget {
                   ),
                 );
             }
-          },
-        ),
-        BlocListener<LocationListBloc, LocationListState>(
-          listenWhen: (previous, current) =>
-              previous.lastDeletedLocation != current.lastDeletedLocation &&
-              current.lastDeletedLocation != null,
-          listener: (context, state) {
-            final deletedLocation = state.lastDeletedLocation!;
-            final messenger = ScaffoldMessenger.of(context);
-            messenger
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l10n.locationListLocationDeletedSnackbarText(
-                      deletedLocation.partieNr,
-                    ),
-                  ),
-                  action: SnackBarAction(
-                    label: l10n.locationListUndoDeletionButtonText,
-                    onPressed: () {
-                      messenger.hideCurrentSnackBar();
-                      context
-                          .read<LocationListBloc>()
-                          .add(const LocationListUndoDeletionRequested());
-                    },
-                  ),
-                ),
-              );
           },
         ),
       ],
@@ -137,6 +110,11 @@ class LocationList extends StatelessWidget {
                               location: location,
                             ),
                           );
+                        },
+                        onDelete: () {
+                          context
+                              .read<LocationListBloc>()
+                              .add(LocationListLocationDeleted(location));
                         },
                       );
                     },

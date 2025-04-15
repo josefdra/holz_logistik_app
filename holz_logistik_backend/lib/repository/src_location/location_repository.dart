@@ -65,6 +65,24 @@ class LocationRepository {
     return _locationSyncService.sendLocationUpdate(data);
   }
 
+  /// Updates the `started` status of a location
+  Future<void> unsetStarted(String locationId) async {
+    final location = await _locationApi.getLocationById(locationId);
+    final updatedLocation = location.copyWith(started: false);
+    await _locationApi.saveLocation(updatedLocation);
+
+    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
+  }
+
+  /// Updates the `started` status of a location
+  Future<void> setStarted(String locationId) async {
+    final location = await _locationApi.getLocationById(locationId);
+    final updatedLocation = location.copyWith(started: true);
+    await _locationApi.saveLocation(updatedLocation);
+
+    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
+  }
+
   /// Disposes any resources managed by the repository.
   void dispose() => _locationApi.close();
 }

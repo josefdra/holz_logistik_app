@@ -25,6 +25,9 @@ class NoteLocalStorage extends NoteApi {
     const [],
   );
 
+  late final Stream<List<Note>> _broadcastNotes =
+      _noteStreamController.stream;
+
   /// Migration function for note table
   Future<void> _migrateNoteTable(
     Database db,
@@ -44,7 +47,7 @@ class NoteLocalStorage extends NoteApi {
   }
 
   @override
-  Stream<List<Note>> get notes => _noteStreamController.asBroadcastStream();
+  Stream<List<Note>> get notes => _broadcastNotes;
 
   @override
   List<Note> get currentNotes => _noteStreamController.value;

@@ -76,6 +76,7 @@ class NoteList extends StatelessWidget {
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
+                  duration: const Duration(seconds: 5),
                   content: Text(
                     l10n.noteListNoteDeletedSnackbarText,
                   ),
@@ -118,7 +119,7 @@ class NoteList extends StatelessWidget {
                 final note = state.notes.elementAt(index);
                 return NoteListTile(
                   note: note,
-                  onDismissed: (_) {
+                  onDelete: () {
                     context.read<NotesBloc>().add(
                           NotesNoteDeleted(note),
                         );

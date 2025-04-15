@@ -288,7 +288,7 @@ class LocationDetailsView extends StatelessWidget {
                                           state.currentPieceCount,
                                       location: state.location,
                                       userId: context
-                                          .read<AuthenticationRepository>()
+                                          .watch<AuthenticationRepository>()
                                           .currentUser
                                           .id,
                                     ),
@@ -334,7 +334,7 @@ class LocationDetailsView extends StatelessWidget {
                       ),
                       if (context
                           .read<AuthenticationRepository>()
-                          .userHasElevatedPrivileges)
+                          .currentUser.role != Role.basic)
                         SizedBox(
                           width: 100,
                           child: Center(

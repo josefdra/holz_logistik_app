@@ -62,10 +62,24 @@ class ShipmentRepository {
     final data = {
       'id': id,
       'deleted': true,
+      'locationId': locationId,
       'timestamp': DateTime.now().toIso8601String(),
     };
 
     return _shipmentSyncService.sendShipmentUpdate(data);
+  }
+
+  /// Deletes all `shipment`s for a given locationId.
+  Future<void> deleteShipmentsByLocationId(String locationId) {
+    final shipments = List<Shipment>.from(
+      _shipmentApi.currentShipmentsByLocation[locationId]!,
+    );
+
+    for (final shipment in shipments) {
+      deleteShipment(id: shipment.id, locationId: locationId);
+    }
+
+    return Future<void>.value();
   }
 
   /// Disposes any resources managed by the repository.

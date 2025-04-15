@@ -26,6 +26,9 @@ class PhotoLocalStorage extends PhotoApi {
     const {},
   );
 
+  late final Stream<Map<String, List<Photo>>> _broadcastPhotosByLocation =
+      _photoStreamController.stream;
+
   /// Migration function for photo table
   Future<void> _migratePhotoTable(
     Database db,
@@ -55,7 +58,7 @@ class PhotoLocalStorage extends PhotoApi {
 
   @override
   Stream<Map<String, List<Photo>>> get photosByLocation =>
-      _photoStreamController.asBroadcastStream();
+      _broadcastPhotosByLocation;
 
   @override
   Map<String, List<Photo>> get currentPhotosByLocation =>

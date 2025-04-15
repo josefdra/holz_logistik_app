@@ -25,6 +25,9 @@ class UserLocalStorage extends UserApi {
     const {},
   );
 
+  late final Stream<Map<String, User>> _broadcastUsers =
+      _userStreamController.stream;
+
   /// Migration function for user table
   Future<void> _migrateUserTable(
     Database db,
@@ -48,8 +51,7 @@ class UserLocalStorage extends UserApi {
   }
 
   @override
-  Stream<Map<String, User>> get users =>
-      _userStreamController.asBroadcastStream();
+  Stream<Map<String, User>> get users => _broadcastUsers;
 
   @override
   Map<String, User> get currentUsers => _userStreamController.value;

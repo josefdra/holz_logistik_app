@@ -40,7 +40,6 @@ class CoreSyncService {
   /// Connect to the WebSocket server
   void _connect() {
     try {
-      print('Attempting to connect to WebSocket at: $_url');
       final uri = Uri.parse(_url);
       _channel = WebSocketChannel.connect(uri);
 
@@ -50,7 +49,6 @@ class CoreSyncService {
         onDone: _handleDone,
       );
     } catch (e) {
-      print('WebSocket connection error: $e');
       // Implement reconnection logic here if needed
       _scheduleReconnect();
     }
@@ -68,8 +66,6 @@ class CoreSyncService {
       final type = message['type'] as String;
       final dynamic data = message['data'];
 
-      print('Received server message. \nType: $type, \nData: $data');
-
       final handler = _messageHandlers[type];
       if (handler != null) {
         handler(data);
@@ -81,12 +77,10 @@ class CoreSyncService {
 
   /// Handle WebSocket errors
   void _handleError(dynamic error) {
-    print('WebSocket error: $error');
   }
 
   /// Handle WebSocket connection close
   void _handleDone() {
-    print('WebSocket connection closed');
     _scheduleReconnect();
   }
 

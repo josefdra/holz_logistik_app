@@ -112,14 +112,15 @@ class LocationDetailsBloc
 
       _shipmentSubscription = _shipmentRepository.shipmentsByLocation
           .map(
-            (shipmentMap) => shipmentMap.containsKey(state.location.id)
-                ? shipmentMap[state.location.id]!
-                : const <Shipment>[],
-          )
+        (shipmentMap) => shipmentMap.containsKey(state.location.id)
+            ? List<Shipment>.from(shipmentMap[state.location.id]!)
+            : <Shipment>[],
+      )
           .listen(
-            (filteredShipments) =>
-                add(LocationDetailsShipmentUpdate(filteredShipments)),
-          );
+        (filteredShipments) {
+          add(LocationDetailsShipmentUpdate(filteredShipments));
+        },
+      );
 
       emit(
         state.copyWith(
@@ -183,7 +184,17 @@ class LocationDetailsBloc
     LocationDetailsLocationUpdate event,
     Emitter<LocationDetailsState> emit,
   ) {
-    emit(state.copyWith(location: event.location));
+    final values = updateValues(state.shipments, event.location);
+
+    emit(
+      state.copyWith(
+        location: event.location,
+        currentQuantity: values['quantity'] as double,
+        currentOversizeQuantity: values['oversizeQuantity'] as double,
+        currentPieceCount: values['pieceCount'] as int,
+      ),
+    );
+
     _refreshContract();
     _refreshSawmills();
     _refreshOversizeSawmills();
@@ -215,12 +226,11 @@ class LocationDetailsBloc
     Emitter<LocationDetailsState> emit,
   ) {
     final values = updateValues(event.shipments, state.location);
-    final quantity = values['quantity'] as double;
 
     emit(
       state.copyWith(
         shipments: event.shipments,
-        currentQuantity: quantity,
+        currentQuantity: values['quantity'] as double,
         currentOversizeQuantity: values['oversizeQuantity'] as double,
         currentPieceCount: values['pieceCount'] as int,
       ),

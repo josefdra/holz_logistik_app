@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:holz_logistik_backend/api/sawmill_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/sawmill_local_storage.dart';
@@ -25,6 +26,9 @@ class SawmillLocalStorage extends SawmillApi {
     const [],
   );
 
+  late final Stream<List<Sawmill>> _broadcastSawmills =
+      _sawmillStreamController.stream;
+
   /// Migration function for sawmill table
   Future<void> _migrateSawmillTable(
     Database db,
@@ -44,14 +48,20 @@ class SawmillLocalStorage extends SawmillApi {
   }
 
   @override
-  Stream<List<Sawmill>> get sawmills =>
-      _sawmillStreamController.asBroadcastStream();
+  Stream<List<Sawmill>> get sawmills => _broadcastSawmills;
 
   @override
   List<Sawmill> get currentSawmills => _sawmillStreamController.value;
 
   @override
   Future<String> getNameById(String id) async {
+    final sawmills = [..._sawmillStreamController.value];
+    final sawmill = sawmills.firstWhereOrNull((s) => s.id == id);
+
+    if (sawmill != null) {
+      return sawmill.name;
+    }
+
     final result = await _coreLocalStorage.getById(SawmillTable.tableName, id);
 
     return result.first[SawmillTable.columnName] as String;
