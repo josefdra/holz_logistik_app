@@ -12,8 +12,11 @@ final class EditLocationInit extends EditLocationEvent {
 }
 
 final class EditLocationPartieNrChanged extends EditLocationEvent {
-  const EditLocationPartieNrChanged(this.partieNr);
+  const EditLocationPartieNrChanged(this.partieNr, {
+    this.fieldName = 'partieNr',
+  });
 
+  final String fieldName;
   final String partieNr;
 
   @override
@@ -39,8 +42,11 @@ final class EditLocationAdditionalInfoChanged extends EditLocationEvent {
 }
 
 final class EditLocationInitialQuantityChanged extends EditLocationEvent {
-  const EditLocationInitialQuantityChanged(this.initialQuantity);
+  const EditLocationInitialQuantityChanged(this.initialQuantity, {
+    this.fieldName = 'initialQuantity',
+  });
 
+  final String fieldName;
   final double initialQuantity;
 
   @override
@@ -60,8 +66,11 @@ final class EditLocationInitialOversizeQuantityChanged
 }
 
 final class EditLocationInitialPieceCountChanged extends EditLocationEvent {
-  const EditLocationInitialPieceCountChanged(this.initialPieceCount);
+  const EditLocationInitialPieceCountChanged(this.initialPieceCount, {
+    this.fieldName = 'initialPieceCount',
+  });
 
+  final String fieldName;
   final int initialPieceCount;
 
   @override
@@ -70,7 +79,7 @@ final class EditLocationInitialPieceCountChanged extends EditLocationEvent {
 
 final class EditLocationContractChanged extends EditLocationEvent {
   const EditLocationContractChanged(this.contractId);
-
+  
   final String contractId;
 
   @override

@@ -71,12 +71,14 @@ class ShipmentRepository {
 
   /// Deletes all `shipment`s for a given locationId.
   Future<void> deleteShipmentsByLocationId(String locationId) {
-    final shipments = List<Shipment>.from(
-      _shipmentApi.currentShipmentsByLocation[locationId]!,
-    );
+    if (_shipmentApi.currentShipmentsByLocation.containsKey(locationId)) {
+      final shipments = List<Shipment>.from(
+        _shipmentApi.currentShipmentsByLocation[locationId]!,
+      );
 
-    for (final shipment in shipments) {
-      deleteShipment(id: shipment.id, locationId: locationId);
+      for (final shipment in shipments) {
+        deleteShipment(id: shipment.id, locationId: locationId);
+      }
     }
 
     return Future<void>.value();

@@ -40,34 +40,100 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     ShipmentFormQuantityUpdate event,
     Emitter<ShipmentFormState> emit,
   ) {
-    emit(state.copyWith(quantity: event.quantity));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(
+        validationErrors: updatedErrors,
+        quantity: event.quantity,
+      ),
+    );
   }
 
   void _onOversizeQuantityUpdate(
     ShipmentFormOversizeQuantityUpdate event,
     Emitter<ShipmentFormState> emit,
   ) {
-    emit(state.copyWith(oversizeQuantity: event.oversizeQuantity));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(
+        validationErrors: updatedErrors,
+        oversizeQuantity: event.oversizeQuantity,
+      ),
+    );
   }
 
   void _onPieceCountUpdate(
     ShipmentFormPieceCountUpdate event,
     Emitter<ShipmentFormState> emit,
   ) {
-    emit(state.copyWith(pieceCount: event.pieceCount));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(
+        validationErrors: updatedErrors,
+        pieceCount: event.pieceCount,
+      ),
+    );
   }
 
   void _onSawmillUpdate(
     ShipmentFormSawmillUpdate event,
     Emitter<ShipmentFormState> emit,
   ) {
-    emit(state.copyWith(sawmillId: event.sawmill));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(validationErrors: updatedErrors, sawmillId: event.sawmill),
+    );
+  }
+
+  Map<String, String?> _validateFields() {
+    final errors = <String, String?>{};
+
+    if (state.quantity == 0 || state.quantity > state.currentQuantity) {
+      errors['quantity'] =
+          'Menge darf nicht 0 oder größer als \ndie verfügbare Menge sein';
+    }
+
+    if (state.oversizeQuantity > state.currentOversizeQuantity) {
+      errors['oversizeQuantity'] =
+          'Menge ÜS darf nicht größer als die \nverfügbare Menge ÜS sein';
+    }
+
+    if (state.pieceCount == 0 || state.pieceCount > state.currentPieceCount) {
+      errors['pieceCount'] = 'Stückzahl darf nicht 0 oder größer als '
+          '\ndie verfügbare Stückzahl sein';
+    }
+
+    if (state.sawmillId.isEmpty || state.sawmillId == '') {
+      errors['sawmill'] = 'Sägewerk darf nicht leer sein';
+    }
+
+    return errors;
   }
 
   void _onSubmitted(
     ShipmentFormSubmitted event,
     Emitter<ShipmentFormState> emit,
   ) {
+    final validationErrors = _validateFields();
+
+    if (validationErrors.isNotEmpty) {
+      emit(
+        state.copyWith(
+          validationErrors: validationErrors,
+          status: ShipmentFormStatus.invalid,
+        ),
+      );
+      return;
+    }
+
     emit(state.copyWith(status: ShipmentFormStatus.loading));
 
     try {

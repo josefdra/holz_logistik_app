@@ -86,14 +86,44 @@ class EditLocationView extends StatelessWidget {
               children: [
                 _PartieNrField(),
                 _AdditionalInfoField(),
-                _DateField(),
-                _InitialQuantityField(),
-                _InitialOversizeQuantityField(),
-                _InitialPieceCountField(),
-                _ContractField(),
-                _NewSawmillField(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DateField(),
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: _InitialQuantityField(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _InitialOversizeQuantityField(),
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: _InitialPieceCountField(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ContractField(),
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: _NewSawmillField(),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20),
                 _SawmillsField(),
-                SizedBox(height: 10),
+                SizedBox(height: 20),
                 _OversizeSawmillsField(),
               ],
             ),
@@ -112,6 +142,7 @@ class _PartieNrField extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
     final hintText = state.initialLocation?.partieNr ?? '';
+    final error = state.validationErrors['partieNr'];
 
     return TextFormField(
       key: const Key('editLocationView_partieNr_textFormField'),
@@ -120,6 +151,8 @@ class _PartieNrField extends StatelessWidget {
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editLocationPartieNrLabel,
         hintText: hintText,
+        errorText: error,
+        border: const OutlineInputBorder(),
       ),
       maxLength: 50,
       inputFormatters: [
@@ -152,6 +185,7 @@ class _AdditionalInfoField extends StatelessWidget {
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editLocationAdditionalInfoLabel,
         hintText: hintText,
+        border: const OutlineInputBorder(),
       ),
       maxLength: 300,
       maxLines: 4,
@@ -173,17 +207,15 @@ class _DateField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<EditLocationBloc>().state;
+    final l10n = context.l10n;
 
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            state.date != null
-                ? '${state.date!.day}.${state.date!.month}.${state.date!.year}'
-                : 'Datum auswählen',
-          ),
-        ),
-        IconButton(
+    return TextField(
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: 'Datum',
+        enabled: !state.status.isLoadingOrSuccess,
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
           onPressed: () async {
             final pickedDate = await showDatePicker(
               context: context,
@@ -202,7 +234,13 @@ class _DateField extends StatelessWidget {
           },
           icon: const Icon(Icons.calendar_month),
         ),
-      ],
+        counterText: '',
+      ),
+      controller: TextEditingController(
+        text: state.date != null
+            ? '${state.date!.day}.${state.date!.month}.${state.date!.year}'
+            : 'Datum',
+      ),
     );
   }
 }
@@ -233,6 +271,7 @@ class _InitialQuantityField extends StatelessWidget {
     final l10n = context.l10n;
 
     final state = context.watch<EditLocationBloc>().state;
+    final error = state.validationErrors['initialQuantity'];
 
     return TextFormField(
       key: const Key('editLocationView_initialQuantity_textFormField'),
@@ -240,6 +279,9 @@ class _InitialQuantityField extends StatelessWidget {
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editLocationInitialQuantityLabel,
+        errorText: error,
+        border: const OutlineInputBorder(),
+        counterText: '',
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       maxLength: 20,
@@ -274,6 +316,8 @@ class _InitialOversizeQuantityField extends StatelessWidget {
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editLocationInitialOversizeQuantityLabel,
+        border: const OutlineInputBorder(),
+        counterText: '',
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       maxLength: 20,
@@ -300,6 +344,7 @@ class _InitialPieceCountField extends StatelessWidget {
     final l10n = context.l10n;
 
     final state = context.watch<EditLocationBloc>().state;
+    final error = state.validationErrors['initialPieceCount'];
 
     return TextFormField(
       key: const Key('editLocationView_initialPieceCount_textFormField'),
@@ -307,6 +352,9 @@ class _InitialPieceCountField extends StatelessWidget {
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editLocationInitialPieceCountLabel,
+        errorText: error,
+        border: const OutlineInputBorder(),
+        counterText: '',
       ),
       keyboardType: TextInputType.number,
       maxLength: 20,
@@ -335,15 +383,20 @@ class _ContractField extends StatelessWidget {
     final contracts =
         context.watch<ContractRepository>().currentActiveContracts;
 
+    final selectedId = state.contractId != ''
+        ? state.contractId
+        : state.initialLocation?.contractId;
+    final value = selectedId != null && contracts.containsKey(selectedId)
+        ? selectedId
+        : null;
+
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(
         labelText: l10n.editLocationContractLabel,
         enabled: !state.status.isLoadingOrSuccess,
         border: const OutlineInputBorder(),
       ),
-      value: state.contractId != ''
-          ? state.contractId
-          : state.initialLocation?.contractId,
+      value: value,
       items: contracts.entries.map((entry) {
         final contract = entry.value;
         return DropdownMenuItem<String>(
@@ -370,37 +423,33 @@ class _NewSawmillField extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
 
-    return Row(
-      children: [
-        Expanded(
-          child: TextFormField(
-            controller: state.newSawmillController,
-            key: const Key('editLocationView_newSawmill_textFormField'),
-            decoration: InputDecoration(
-              enabled: !state.status.isLoadingOrSuccess,
-              labelText: l10n.editLocationNewSawmillLabel,
-            ),
-            maxLength: 30,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(30),
-            ],
-            onChanged: (value) {
-              context.read<EditLocationBloc>().add(
-                    EditLocationNewSawmillChanged(
-                      Sawmill.empty(name: value),
-                    ),
-                  );
-            },
-          ),
-        ),
-        IconButton(
+    return TextField(
+      controller: state.newSawmillController,
+      key: const Key('editLocationView_newSawmill_textFormField'),
+      decoration: InputDecoration(
+        labelText: l10n.editLocationNewSawmillLabel,
+        enabled: !state.status.isLoadingOrSuccess,
+        border: const OutlineInputBorder(),
+        suffixIcon: IconButton(
           key: const Key('editLocationView_addSawmill_iconButton'),
           onPressed: () => context
               .read<EditLocationBloc>()
               .add(const EditLocationNewSawmillSubmitted()),
           icon: const Icon(Icons.check),
         ),
+        counterText: '',
+      ),
+      maxLength: 30,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(30),
       ],
+      onChanged: (value) {
+        context.read<EditLocationBloc>().add(
+              EditLocationNewSawmillChanged(
+                Sawmill.empty(name: value),
+              ),
+            );
+      },
     );
   }
 }

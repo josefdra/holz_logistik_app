@@ -8,8 +8,12 @@ sealed class ShipmentFormEvent extends Equatable {
 }
 
 final class ShipmentFormQuantityUpdate extends ShipmentFormEvent {
-  const ShipmentFormQuantityUpdate(this.quantity);
+  const ShipmentFormQuantityUpdate(
+    this.quantity, {
+    this.fieldName = 'quantity',
+  });
 
+  final String fieldName;
   final double quantity;
 
   @override
@@ -17,8 +21,12 @@ final class ShipmentFormQuantityUpdate extends ShipmentFormEvent {
 }
 
 final class ShipmentFormOversizeQuantityUpdate extends ShipmentFormEvent {
-  const ShipmentFormOversizeQuantityUpdate(this.oversizeQuantity);
+  const ShipmentFormOversizeQuantityUpdate(
+    this.oversizeQuantity, {
+    this.fieldName = 'oversizeQuantity',
+  });
 
+  final String fieldName;
   final double oversizeQuantity;
 
   @override
@@ -26,8 +34,12 @@ final class ShipmentFormOversizeQuantityUpdate extends ShipmentFormEvent {
 }
 
 final class ShipmentFormPieceCountUpdate extends ShipmentFormEvent {
-  const ShipmentFormPieceCountUpdate(this.pieceCount);
+  const ShipmentFormPieceCountUpdate(
+    this.pieceCount, {
+    this.fieldName = 'pieceCount',
+  });
 
+  final String fieldName;
   final int pieceCount;
 
   @override
@@ -35,8 +47,12 @@ final class ShipmentFormPieceCountUpdate extends ShipmentFormEvent {
 }
 
 final class ShipmentFormSawmillUpdate extends ShipmentFormEvent {
-  const ShipmentFormSawmillUpdate(this.sawmill);
+  const ShipmentFormSawmillUpdate(
+    this.sawmill, {
+    this.fieldName = 'sawmill',
+  });
 
+  final String fieldName;
   final String sawmill;
 
   @override

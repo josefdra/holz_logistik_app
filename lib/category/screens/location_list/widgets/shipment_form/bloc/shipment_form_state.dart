@@ -1,6 +1,6 @@
 part of 'shipment_form_bloc.dart';
 
-enum ShipmentFormStatus { initial, loading, success, failure }
+enum ShipmentFormStatus { initial, loading, success, invalid, failure }
 
 extension ShipmentFormStatusX on ShipmentFormStatus {
   bool get isLoadingOrSuccess => [
@@ -21,6 +21,7 @@ final class ShipmentFormState extends Equatable {
     this.oversizeQuantity = 0,
     this.pieceCount = 0,
     this.sawmillId = '',
+    this.validationErrors = const {},
   });
 
   final double currentQuantity;
@@ -33,6 +34,7 @@ final class ShipmentFormState extends Equatable {
   final double oversizeQuantity;
   final int pieceCount;
   final String sawmillId;
+  final Map<String, String?> validationErrors;
 
   ShipmentFormState copyWith({
     double? currentQuantity,
@@ -45,6 +47,7 @@ final class ShipmentFormState extends Equatable {
     double? oversizeQuantity,
     int? pieceCount,
     String? sawmillId,
+    Map<String, String?>? validationErrors,
   }) {
     return ShipmentFormState(
       currentQuantity: currentQuantity ?? this.currentQuantity,
@@ -58,6 +61,7 @@ final class ShipmentFormState extends Equatable {
       oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
       pieceCount: pieceCount ?? this.pieceCount,
       sawmillId: sawmillId ?? this.sawmillId,
+      validationErrors: validationErrors ?? this.validationErrors,
     );
   }
 
@@ -73,5 +77,6 @@ final class ShipmentFormState extends Equatable {
         oversizeQuantity,
         pieceCount,
         sawmillId,
+        validationErrors,
       ];
 }

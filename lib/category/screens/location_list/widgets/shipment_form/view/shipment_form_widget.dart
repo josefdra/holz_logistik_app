@@ -125,27 +125,38 @@ class _QuantityField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
+    final error = state.validationErrors['quantity'];
 
-    return TextFormField(
-      key: const Key('shipmentForm_quantity_textFormField'),
-      initialValue: '',
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: 'Menge (fm)',
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      maxLength: 20,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(20),
-        DecimalInputFormatter(),
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Verfügbare Menge: ${state.currentQuantity}'),
+        ),
+        TextFormField(
+          key: const Key('shipmentForm_quantity_textFormField'),
+          initialValue: '',
+          decoration: InputDecoration(
+            enabled: !state.status.isLoadingOrSuccess,
+            labelText: 'Menge (fm)',
+            errorText: error,
+            border: const OutlineInputBorder(),
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          maxLength: 20,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(20),
+            DecimalInputFormatter(),
+          ],
+          onChanged: (value) {
+            if (value.isNotEmpty) {
+              context
+                  .read<ShipmentFormBloc>()
+                  .add(ShipmentFormQuantityUpdate(double.parse(value)));
+            }
+          },
+        ),
       ],
-      onChanged: (value) {
-        if (value.isNotEmpty) {
-          context
-              .read<ShipmentFormBloc>()
-              .add(ShipmentFormQuantityUpdate(double.parse(value)));
-        }
-      },
     );
   }
 }
@@ -156,27 +167,38 @@ class _OversizeQuantityField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
+    final error = state.validationErrors['oversizeQuantity'];
 
-    return TextFormField(
-      key: const Key('shipmentForm_oversizeQuantity_textFormField'),
-      initialValue: '',
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: 'Davon ÜS',
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      maxLength: 20,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(20),
-        DecimalInputFormatter(),
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Verfügbare Menge ÜS: ${state.currentOversizeQuantity}'),
+        ),
+        TextFormField(
+          key: const Key('shipmentForm_oversizeQuantity_textFormField'),
+          initialValue: '',
+          decoration: InputDecoration(
+            enabled: !state.status.isLoadingOrSuccess,
+            labelText: 'Davon ÜS',
+            errorText: error,
+            border: const OutlineInputBorder(),
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          maxLength: 20,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(20),
+            DecimalInputFormatter(),
+          ],
+          onChanged: (value) {
+            if (value.isNotEmpty) {
+              context.read<ShipmentFormBloc>().add(
+                    ShipmentFormOversizeQuantityUpdate(double.parse(value)),
+                  );
+            }
+          },
+        ),
       ],
-      onChanged: (value) {
-        if (value.isNotEmpty) {
-          context.read<ShipmentFormBloc>().add(
-                ShipmentFormOversizeQuantityUpdate(double.parse(value)),
-              );
-        }
-      },
     );
   }
 }
@@ -187,27 +209,38 @@ class _PieceCountField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
+    final error = state.validationErrors['pieceCount'];
 
-    return TextFormField(
-      key: const Key('shipmentForm_pieceCount_textFormField'),
-      initialValue: '',
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: 'Stückzahl',
-      ),
-      keyboardType: TextInputType.number,
-      maxLength: 20,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(20),
-        DecimalInputFormatter(),
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text('Verfügbare Stückzahl: ${state.currentPieceCount}'),
+        ),
+        TextFormField(
+          key: const Key('shipmentForm_pieceCount_textFormField'),
+          initialValue: '',
+          decoration: InputDecoration(
+            enabled: !state.status.isLoadingOrSuccess,
+            labelText: 'Stückzahl',
+            errorText: error,
+            border: const OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.number,
+          maxLength: 20,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(20),
+            DecimalInputFormatter(),
+          ],
+          onChanged: (value) {
+            if (value.isNotEmpty) {
+              context
+                  .read<ShipmentFormBloc>()
+                  .add(ShipmentFormPieceCountUpdate(int.parse(value)));
+            }
+          },
+        ),
       ],
-      onChanged: (value) {
-        if (value.isNotEmpty) {
-          context
-              .read<ShipmentFormBloc>()
-              .add(ShipmentFormPieceCountUpdate(int.parse(value)));
-        }
-      },
     );
   }
 }
@@ -219,11 +252,13 @@ class _SawmillField extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
     final sawmills = context.watch<SawmillRepository>().currentSawmills;
+    final error = state.validationErrors['sawmill'];
 
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(
         labelText: 'Sägewerk',
         enabled: !state.status.isLoadingOrSuccess,
+        errorText: error,
         border: const OutlineInputBorder(),
       ),
       items: sawmills.map((sawmill) {

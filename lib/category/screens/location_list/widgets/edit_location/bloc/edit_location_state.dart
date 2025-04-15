@@ -1,6 +1,6 @@
 part of 'edit_location_bloc.dart';
 
-enum EditLocationStatus { initial, loading, success, failure }
+enum EditLocationStatus { initial, loading, success, invalid, failure }
 
 extension EditLocationStatusX on EditLocationStatus {
   bool get isLoadingOrSuccess => [
@@ -26,6 +26,7 @@ final class EditLocationState extends Equatable {
     this.photos = const [],
     this.newSawmill,
     this.date,
+    this.validationErrors = const {},
     TextEditingController? newSawmillController,
     MultiSelectController<String>? sawmillController,
     MultiSelectController<String>? oversizeSawmillController,
@@ -50,6 +51,7 @@ final class EditLocationState extends Equatable {
   final List<Photo> photos;
   final Sawmill? newSawmill;
   final DateTime? date;
+  final Map<String, String?> validationErrors;
   final TextEditingController newSawmillController;
   final MultiSelectController<String> sawmillController;
   final MultiSelectController<String> oversizeSawmillController;
@@ -72,6 +74,7 @@ final class EditLocationState extends Equatable {
     List<Photo>? photos,
     Sawmill? newSawmill,
     DateTime? date,
+    Map<String, String?>? validationErrors,
     TextEditingController? newSawmillController,
     MultiSelectController<String>? sawmillController,
     MultiSelectController<String>? oversizeSawmillController,
@@ -93,6 +96,7 @@ final class EditLocationState extends Equatable {
       photos: photos ?? this.photos,
       newSawmill: newSawmill ?? this.newSawmill,
       date: date ?? this.date,
+      validationErrors: validationErrors ?? this.validationErrors,
       newSawmillController: newSawmillController ?? this.newSawmillController,
       sawmillController: sawmillController ?? this.sawmillController,
       oversizeSawmillController:
@@ -117,6 +121,7 @@ final class EditLocationState extends Equatable {
         photos,
         newSawmill,
         date,
+        validationErrors,
         newSawmillController,
         sawmillController,
         oversizeSawmillController,

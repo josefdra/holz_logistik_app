@@ -90,7 +90,15 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     EditLocationPartieNrChanged event,
     Emitter<EditLocationState> emit,
   ) {
-    emit(state.copyWith(partieNr: event.partieNr));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(
+        validationErrors: updatedErrors,
+        partieNr: event.partieNr,
+      ),
+    );
   }
 
   void _onAdditionalInfoChanged(
@@ -111,7 +119,15 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     EditLocationInitialQuantityChanged event,
     Emitter<EditLocationState> emit,
   ) {
-    emit(state.copyWith(initialQuantity: event.initialQuantity));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(
+        validationErrors: updatedErrors,
+        initialQuantity: event.initialQuantity,
+      ),
+    );
   }
 
   void _onInitialOversizeQuantityChanged(
@@ -127,7 +143,15 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     EditLocationInitialPieceCountChanged event,
     Emitter<EditLocationState> emit,
   ) {
-    emit(state.copyWith(initialPieceCount: event.initialPieceCount));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(
+      state.copyWith(
+        validationErrors: updatedErrors,
+        initialPieceCount: event.initialPieceCount,
+      ),
+    );
   }
 
   void _onContractChanged(
@@ -218,11 +242,42 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     );
   }
 
+  Map<String, String?> _validateFields() {
+    final errors = <String, String?>{};
+
+    if (state.partieNr == '') {
+      errors['partieNr'] = 'Partie Nummer darf nicht leer sein';
+    }
+
+    if (state.initialQuantity == 0) {
+      errors['initialQuantity'] = 'Menge darf nicht 0 sein';
+    }
+
+    if (state.initialPieceCount == 0) {
+      errors['initialPieceCount'] = 'Stückzahl darf nicht 0 sein';
+    }
+
+    return errors;
+  }
+
   Future<void> _onSubmitted(
     EditLocationSubmitted event,
     Emitter<EditLocationState> emit,
   ) async {
+    final validationErrors = _validateFields();
+
+    if (validationErrors.isNotEmpty) {
+      emit(
+        state.copyWith(
+          validationErrors: validationErrors,
+          status: EditLocationStatus.invalid,
+        ),
+      );
+      return;
+    }
+
     emit(state.copyWith(status: EditLocationStatus.loading));
+
     final location = (state.initialLocation ??
             Location.empty(
               latitude: state.newMarkerPosition!.latitude,
@@ -241,15 +296,10 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       oversizeSawmillIds: state.oversizeSawmills,
     );
 
-    savePhotos(_photoRepository, state.photos);
-
     try {
-      if (location.initialQuantity != 0) {
-        await _locationsRepository.saveLocation(location);
-        emit(state.copyWith(status: EditLocationStatus.success));
-      } else {
-        emit(state.copyWith(status: EditLocationStatus.initial));
-      }
+      savePhotos(_photoRepository, state.photos);
+      await _locationsRepository.saveLocation(location);
+      emit(state.copyWith(status: EditLocationStatus.success));
     } catch (e) {
       emit(state.copyWith(status: EditLocationStatus.failure));
     }
