@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/location_details/models/update_values.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 part 'location_details_event.dart';
@@ -134,6 +135,17 @@ class LocationDetailsBloc
     }
   }
 
+  void _refreshContract() {
+    final contractId = state.location.contractId;
+
+    _contractRepository.activeContracts.first.then((contractMap) {
+      final contract = contractMap.containsKey(contractId)
+          ? contractMap[contractId]!
+          : Contract.empty();
+      add(LocationDetailsContractUpdate(contract));
+    });
+  }
+
   void _refreshSawmills() {
     final sawmillIds = state.location.sawmillIds;
     if (sawmillIds == null || sawmillIds.isEmpty) {
@@ -158,21 +170,12 @@ class LocationDetailsBloc
 
     _sawmillRepository.sawmills.first.then((sawmills) {
       final filteredOversizeSawmills = sawmills
-          .where((sawmill) =>
-              state.location.oversizeSawmillIds!.contains(sawmill.id))
+          .where(
+            (sawmill) =>
+                state.location.oversizeSawmillIds!.contains(sawmill.id),
+          )
           .toList();
       add(LocationDetailsOversizeSawmillUpdate(filteredOversizeSawmills));
-    });
-  }
-
-  void _refreshContract() {
-    final contractId = state.location.contractId;
-
-    _contractRepository.activeContracts.first.then((contractMap) {
-      final contract = contractMap.containsKey(contractId)
-          ? contractMap[contractId]!
-          : Contract.empty();
-      add(LocationDetailsContractUpdate(contract));
     });
   }
 
@@ -211,8 +214,16 @@ class LocationDetailsBloc
     LocationDetailsShipmentUpdate event,
     Emitter<LocationDetailsState> emit,
   ) {
+    final values = updateValues(event.shipments, state.location);
+    final quantity = values['quantity'] as double;
+
     emit(
-      state.copyWith(shipments: event.shipments),
+      state.copyWith(
+        shipments: event.shipments,
+        currentQuantity: quantity,
+        currentOversizeQuantity: values['oversizeQuantity'] as double,
+        currentPieceCount: values['pieceCount'] as int,
+      ),
     );
   }
 

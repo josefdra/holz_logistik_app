@@ -6,6 +6,7 @@ import 'package:holz_logistik/category/screens/location_list/view/view.dart';
 import 'package:holz_logistik/category/screens/map/map.dart';
 import 'package:holz_logistik/category/screens/notes/notes.dart';
 import 'package:holz_logistik/category/screens/settings/view/settings_page.dart';
+import 'package:holz_logistik/category/screens/shipment_list/view/view.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -42,7 +43,7 @@ class HomeView extends StatelessWidget {
           LocationListPage(),
           MapPage(),
           NotesPage(),
-          Center(child: Text('Abfuhren')),
+          ShipmentsPage(),
           AnalyticsPage(),
         ],
       ),

@@ -19,6 +19,9 @@ abstract class ContractApi {
   /// Provides a current finished contracts.
   Map<String, Contract> get currentDoneContracts;
 
+  /// Provides a single contract by [id]
+  Future<Contract> getContractById(String id);
+
   /// Saves or updates a [contract].
   ///
   /// If a [contract] with the same id already exists, it will be updated.

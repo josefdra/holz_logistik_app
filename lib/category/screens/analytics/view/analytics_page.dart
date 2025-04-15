@@ -120,11 +120,6 @@ class ContractList extends StatelessWidget {
                 final contract = state.contracts.elementAt(index);
                 return ContractListTile(
                   contract: contract,
-                  onDismissed: (_) {
-                    context.read<AnalyticsBloc>().add(
-                          AnalyticsContractDeleted(contract),
-                        );
-                  },
                   onTap: () {
                     Navigator.of(context).push(
                       EditContractWidget.route(initialContract: contract),

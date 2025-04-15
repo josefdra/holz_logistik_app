@@ -1,6 +1,4 @@
-import 'package:holz_logistik_backend/local_storage/contract_local_storage.dart';
-import 'package:holz_logistik_backend/local_storage/location_local_storage.dart';
-import 'package:holz_logistik_backend/local_storage/user_local_storage.dart';
+import 'package:holz_logistik_backend/local_storage/local_storage.dart';
 
 /// Provides constants and utilities for working with
 /// the "shipments" database table.
@@ -29,8 +27,11 @@ class ShipmentTable {
   /// The column name for storing the contract id of the shipment.
   static const String columnContractId = 'contractId';
 
+  /// The column name for storing the sawmill id of the shipment.
+  static const String columnSawmillId = 'sawmillId';
+
   /// The column name for storing the location id of the shipment.
-  static const String columnLocationtId = 'locationId';
+  static const String columnLocationId = 'locationId';
 
   /// SQL statement for creating the shipments table with the defined schema.
   static const String createTable = '''
@@ -42,10 +43,12 @@ class ShipmentTable {
       $columnPieceCount INTEGER NOT NULL,
       $columnUserId TEXT NOT NULL,
       $columnContractId TEXT NOT NULL,
-      $columnLocationtId TEXT NOT NULL,
+      $columnSawmillId TEXT NOT NULL,
+      $columnLocationId TEXT NOT NULL,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId}),
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId}),
-      FOREIGN KEY ($columnLocationtId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId})
+      FOREIGN KEY ($columnSawmillId) REFERENCES ${SawmillTable.tableName}(${LocationTable.columnId})
+      FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId})
     )
   ''';
 }

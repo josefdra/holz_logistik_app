@@ -14,6 +14,7 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       partieNr: json['partieNr'] as String,
+      date: DateTime.parse(json['date'] as String),
       additionalInfo: json['additionalInfo'] as String,
       initialQuantity: (json['initialQuantity'] as num).toDouble(),
       initialOversizeQuantity:
@@ -36,6 +37,7 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'latitude': instance.latitude,
       'longitude': instance.longitude,
       'partieNr': instance.partieNr,
+      'date': instance.date.toIso8601String(),
       'additionalInfo': instance.additionalInfo,
       'initialQuantity': instance.initialQuantity,
       'initialOversizeQuantity': instance.initialOversizeQuantity,

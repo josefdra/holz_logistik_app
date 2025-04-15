@@ -20,6 +20,15 @@ final class EditLocationPartieNrChanged extends EditLocationEvent {
   List<Object> get props => [partieNr];
 }
 
+final class EditLocationDateChanged extends EditLocationEvent {
+  const EditLocationDateChanged(this.date);
+
+  final DateTime date;
+
+  @override
+  List<Object> get props => [date];
+}
+
 final class EditLocationAdditionalInfoChanged extends EditLocationEvent {
   const EditLocationAdditionalInfoChanged(this.additionalInfo);
 
@@ -80,7 +89,7 @@ final class EditLocationNewSawmillChanged extends EditLocationEvent {
 final class EditLocationSawmillsChanged extends EditLocationEvent {
   const EditLocationSawmillsChanged(this.sawmills);
 
-  final List<Sawmill> sawmills;
+  final List<String> sawmills;
 
   @override
   List<Object> get props => [sawmills];
@@ -89,7 +98,7 @@ final class EditLocationSawmillsChanged extends EditLocationEvent {
 final class EditLocationOversizeSawmillsChanged extends EditLocationEvent {
   const EditLocationOversizeSawmillsChanged(this.oversizeSawmills);
 
-  final List<Sawmill> oversizeSawmills;
+  final List<String> oversizeSawmills;
 
   @override
   List<Object> get props => [oversizeSawmills];
@@ -111,7 +120,7 @@ final class EditLocationNewSawmillSubmitted extends EditLocationEvent {
 final class EditLocationSawmillUpdate extends EditLocationEvent {
   const EditLocationSawmillUpdate(this.allSawmills);
 
-  final List<Sawmill> allSawmills;
+  final List<String> allSawmills;
 
   @override
   List<Object> get props => [allSawmills];

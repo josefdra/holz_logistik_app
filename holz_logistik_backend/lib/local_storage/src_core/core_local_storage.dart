@@ -87,7 +87,10 @@ class CoreLocalStorage {
   }
 
   /// Gets entity of [tableName] by [id]
-  Future<List<Map<String, dynamic>>> getById(String tableName, int id) async {
+  Future<List<Map<String, dynamic>>> getById(
+    String tableName,
+    String id,
+  ) async {
     final db = await database;
     return db.query(
       tableName,

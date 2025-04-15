@@ -36,8 +36,10 @@ class EditLocationWidget extends StatelessWidget {
     return BlocListener<EditLocationBloc, EditLocationState>(
       listenWhen: (previous, current) =>
           previous.status != current.status &&
-          current.status == EditLocationStatus.success,
-      listener: (context, state) => Navigator.of(context).pop(),
+          (current.status == EditLocationStatus.success),
+      listener: (context, state) {
+        Navigator.of(context).pop();
+      },
       child: const EditLocationView(),
     );
   }
@@ -84,6 +86,7 @@ class EditLocationView extends StatelessWidget {
               children: [
                 _PartieNrField(),
                 _AdditionalInfoField(),
+                _DateField(),
                 _InitialQuantityField(),
                 _InitialOversizeQuantityField(),
                 _InitialPieceCountField(),
@@ -164,6 +167,46 @@ class _AdditionalInfoField extends StatelessWidget {
   }
 }
 
+class _DateField extends StatelessWidget {
+  const _DateField();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<EditLocationBloc>().state;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            state.date != null
+                ? '${state.date!.day}.${state.date!.month}.${state.date!.year}'
+                : 'Datum auswählen',
+          ),
+        ),
+        IconButton(
+          onPressed: () async {
+            final pickedDate = await showDatePicker(
+              context: context,
+              initialDate: state.date ?? DateTime.now(),
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2100),
+            );
+
+            if (pickedDate != null &&
+                pickedDate != state.date &&
+                context.mounted) {
+              context
+                  .read<EditLocationBloc>()
+                  .add(EditLocationDateChanged(pickedDate));
+            }
+          },
+          icon: const Icon(Icons.calendar_month),
+        ),
+      ],
+    );
+  }
+}
+
 class DecimalInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -226,7 +269,8 @@ class _InitialOversizeQuantityField extends StatelessWidget {
 
     return TextFormField(
       key: const Key('editLocationView_initialQuantity_textFormField'),
-      initialValue: state.initialLocation?.initialQuantity.toString() ?? '',
+      initialValue:
+          state.initialLocation?.initialOversizeQuantity.toString() ?? '',
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editLocationInitialOversizeQuantityLabel,
@@ -297,7 +341,9 @@ class _ContractField extends StatelessWidget {
         enabled: !state.status.isLoadingOrSuccess,
         border: const OutlineInputBorder(),
       ),
-      value: state.contractId != '' ? state.contractId : null,
+      value: state.contractId != ''
+          ? state.contractId
+          : state.initialLocation?.contractId,
       items: contracts.entries.map((entry) {
         final contract = entry.value;
         return DropdownMenuItem<String>(
@@ -375,9 +421,7 @@ class _SawmillsField extends StatelessWidget {
             labelText: l10n.editLocationSawmillsLabel,
             border: const OutlineInputBorder(),
           ),
-          items: state.allSawmills
-              .map((item) => DropdownItem(label: item.name, value: item))
-              .toList(),
+          items: state.sawmillController.items,
           onSelectionChange: (selectedItems) => context
               .read<EditLocationBloc>()
               .add(EditLocationSawmillsChanged(selectedItems)),
@@ -403,9 +447,7 @@ class _OversizeSawmillsField extends StatelessWidget {
             labelText: l10n.editLocationOversizeSawmillsLabel,
             border: const OutlineInputBorder(),
           ),
-          items: state.allSawmills
-              .map((item) => DropdownItem(label: item.name, value: item))
-              .toList(),
+          items: state.oversizeSawmillController.items,
           onSelectionChange: (selectedItems) => context
               .read<EditLocationBloc>()
               .add(EditLocationOversizeSawmillsChanged(selectedItems)),

@@ -84,6 +84,16 @@ class ContractLocalStorage extends ContractApi {
   Map<String, Contract> get currentDoneContracts =>
       _doneContractStreamController.value;
 
+  @override
+  Future<Contract> getContractById(String id) async {
+    final contracts = await _coreLocalStorage.getById(
+      ContractTable.tableName,
+      id,
+    );
+
+    return Contract.fromJson(contracts.first);
+  }
+
   /// Insert or Update a `contract` to the database based on [contractData]
   Future<int> _insertOrUpdateContract(Map<String, dynamic> contractData) async {
     return _coreLocalStorage.insertOrUpdate(

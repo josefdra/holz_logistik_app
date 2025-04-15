@@ -10,7 +10,7 @@ part 'shipment.g.dart';
 /// A single `shipment` item.
 ///
 /// Contains a [id], time of the [lastEdit], [quantity], [oversizeQuantity],
-/// [pieceCount], [userId], [contractId] and [locationId].
+/// [pieceCount], [userId], [contractId], [sawmillId] and [locationId].
 ///
 /// [Shipment]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -28,6 +28,7 @@ class Shipment extends Equatable {
     required this.pieceCount,
     required this.userId,
     required this.contractId,
+    required this.sawmillId,
     required this.locationId,
   });
 
@@ -40,6 +41,7 @@ class Shipment extends Equatable {
     this.pieceCount = 0,
     this.userId = '',
     this.contractId = '',
+    this.sawmillId = '',
     this.locationId = '',
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now();
@@ -79,6 +81,11 @@ class Shipment extends Equatable {
   /// Cannot be empty.
   final String contractId;
 
+  /// The sawmillId of the `shipment`.
+  ///
+  /// Cannot be empty.
+  final String sawmillId;
+
   /// The locationId of the `shipment`.
   ///
   /// Cannot be empty.
@@ -95,6 +102,7 @@ class Shipment extends Equatable {
     int? pieceCount,
     String? userId,
     String? contractId,
+    String? sawmillId,
     String? locationId,
   }) {
     return Shipment(
@@ -105,6 +113,7 @@ class Shipment extends Equatable {
       pieceCount: pieceCount ?? this.pieceCount,
       userId: userId ?? this.userId,
       contractId: contractId ?? this.contractId,
+      sawmillId: sawmillId ?? this.sawmillId,
       locationId: locationId ?? this.locationId,
     );
   }
@@ -124,6 +133,7 @@ class Shipment extends Equatable {
         pieceCount,
         userId,
         contractId,
+        sawmillId,
         locationId,
       ];
 }

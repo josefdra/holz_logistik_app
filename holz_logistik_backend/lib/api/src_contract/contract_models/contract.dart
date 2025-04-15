@@ -10,8 +10,7 @@ part 'contract.g.dart';
 /// A single `contract` item.
 ///
 /// Contains a [id], the [done] status, time of the [lastEdit], the [title],
-/// [additionalInfo], the [availableQuantity], the [bookedQuantity] and the
-/// [shippedQuantity].
+/// [additionalInfo].
 ///
 /// [Contract]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -27,9 +26,6 @@ class Contract extends Equatable {
     required this.lastEdit,
     required this.title,
     required this.additionalInfo,
-    required this.availableQuantity,
-    required this.bookedQuantity,
-    required this.shippedQuantity,
   });
 
   /// {@macro contract_item}
@@ -39,9 +35,6 @@ class Contract extends Equatable {
     DateTime? lastEdit,
     this.title = '',
     this.additionalInfo = '',
-    this.availableQuantity = 0,
-    this.bookedQuantity = 0,
-    this.shippedQuantity = 0,
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now();
 
@@ -74,21 +67,6 @@ class Contract extends Equatable {
   /// Cannot be empty.
   final String additionalInfo;
 
-  /// The available quantity of the `contract`.
-  ///
-  /// Cannot be empty.
-  final double availableQuantity;
-
-  /// The booked quantity of the `contract`.
-  ///
-  /// Cannot be empty.
-  final double bookedQuantity;
-
-  /// The shipped quantity of the `contract`.
-  ///
-  /// Cannot be empty.
-  final double shippedQuantity;
-
   /// Returns a copy of this `contract` with the given values updated.
   ///
   /// {@macro contract_item}
@@ -98,9 +76,6 @@ class Contract extends Equatable {
     DateTime? lastEdit,
     String? title,
     String? additionalInfo,
-    double? availableQuantity,
-    double? bookedQuantity,
-    double? shippedQuantity,
   }) {
     return Contract(
       id: id ?? this.id,
@@ -108,9 +83,6 @@ class Contract extends Equatable {
       lastEdit: lastEdit ?? this.lastEdit,
       title: title ?? this.title,
       additionalInfo: additionalInfo ?? this.additionalInfo,
-      availableQuantity: availableQuantity ?? this.availableQuantity,
-      bookedQuantity: bookedQuantity ?? this.bookedQuantity,
-      shippedQuantity: shippedQuantity ?? this.shippedQuantity,
     );
   }
 
@@ -127,8 +99,5 @@ class Contract extends Equatable {
         lastEdit,
         title,
         additionalInfo,
-        availableQuantity,
-        bookedQuantity,
-        shippedQuantity,
       ];
 }

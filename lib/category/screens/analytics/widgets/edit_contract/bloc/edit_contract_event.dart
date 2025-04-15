@@ -25,35 +25,6 @@ final class EditContractAdditionalInfoChanged extends EditContractEvent {
   List<Object> get props => [additionalInfo];
 }
 
-final class EditContractAvailableQuantityChanged extends EditContractEvent {
-  const EditContractAvailableQuantityChanged(this.availableQuantity);
-
-  final double availableQuantity;
-
-  @override
-  List<Object> get props => [availableQuantity];
-}
-
-final class EditContractBookedQuantityChanged extends EditContractEvent {
-  const EditContractBookedQuantityChanged(this.bookedQuantity);
-
-  final double bookedQuantity;
-
-  @override
-  List<Object> get props => [bookedQuantity];
-}
-
-final class EditContractShippedQuantityChanged extends EditContractEvent {
-  const EditContractShippedQuantityChanged(
-    this.shippedQuantity,
-  );
-
-  final double shippedQuantity;
-
-  @override
-  List<Object> get props => [shippedQuantity];
-}
-
 final class EditContractSubmitted extends EditContractEvent {
   const EditContractSubmitted();
 }

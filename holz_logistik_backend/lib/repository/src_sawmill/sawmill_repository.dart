@@ -25,6 +25,9 @@ class SawmillRepository {
   /// Provides all current sawmills
   List<Sawmill> get currentSawmills => _sawmillApi.currentSawmills;
 
+  /// Gets the name of the sawmill by [id]
+  Future<String> getNameById(String id) => _sawmillApi.getNameById(id);
+
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {

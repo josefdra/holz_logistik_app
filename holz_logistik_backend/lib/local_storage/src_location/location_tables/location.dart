@@ -28,6 +28,9 @@ class LocationTable {
   /// The column name for storing the partie number of the location.
   static const String columnPartieNr = 'partieNr';
 
+  /// The column name for the date of a location.
+  static const String columnDate = 'date';
+
   /// The column name for storing additional information of the location.
   static const String columnAdditionalInfo = 'additionalInfo';
 
@@ -53,6 +56,7 @@ class LocationTable {
       $columnLatitude REAL NOT NULL,
       $columnLongitude REAL NOT NULL,
       $columnPartieNr TEXT NOT NULL,
+      $columnDate TEXT NOT NULL,
       $columnAdditionalInfo TEXT NOT NULL,
       $columnInitialQuantity REAL NOT NULL,
       $columnInitialOversizeQuantity REAL NOT NULL,

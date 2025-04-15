@@ -10,9 +10,9 @@ part 'location.g.dart';
 /// A single `location` item.
 ///
 /// Contains a [id], [done], [started], [lastEdit], [latitude], [longitude],
-/// [partieNr], [additionalInfo], [initialQuantity], [initialOversizeQuantity],
-/// [initialPieceCount], [contractId], [sawmillIds] and
-/// [oversizeSawmillIds].
+/// [partieNr], [date], [additionalInfo], [initialQuantity],
+/// [initialOversizeQuantity], [initialPieceCount], [contractId], [sawmillIds]
+/// and [oversizeSawmillIds].
 ///
 /// [Location]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -30,6 +30,7 @@ class Location extends Equatable {
     required this.latitude,
     required this.longitude,
     required this.partieNr,
+    required this.date,
     required this.additionalInfo,
     required this.initialQuantity,
     required this.initialOversizeQuantity,
@@ -48,6 +49,7 @@ class Location extends Equatable {
     this.latitude = 0,
     this.longitude = 0,
     this.partieNr = '',
+    DateTime? date,
     this.additionalInfo = '',
     this.initialQuantity = 0,
     this.initialOversizeQuantity = 0,
@@ -56,7 +58,8 @@ class Location extends Equatable {
     this.sawmillIds = const [],
     this.oversizeSawmillIds = const [],
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now();
+        lastEdit = lastEdit ?? DateTime.now(),
+        date = date ?? DateTime.now();
 
   /// The id of the `location`.
   ///
@@ -98,6 +101,9 @@ class Location extends Equatable {
   ///
   /// Cannot be empty.
   final String partieNr;
+
+  /// The date of the `location`.
+  final DateTime date;
 
   /// The additional information of the `location`.
   ///
@@ -145,6 +151,7 @@ class Location extends Equatable {
     double? latitude,
     double? longitude,
     String? partieNr,
+    DateTime? date,
     String? additionalInfo,
     double? initialQuantity,
     double? initialOversizeQuantity,
@@ -161,6 +168,7 @@ class Location extends Equatable {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       partieNr: partieNr ?? this.partieNr,
+      date: date ?? this.date,
       additionalInfo: additionalInfo ?? this.additionalInfo,
       initialQuantity: initialQuantity ?? this.initialQuantity,
       initialOversizeQuantity:
@@ -187,6 +195,7 @@ class Location extends Equatable {
         latitude,
         longitude,
         partieNr,
+        date,
         additionalInfo,
         initialQuantity,
         initialOversizeQuantity,

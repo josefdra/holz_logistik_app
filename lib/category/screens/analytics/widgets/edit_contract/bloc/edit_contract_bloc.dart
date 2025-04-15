@@ -16,16 +16,10 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
             done: initialContract?.done ?? false,
             title: initialContract?.title ?? '',
             additionalInfo: initialContract?.additionalInfo ?? '',
-            availableQuantity: initialContract?.availableQuantity ?? 0.0,
-            bookedQuantity: initialContract?.bookedQuantity ?? 0.0,
-            shippedQuantity: initialContract?.shippedQuantity ?? 0.0,
           ),
         ) {
     on<EditContractTitleChanged>(_onTitleChanged);
     on<EditContractAdditionalInfoChanged>(_onAdditionalInfoChanged);
-    on<EditContractAvailableQuantityChanged>(_onAvailableQuantityChanged);
-    on<EditContractBookedQuantityChanged>(_onBookedQuantityChanged);
-    on<EditContractShippedQuantityChanged>(_onShippedQuantityChanged);
     on<EditContractSubmitted>(_onSubmitted);
   }
 
@@ -45,29 +39,6 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
     emit(state.copyWith(additionalInfo: event.additionalInfo));
   }
 
-  void _onAvailableQuantityChanged(
-    EditContractAvailableQuantityChanged event,
-    Emitter<EditContractState> emit,
-  ) {
-    emit(state.copyWith(availableQuantity: event.availableQuantity));
-  }
-
-  void _onBookedQuantityChanged(
-    EditContractBookedQuantityChanged event,
-    Emitter<EditContractState> emit,
-  ) {
-    emit(
-      state.copyWith(bookedQuantity: event.bookedQuantity),
-    );
-  }
-
-  void _onShippedQuantityChanged(
-    EditContractShippedQuantityChanged event,
-    Emitter<EditContractState> emit,
-  ) {
-    emit(state.copyWith(shippedQuantity: event.shippedQuantity));
-  }
-
   Future<void> _onSubmitted(
     EditContractSubmitted event,
     Emitter<EditContractState> emit,
@@ -78,9 +49,6 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
       lastEdit: DateTime.now(),
       title: state.title,
       additionalInfo: state.additionalInfo,
-      availableQuantity: state.availableQuantity,
-      bookedQuantity: state.bookedQuantity,
-      shippedQuantity: state.shippedQuantity,
     );
 
     try {

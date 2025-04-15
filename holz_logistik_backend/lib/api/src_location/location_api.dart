@@ -19,6 +19,9 @@ abstract class LocationApi {
   /// Provides all current done locations
   List<Location> get currentDoneLocations;
 
+  /// Provides a single location by [id]
+  Future<Location> getLocationById(String id);
+
   /// Saves or updates a [location].
   ///
   /// If a [location] with the same id already exists, it will be updated.

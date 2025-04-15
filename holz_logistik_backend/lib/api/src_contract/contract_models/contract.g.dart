@@ -12,9 +12,6 @@ Contract _$ContractFromJson(Map<String, dynamic> json) => Contract(
       lastEdit: DateTime.parse(json['lastEdit'] as String),
       title: json['title'] as String,
       additionalInfo: json['additionalInfo'] as String,
-      availableQuantity: (json['availableQuantity'] as num).toDouble(),
-      bookedQuantity: (json['bookedQuantity'] as num).toDouble(),
-      shippedQuantity: (json['shippedQuantity'] as num).toDouble(),
     );
 
 Map<String, dynamic> _$ContractToJson(Contract instance) => <String, dynamic>{
@@ -23,7 +20,4 @@ Map<String, dynamic> _$ContractToJson(Contract instance) => <String, dynamic>{
       'lastEdit': instance.lastEdit.toIso8601String(),
       'title': instance.title,
       'additionalInfo': instance.additionalInfo,
-      'availableQuantity': instance.availableQuantity,
-      'bookedQuantity': instance.bookedQuantity,
-      'shippedQuantity': instance.shippedQuantity,
     };

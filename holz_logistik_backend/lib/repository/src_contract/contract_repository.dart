@@ -65,7 +65,7 @@ class ContractRepository {
 
     return _contractSyncService.sendContractUpdate(data);
   }
-
+  
   /// Disposes any resources managed by the repository.
   void dispose() => _contractApi.close();
 }

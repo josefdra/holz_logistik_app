@@ -19,11 +19,11 @@ class LocationRepository {
   final LocationApi _locationApi;
   final LocationSyncService _locationSyncService;
 
-  /// Provides a [Stream] of active locations.
-  Stream<List<Location>> get activeLocations => _locationApi.activeLocations;
-
   /// Provides a [Stream] of done locations.
   Stream<List<Location>> get doneLocations => _locationApi.doneLocations;
+
+  /// Provides a [Stream] of active locations.
+  Stream<List<Location>> get activeLocations => _locationApi.activeLocations;
 
   /// Provides all current active locations
   List<Location> get currentActiveLocations =>

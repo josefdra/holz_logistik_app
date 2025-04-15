@@ -76,7 +76,6 @@ class EditContractView extends StatelessWidget {
               children: [
                 _TitleField(),
                 _AdditionalInfoField(),
-                _AvailableQuantityField(),
               ],
             ),
           ),
@@ -162,38 +161,5 @@ class DecimalInputFormatter extends TextInputFormatter {
       );
     }
     return oldValue;
-  }
-}
-
-class _AvailableQuantityField extends StatelessWidget {
-  const _AvailableQuantityField();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    final state = context.watch<EditContractBloc>().state;
-
-    return TextFormField(
-      key: const Key('editContractView_availableQuantity_textFormField'),
-      initialValue: state.initialContract?.availableQuantity.toString() ?? '',
-      decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editContractAvailableQuantityLabel,
-      ),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      maxLength: 20,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(20),
-        DecimalInputFormatter(),
-      ],
-      onChanged: (value) {
-        if (value.isNotEmpty) {
-          context
-              .read<EditContractBloc>()
-              .add(EditContractAvailableQuantityChanged(double.parse(value)));
-        }
-      },
-    );
   }
 }

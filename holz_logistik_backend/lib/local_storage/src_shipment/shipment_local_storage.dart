@@ -25,7 +25,7 @@ class ShipmentLocalStorage extends ShipmentApi {
       BehaviorSubject<Map<String, List<Shipment>>>.seeded(
     const {},
   );
-  late final _allShipemtsStreamController =
+  late final _allShipmentsStreamController =
       BehaviorSubject<List<Shipment>>.seeded(
     const [],
   );
@@ -59,7 +59,7 @@ class ShipmentLocalStorage extends ShipmentApi {
       shipmentsByLocationId[shipment.locationId]!.add(shipment);
     }
 
-    _allShipemtsStreamController.add(allShipments);
+    _allShipmentsStreamController.add(allShipments);
     _shipmentStreamController.add(shipmentsByLocationId);
   }
 
@@ -69,15 +69,14 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   @override
   Stream<List<Shipment>> get shipments =>
-      _allShipemtsStreamController.asBroadcastStream();
+      _allShipmentsStreamController.asBroadcastStream();
 
   @override
   Map<String, List<Shipment>> get currentShipmentsByLocation =>
       _shipmentStreamController.value;
 
   @override
-  List<Shipment> get currentShipments =>
-      _allShipemtsStreamController.value;
+  List<Shipment> get currentShipments => _allShipmentsStreamController.value;
 
   /// Insert or Update a `shipment` to the database based on [shipmentData]
   Future<int> _insertOrUpdateShipment(Map<String, dynamic> shipmentData) async {
@@ -90,24 +89,38 @@ class ShipmentLocalStorage extends ShipmentApi {
   /// Insert or Update a [shipment]
   @override
   Future<int> saveShipment(Shipment shipment) {
-    final currentShipmentsByLocation = _shipmentStreamController.value;
+    final currentShipmentsByLocation =
+        Map<String, List<Shipment>>.from(_shipmentStreamController.value);
+    final allShipments =
+        List<Shipment>.from(_allShipmentsStreamController.value);
+
     if (!currentShipmentsByLocation.containsKey(shipment.locationId)) {
       currentShipmentsByLocation[shipment.locationId] = [];
     }
 
-    currentShipmentsByLocation[shipment.locationId]!.add(shipment);
-    _shipmentStreamController.add(currentShipmentsByLocation);
+    final locationShipmentIndex =
+        currentShipmentsByLocation[shipment.locationId]!
+            .indexWhere((s) => s.id == shipment.id);
 
-    final allShipments = [..._allShipemtsStreamController.value];
-    final shipmentIndex = allShipments.indexWhere((s) => s.id == shipment.id);
+    if (locationShipmentIndex >= 0) {
+      currentShipmentsByLocation[shipment.locationId]![locationShipmentIndex] =
+          shipment;
+    } else {
+      currentShipmentsByLocation[shipment.locationId]!.add(shipment);
+    }
 
-    if (shipmentIndex >= 0) {
-      allShipments[shipmentIndex] = shipment;
+    final allShipmentIndex =
+        allShipments.indexWhere((s) => s.id == shipment.id);
+
+    if (allShipmentIndex >= 0) {
+      allShipments[allShipmentIndex] = shipment;
     } else {
       allShipments.add(shipment);
     }
 
-    _allShipemtsStreamController.add(allShipments);
+    _shipmentStreamController.add(currentShipmentsByLocation);
+    _allShipmentsStreamController.add(allShipments);
+
     return _insertOrUpdateShipment(shipment.toJson());
   }
 
@@ -132,18 +145,20 @@ class ShipmentLocalStorage extends ShipmentApi {
 
     _shipmentStreamController.add(currentShipmentsByLocation);
 
-    final allShipments = [..._allShipemtsStreamController.value];
+    final allShipments = [..._allShipmentsStreamController.value];
     final contractIndex = allShipments.indexWhere((s) => s.id == id);
 
     allShipments.removeAt(contractIndex);
-    _allShipemtsStreamController.add(allShipments);
+    _allShipmentsStreamController.add(allShipments);
 
     return _deleteShipment(id);
   }
 
-  /// Close the [_shipmentStreamController]
+  /// Close the [_shipmentStreamController] and [_allShipmentsStreamController]
   @override
   Future<void> close() {
-    return _shipmentStreamController.close();
+    _shipmentStreamController.close();
+    _allShipmentsStreamController.close();
+    return Future.value();
   }
 }

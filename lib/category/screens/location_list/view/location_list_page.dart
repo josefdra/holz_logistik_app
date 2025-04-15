@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
-import 'package:holz_logistik/category/screens/location_list/widgets/location_details/view/view.dart';
 import 'package:holz_logistik_backend/repository/location_repository.dart';
 
 class LocationListPage extends StatelessWidget {
@@ -131,11 +130,6 @@ class LocationList extends StatelessWidget {
                           state.searchQueryedLocations.elementAt(index);
                       return LocationListTile(
                         location: location,
-                        onDismissed: (_) {
-                          context.read<LocationListBloc>().add(
-                                LocationListLocationDeleted(location),
-                              );
-                        },
                         onTap: () {
                           showDialog<LocationDetailsWidget>(
                             context: context,

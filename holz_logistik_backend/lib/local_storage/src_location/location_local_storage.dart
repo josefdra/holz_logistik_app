@@ -59,8 +59,8 @@ class LocationLocalStorage extends LocationApi {
     final idsJson = await db.query(
       LocationSawmillJunctionTable.tableName,
       where:
-          // ignore: lines_longer_than_80_chars
-          '${LocationSawmillJunctionTable.columnLocationId} = ? AND ${LocationSawmillJunctionTable.columnIsOversize} = ?',
+          '${LocationSawmillJunctionTable.columnLocationId} = ? '
+          'AND ${LocationSawmillJunctionTable.columnIsOversize} = ?',
       whereArgs: [id, if (isOversize) 1 else 0],
     );
 
@@ -128,6 +128,16 @@ class LocationLocalStorage extends LocationApi {
   @override
   List<Location> get currentDoneLocations =>
       _doneLocationStreamController.value;
+
+  @override
+  Future<Location> getLocationById(String id) async {
+    final locations = await _coreLocalStorage.getById(
+      LocationTable.tableName,
+      id,
+    );
+
+    return Location.fromJson(locations.first);
+  }
 
   /// Insert a junction value to the database based on [junctionData]
   Future<int> _insertLocationSawmillJunction(

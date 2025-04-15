@@ -17,7 +17,14 @@ final class LocationDetailsState extends Equatable {
     this.sawmills = const [],
     this.oversizeSawmills = const [],
     this.shipments = const [],
-  }) : contract = contract ?? Contract.empty();
+    double? currentQuantity,
+    double? currentOversizeQuantity,
+    int? currentPieceCount,
+  })  : contract = contract ?? Contract.empty(),
+        currentQuantity = currentQuantity ?? location.initialQuantity,
+        currentOversizeQuantity =
+            currentOversizeQuantity ?? location.initialOversizeQuantity,
+        currentPieceCount = currentPieceCount ?? location.initialPieceCount;
 
   final LocationDetailsStatus status;
   final Location location;
@@ -25,6 +32,9 @@ final class LocationDetailsState extends Equatable {
   final List<Sawmill> sawmills;
   final List<Sawmill> oversizeSawmills;
   final List<Shipment> shipments;
+  final double currentQuantity;
+  final double currentOversizeQuantity;
+  final int currentPieceCount;
 
   LocationDetailsState copyWith({
     LocationDetailsStatus? status,
@@ -33,6 +43,9 @@ final class LocationDetailsState extends Equatable {
     List<Sawmill>? sawmills,
     List<Sawmill>? oversizeSawmills,
     List<Shipment>? shipments,
+    double? currentQuantity,
+    double? currentOversizeQuantity,
+    int? currentPieceCount,
   }) {
     return LocationDetailsState(
       status: status ?? this.status,
@@ -41,6 +54,10 @@ final class LocationDetailsState extends Equatable {
       sawmills: sawmills ?? this.sawmills,
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
       shipments: shipments ?? this.shipments,
+      currentQuantity: currentQuantity ?? this.currentQuantity,
+      currentOversizeQuantity:
+          currentOversizeQuantity ?? this.currentOversizeQuantity,
+      currentPieceCount: currentPieceCount ?? this.currentPieceCount,
     );
   }
 

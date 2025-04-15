@@ -13,6 +13,9 @@ abstract class SawmillApi {
   /// Provides all current sawmills
   List<Sawmill> get currentSawmills;
 
+  /// Gets the name by [id]
+  Future<String> getNameById(String id);
+
   /// Saves or updates a [sawmill].
   ///
   /// If a [sawmill] with the same id already exists, it will be updated.

@@ -19,15 +19,6 @@ class ContractTable {
   /// The column name for storing the additional info of the contract.
   static const String columnAdditionalInfo = 'additionalInfo';
 
-  /// The column name for storing the available quantity of the contract.
-  static const String columnAvailableQuantity = 'availableQuantity';
-
-  /// The column name for storing the booked quantity of the contract.
-  static const String columnBookedQuantity = 'bookedQuantity';
-
-  /// The column name for storing the shipped quantity of the contract.
-  static const String columnShippedQuantity = 'shippedQuantity';
-
   /// SQL statement for creating the contracts table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -35,10 +26,7 @@ class ContractTable {
       $columnDone INTEGER NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnTitle TEXT NOT NULL,
-      $columnAdditionalInfo TEXT NOT NULL,
-      $columnAvailableQuantity REAL NOT NULL,
-      $columnBookedQuantity REAL NOT NULL,
-      $columnShippedQuantity REAL NOT NULL
+      $columnAdditionalInfo TEXT NOT NULL
     )
   ''';
 }

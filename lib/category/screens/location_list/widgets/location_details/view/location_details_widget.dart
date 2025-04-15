@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/widgets/location_details/bloc/location_details_bloc.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/shipment_form/view/shipment_form_widget.dart';
 import 'package:holz_logistik/category/screens/location_list/widgets/widgets.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
@@ -34,8 +34,6 @@ class LocationDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocBuilder<LocationDetailsBloc, LocationDetailsState>(
       builder: (context, state) {
         if (state.status == LocationDetailsStatus.loading) {
@@ -191,7 +189,7 @@ class LocationDetailsView extends StatelessWidget {
                             height: 32,
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('${state.location.initialQuantity}'),
+                              child: Text('${state.currentQuantity}'),
                             ),
                           ),
                           SizedBox(
@@ -199,7 +197,7 @@ class LocationDetailsView extends StatelessWidget {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                '${state.location.initialOversizeQuantity}',
+                                '${state.currentOversizeQuantity}',
                               ),
                             ),
                           ),
@@ -208,7 +206,7 @@ class LocationDetailsView extends StatelessWidget {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child:
-                                  Text('${state.location.initialPieceCount}'),
+                                  Text('${state.currentPieceCount}'),
                             ),
                           ),
                         ],
@@ -261,6 +259,12 @@ class LocationDetailsView extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   Center(
+                    child: Text('Datum: ${state.location.date.day}.'
+                        '${state.location.date.month}.'
+                        '${state.location.date.year}'),
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
                     child: Text(state.location.additionalInfo),
                   ),
                   const SizedBox(height: 20),
@@ -273,7 +277,23 @@ class LocationDetailsView extends StatelessWidget {
                           child: Column(
                             children: [
                               IconButton.filled(
-                                onPressed: () {},
+                                onPressed: () {
+                                  showDialog<ShipmentFormWidget>(
+                                    context: context,
+                                    builder: (context) => ShipmentFormWidget(
+                                      currentQuantity: state.currentQuantity,
+                                      currentOversizeQuantity:
+                                          state.currentOversizeQuantity,
+                                      currentPieceCount:
+                                          state.currentPieceCount,
+                                      location: state.location,
+                                      userId: context
+                                          .read<AuthenticationRepository>()
+                                          .currentUser
+                                          .id,
+                                    ),
+                                  );
+                                },
                                 icon: const Icon(Icons.local_shipping),
                                 style: IconButton.styleFrom(
                                   backgroundColor:
@@ -323,7 +343,8 @@ class LocationDetailsView extends StatelessWidget {
                                 IconButton.filled(
                                   onPressed: () => Navigator.of(context).push(
                                     EditLocationWidget.route(
-                                        initialLocation: state.location),
+                                      initialLocation: state.location,
+                                    ),
                                   ),
                                   icon: const Icon(Icons.edit),
                                   style: IconButton.styleFrom(

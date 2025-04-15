@@ -50,6 +50,13 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   List<Sawmill> get currentSawmills => _sawmillStreamController.value;
 
+  @override
+  Future<String> getNameById(String id) async {
+    final result = await _coreLocalStorage.getById(SawmillTable.tableName, id);
+
+    return result.first[SawmillTable.columnName] as String;
+  }
+
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
   Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {
     return _coreLocalStorage.insertOrUpdate(

@@ -25,14 +25,15 @@ final class EditLocationState extends Equatable {
     this.oversizeSawmills = const [],
     this.photos = const [],
     this.newSawmill,
+    this.date,
     TextEditingController? newSawmillController,
-    MultiSelectController<Sawmill>? sawmillController,
-    MultiSelectController<Sawmill>? oversizeSawmillController,
+    MultiSelectController<String>? sawmillController,
+    MultiSelectController<String>? oversizeSawmillController,
   })  : newSawmillController = newSawmillController ?? TextEditingController(),
         sawmillController =
-            sawmillController ?? MultiSelectController<Sawmill>(),
+            sawmillController ?? MultiSelectController<String>(),
         oversizeSawmillController =
-            oversizeSawmillController ?? MultiSelectController<Sawmill>();
+            oversizeSawmillController ?? MultiSelectController<String>();
 
   final EditLocationStatus status;
   final Location? initialLocation;
@@ -43,14 +44,15 @@ final class EditLocationState extends Equatable {
   final double initialOversizeQuantity;
   final int initialPieceCount;
   final String contractId;
-  final List<Sawmill> allSawmills;
-  final List<Sawmill> sawmills;
-  final List<Sawmill> oversizeSawmills;
+  final List<String> allSawmills;
+  final List<String> sawmills;
+  final List<String> oversizeSawmills;
   final List<Photo> photos;
   final Sawmill? newSawmill;
+  final DateTime? date;
   final TextEditingController newSawmillController;
-  final MultiSelectController<Sawmill> sawmillController;
-  final MultiSelectController<Sawmill> oversizeSawmillController;
+  final MultiSelectController<String> sawmillController;
+  final MultiSelectController<String> oversizeSawmillController;
 
   bool get isNewLocation => initialLocation == null;
 
@@ -64,14 +66,15 @@ final class EditLocationState extends Equatable {
     double? initialOversizeQuantity,
     int? initialPieceCount,
     String? contractId,
-    List<Sawmill>? allSawmills,
-    List<Sawmill>? sawmills,
-    List<Sawmill>? oversizeSawmills,
+    List<String>? allSawmills,
+    List<String>? sawmills,
+    List<String>? oversizeSawmills,
     List<Photo>? photos,
     Sawmill? newSawmill,
+    DateTime? date,
     TextEditingController? newSawmillController,
-    MultiSelectController<Sawmill>? sawmillController,
-    MultiSelectController<Sawmill>? oversizeSawmillController,
+    MultiSelectController<String>? sawmillController,
+    MultiSelectController<String>? oversizeSawmillController,
   }) {
     return EditLocationState(
       status: status ?? this.status,
@@ -89,6 +92,7 @@ final class EditLocationState extends Equatable {
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
       photos: photos ?? this.photos,
       newSawmill: newSawmill ?? this.newSawmill,
+      date: date ?? this.date,
       newSawmillController: newSawmillController ?? this.newSawmillController,
       sawmillController: sawmillController ?? this.sawmillController,
       oversizeSawmillController:
@@ -112,6 +116,7 @@ final class EditLocationState extends Equatable {
         oversizeSawmills,
         photos,
         newSawmill,
+        date,
         newSawmillController,
         sawmillController,
         oversizeSawmillController,
