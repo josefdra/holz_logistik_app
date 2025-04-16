@@ -25,8 +25,7 @@ class NoteLocalStorage extends NoteApi {
     const [],
   );
 
-  late final Stream<List<Note>> _broadcastNotes =
-      _noteStreamController.stream;
+  late final Stream<List<Note>> _notes = _noteStreamController.stream;
 
   /// Migration function for note table
   Future<void> _migrateNoteTable(
@@ -47,10 +46,7 @@ class NoteLocalStorage extends NoteApi {
   }
 
   @override
-  Stream<List<Note>> get notes => _broadcastNotes;
-
-  @override
-  List<Note> get currentNotes => _noteStreamController.value;
+  Stream<List<Note>> get notes => _notes;
 
   /// Insert or Update a `note` to the database based on [noteData]
   Future<int> _insertOrUpdateNote(Map<String, dynamic> noteData) async {
@@ -59,10 +55,11 @@ class NoteLocalStorage extends NoteApi {
 
   /// Insert or Update a [note]
   @override
-  Future<int> saveNote(Note note) {
+  Future<int> saveNote(Note note) async {
+    final result = await _insertOrUpdateNote(note.toJson());
     final notes = [..._noteStreamController.value];
     final noteIndex = notes.indexWhere((n) => n.id == note.id);
-    if (noteIndex >= 0) {
+    if (noteIndex > -1) {
       notes[noteIndex] = note;
     } else {
       notes.add(note);
@@ -70,7 +67,7 @@ class NoteLocalStorage extends NoteApi {
 
     _noteStreamController.add(notes);
 
-    return _insertOrUpdateNote(note.toJson());
+    return result;
   }
 
   /// Delete a Note from the database based on [id]
@@ -81,15 +78,14 @@ class NoteLocalStorage extends NoteApi {
   /// Delete a Note based on [id]
   @override
   Future<int> deleteNote(String id) async {
+    final result = await _deleteNote(id);
     final notes = [..._noteStreamController.value];
     final noteIndex = notes.indexWhere((n) => n.id == id);
-    if (noteIndex == -1) {
-      throw NoteNotFoundException();
-    } else {
-      notes.removeAt(noteIndex);
-      _noteStreamController.add(notes);
-      return _deleteNote(id);
-    }
+
+    notes.removeAt(noteIndex);
+    _noteStreamController.add(notes);
+
+    return result;
   }
 
   /// Close the [_noteStreamController]

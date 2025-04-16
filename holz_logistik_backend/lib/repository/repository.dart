@@ -1,5 +1,4 @@
 export 'authentication_repository.dart';
-export 'comment_repository.dart';
 export 'contract_repository.dart';
 export 'location_repository.dart';
 export 'note_repository.dart';

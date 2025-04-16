@@ -20,19 +20,26 @@ class ContractRepository {
   final ContractSyncService _contractSyncService;
 
   /// Provides a [Stream] of active contracts.
-  Stream<Map<String, Contract>> get activeContracts =>
-      _contractApi.activeContracts;
+  Stream<List<Contract>> get activeContracts => _contractApi.activeContracts;
 
-  /// Provides a [Stream] of done contracts.
-  Stream<Map<String, Contract>> get doneContracts => _contractApi.doneContracts;
+  /// Provides a [Stream] of updates on finished contracts.
+  Stream<Map<String, dynamic>> get finishedContractUpdates =>
+      _contractApi.finishedContractUpdates;
 
-  /// Provides the current active contracts.
-  Map<String, Contract> get currentActiveContracts =>
-      _contractApi.currentActiveContracts;
+  /// Provides finished contracts by date.
+  Future<List<Contract>> getFinishedContractsByDate(
+    DateTime start,
+    DateTime end,
+  ) =>
+      _contractApi.getFinishedContractsByDate(start, end);
 
-  /// Provides the current finished contracts.
-  Map<String, Contract> get currentDoneContracts =>
-      _contractApi.currentDoneContracts;
+  /// Provides finished contracts by search query.
+  Future<List<Contract>> getFinishedContractsByQuery(String query) =>
+      _contractApi.getFinishedContractsByQuery(query);
+
+  /// Provides a single contract by [id]
+  Future<Contract> getContractById(String id) =>
+      _contractApi.getContractById(id);
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
@@ -65,7 +72,7 @@ class ContractRepository {
 
     return _contractSyncService.sendContractUpdate(data);
   }
-  
+
   /// Disposes any resources managed by the repository.
   void dispose() => _contractApi.close();
 }

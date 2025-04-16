@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/screens/shipment_list/shipments.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
@@ -14,31 +15,86 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     required LocationRepository locationRepository,
   })  : _shipmentRepository = shipmentRepository,
         _locationRepository = locationRepository,
-        super(const ShipmentsState()) {
+        super(ShipmentsState()) {
     on<ShipmentsSubscriptionRequested>(_onSubscriptionRequested);
+    on<ShipmentsShipmentUpdate>(_onShipmentUpdate);
+    on<ShipmentsRefreshRequested>(_onRefreshRequested);
     on<ShipmentsShipmentDeleted>(_onShipmentDeleted);
+    on<ShipmentsDateChanged>(_onDateChanged);
+    on<ShipmentsAutomaticDate>(_onAutomaticDate);
     on<ShipmentsUndoDeletionRequested>(_onUndoDeletionRequested);
+
+    _dateCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      _checkDateChange();
+    });
   }
 
   final ShipmentRepository _shipmentRepository;
   final LocationRepository _locationRepository;
+  late final Timer _dateCheckTimer;
+
+  late final StreamSubscription<Map<String, dynamic>>?
+      _shipmentUpdateSubscription;
+
+  void _checkDateChange() {
+    final now = DateTime.now();
+
+    if (now.isAfter(state.endDate) && !state.customDate) {
+      add(const ShipmentsRefreshRequested());
+    }
+  }
 
   Future<void> _onSubscriptionRequested(
     ShipmentsSubscriptionRequested event,
     Emitter<ShipmentsState> emit,
   ) async {
     emit(state.copyWith(status: ShipmentsStatus.loading));
+    add(const ShipmentsShipmentUpdate());
 
-    await emit.forEach<List<Shipment>>(
-      _shipmentRepository.allShipments,
-      onData: (shipments) => state.copyWith(
+    _shipmentUpdateSubscription =
+        _shipmentRepository.shipmentUpdates.listen((shipmentUpdate) {
+      if (shipmentUpdate.isNotEmpty &&
+          state.startDate.millisecondsSinceEpoch <=
+              (shipmentUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch &&
+          (shipmentUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch <=
+              state.endDate.millisecondsSinceEpoch) {
+        add(const ShipmentsShipmentUpdate());
+      }
+    });
+  }
+
+  Future<void> _onShipmentUpdate(
+    ShipmentsShipmentUpdate event,
+    Emitter<ShipmentsState> emit,
+  ) async {
+    final shipments = await _shipmentRepository.getShipmentsByDate(
+      state.startDate,
+      state.endDate,
+    );
+
+    emit(
+      state.copyWith(
         status: ShipmentsStatus.success,
         shipments: shipments,
       ),
-      onError: (_, __) => state.copyWith(
-        status: ShipmentsStatus.failure,
+    );
+  }
+
+  Future<void> _onRefreshRequested(
+    ShipmentsRefreshRequested event,
+    Emitter<ShipmentsState> emit,
+  ) async {
+    final endDate = DateTime.now().copyWith(hour: 23, minute: 59, second: 59);
+    final startDate = endDate.subtract(const Duration(days: 32));
+
+    emit(
+      state.copyWith(
+        startDate: startDate,
+        endDate: endDate,
       ),
     );
+
+    add(const ShipmentsShipmentUpdate());
   }
 
   Future<void> _onShipmentDeleted(
@@ -46,20 +102,43 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     Emitter<ShipmentsState> emit,
   ) async {
     emit(state.copyWith(lastDeletedShipment: event.shipment));
+    final locationId = event.shipment.locationId;
+
     await _shipmentRepository.deleteShipment(
       id: event.shipment.id,
-      locationId: event.shipment.locationId,
+      locationId: locationId,
     );
 
-    if (_shipmentRepository.currentShipmentsByLocation
-        .containsKey(event.shipment.locationId)) {
-      if (_shipmentRepository
-          .currentShipmentsByLocation[event.shipment.locationId]!.isNotEmpty) {
-        return;
-      }
-    }
+    final shipments =
+        await _shipmentRepository.getShipmentsByLocation(locationId);
 
-    await _locationRepository.unsetStarted(event.shipment.locationId);
+    if (shipments.isEmpty) {
+      await _locationRepository.unsetStarted(locationId);
+    }
+  }
+
+  Future<void> _onDateChanged(
+    ShipmentsDateChanged event,
+    Emitter<ShipmentsState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        startDate: event.startDate,
+        endDate: event.endDate,
+        customDate: true,
+      ),
+    );
+
+    add(const ShipmentsShipmentUpdate());
+  }
+
+  Future<void> _onAutomaticDate(
+    ShipmentsAutomaticDate event,
+    Emitter<ShipmentsState> emit,
+  ) async {
+    emit(state.copyWith(customDate: false));
+
+    add(const ShipmentsRefreshRequested());
   }
 
   Future<void> _onUndoDeletionRequested(
@@ -72,9 +151,16 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     );
 
     final shipment = state.lastDeletedShipment!;
-    emit(state.copyWith());
     await _shipmentRepository.saveShipment(shipment);
 
     await _locationRepository.setStarted(shipment.locationId);
+  }
+
+  @override
+  Future<void> close() async {
+    await _shipmentUpdateSubscription?.cancel();
+    _dateCheckTimer.cancel();
+    state.scrollController.dispose();
+    return super.close();
   }
 }

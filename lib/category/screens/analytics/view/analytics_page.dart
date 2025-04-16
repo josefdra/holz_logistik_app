@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/analytics/analytics.dart';
+import 'package:holz_logistik/category/screens/analytics/widgets/contracts/view/contracts_page.dart';
 import 'package:holz_logistik_backend/repository/contract_repository.dart';
 
 class AnalyticsPage extends StatelessWidget {
@@ -27,15 +28,34 @@ class AnalyticsPage extends StatelessWidget {
         contractRepository: context.read<ContractRepository>(),
       )..add(const AnalyticsSubscriptionRequested()),
       child: Scaffold(
-        body: const ContractList(),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: FloatingActionButton(
-          heroTag: 'analyticsPageFloatingActionButton',
-          shape: const CircleBorder(),
-          onPressed: () => Navigator.of(context).push(
-            EditContractWidget.route(),
-          ),
-          child: const Icon(Icons.add),
+        body: Column(
+          children: [
+            const Expanded(
+              child: ContractList(),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).colorScheme.secondary,
+                  shape: const BeveledRectangleBorder(),
+                ),
+                onPressed: () => Navigator.of(context).push(
+                  ContractPage.route(),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Zusätzliches'),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -65,35 +85,6 @@ class ContractList extends StatelessWidget {
             }
           },
         ),
-        BlocListener<AnalyticsBloc, AnalyticsState>(
-          listenWhen: (previous, current) =>
-              previous.lastDeletedContract != current.lastDeletedContract &&
-              current.lastDeletedContract != null,
-          listener: (context, state) {
-            final deletedContract = state.lastDeletedContract!;
-            final messenger = ScaffoldMessenger.of(context);
-            messenger
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l10n.contractListContractDeletedSnackbarText(
-                      deletedContract.title,
-                    ),
-                  ),
-                  action: SnackBarAction(
-                    label: l10n.contractListUndoDeletionButtonText,
-                    onPressed: () {
-                      messenger.hideCurrentSnackBar();
-                      context
-                          .read<AnalyticsBloc>()
-                          .add(const AnalyticsUndoDeletionRequested());
-                    },
-                  ),
-                ),
-              );
-          },
-        ),
       ],
       child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
         builder: (context, state) {
@@ -113,18 +104,15 @@ class ContractList extends StatelessWidget {
           }
 
           return CupertinoScrollbar(
+            controller: state.scrollController,
             child: ListView.builder(
-              controller: ScrollController(),
+              controller: state.scrollController,
               itemCount: state.contracts.length,
               itemBuilder: (_, index) {
                 final contract = state.contracts.elementAt(index);
                 return ContractListTile(
                   contract: contract,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      EditContractWidget.route(initialContract: contract),
-                    );
-                  },
+                  onTap: () {},
                 );
               },
             ),

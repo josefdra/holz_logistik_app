@@ -21,19 +21,19 @@ class ContractLocalStorage extends ContractApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _activeContractStreamController =
-      BehaviorSubject<Map<String, Contract>>.seeded(
-    const {},
+  late final _activeContractsStreamController =
+      BehaviorSubject<List<Contract>>.seeded(
+    const [],
   );
-  late final _doneContractStreamController =
-      BehaviorSubject<Map<String, Contract>>.seeded(
+  late final _finishedContractUpdatesStreamController =
+      BehaviorSubject<Map<String, dynamic>>.seeded(
     const {},
   );
 
-  late final Stream<Map<String, Contract>> _broadcastActiveContracts =
-      _activeContractStreamController.stream;
-  late final Stream<Map<String, Contract>> _broadcastDoneContracts =
-      _doneContractStreamController.stream;
+  late final Stream<List<Contract>> _activeContracts =
+      _activeContractsStreamController.stream;
+  late final Stream<Map<String, dynamic>> _finishedContractUpdates =
+      _finishedContractUpdatesStreamController.stream;
 
   /// Migration function for contract table
   Future<void> _migrateContractTable(
@@ -44,7 +44,7 @@ class ContractLocalStorage extends ContractApi {
     // Migration logic here if needed
   }
 
-  Future<Map<String, Contract>> _getContractsByCondition({
+  Future<List<Contract>> _getContractsByCondition({
     required bool isDone,
   }) async {
     final db = await _coreLocalStorage.database;
@@ -55,38 +55,74 @@ class ContractLocalStorage extends ContractApi {
       whereArgs: [if (isDone) 1 else 0],
     );
 
-    final contractsMap = <String, Contract>{};
+    final contracts = <Contract>[];
     for (final contractJson in contractsJson) {
-      final contract =
-          Contract.fromJson(Map<String, dynamic>.from(contractJson));
-      contractsMap[contract.id] = contract;
+      final contract = Contract.fromJson(contractJson);
+      contracts.add(contract);
     }
-    return contractsMap;
+
+    return contracts;
   }
 
   /// Initialization
   Future<void> _init() async {
     final activeContracts = await _getContractsByCondition(isDone: false);
-    final doneContracts = await _getContractsByCondition(isDone: true);
 
-    _activeContractStreamController.add(activeContracts);
-    _doneContractStreamController.add(doneContracts);
+    _activeContractsStreamController.add(activeContracts);
   }
 
   @override
-  Stream<Map<String, Contract>> get activeContracts =>
-      _broadcastActiveContracts;
+  Stream<List<Contract>> get activeContracts => _activeContracts;
 
   @override
-  Stream<Map<String, Contract>> get doneContracts => _broadcastDoneContracts;
+  Stream<Map<String, dynamic>> get finishedContractUpdates =>
+      _finishedContractUpdates;
 
   @override
-  Map<String, Contract> get currentActiveContracts =>
-      _activeContractStreamController.value;
+  Future<List<Contract>> getFinishedContractsByDate(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await _coreLocalStorage.database;
+
+    final contractsJson = await db.query(
+      ContractTable.tableName,
+      where:
+          '${ContractTable.columnDone} = ? AND ${ContractTable.columnStartDate}'
+          ' >= ? AND ${ContractTable.columnStartDate} <= ? OR '
+          '${ContractTable.columnEndDate} >= ? AND '
+          '${ContractTable.columnEndDate} <= ?',
+      whereArgs: [1, start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+    );
+
+    final contracts = <Contract>[];
+    for (final contractJson in contractsJson) {
+      final contract = Contract.fromJson(contractJson);
+      contracts.add(contract);
+    }
+
+    return contracts;
+  }
 
   @override
-  Map<String, Contract> get currentDoneContracts =>
-      _doneContractStreamController.value;
+  Future<List<Contract>> getFinishedContractsByQuery(String query) async {
+    final db = await _coreLocalStorage.database;
+
+    final contractsJson = await db.query(
+      ContractTable.tableName,
+      where: '${ContractTable.columnDone} = ? AND ${ContractTable.columnTitle}'
+          ' LIKE ?',
+      whereArgs: [1, '%query%'],
+    );
+
+    final contracts = <Contract>[];
+    for (final contractJson in contractsJson) {
+      final contract = Contract.fromJson(contractJson);
+      contracts.add(contract);
+    }
+
+    return contracts;
+  }
 
   @override
   Future<Contract> getContractById(String id) async {
@@ -108,20 +144,33 @@ class ContractLocalStorage extends ContractApi {
 
   /// Insert or Update a [contract]
   @override
-  Future<int> saveContract(Contract contract) {
-    late final BehaviorSubject<Map<String, Contract>> controller;
+  Future<int> saveContract(Contract contract) async {
+    final result = await _insertOrUpdateContract(contract.toJson());
+    final activeController = _activeContractsStreamController;
+    final activeContracts = List<Contract>.from(activeController.value);
 
     if (contract.done == false) {
-      controller = _activeContractStreamController;
+      final index = activeContracts.indexWhere((c) => c.id == contract.id);
+      if (index > -1) {
+        activeContracts[index] = contract;
+      } else {
+        activeContracts.add(contract);
+      }
     } else {
-      controller = _doneContractStreamController;
+      activeContracts.removeWhere((c) => c.id == contract.id);
+      final updateController = _finishedContractUpdatesStreamController;
+      final updateData = {
+        'startDate': contract.startDate,
+        'endDate': contract.endDate,
+        'title': contract.title,
+      };
+
+      updateController.add(updateData);
     }
 
-    final contracts = Map<String, Contract>.from(controller.value);
-    contracts[contract.id] = contract;
-    controller.add(contracts);
+    activeController.add(activeContracts);
 
-    return _insertOrUpdateContract(contract.toJson());
+    return result;
   }
 
   /// Delete a Contract from the database based on [id]
@@ -132,24 +181,33 @@ class ContractLocalStorage extends ContractApi {
   /// Delete a Contract based on [id] and [done] status
   @override
   Future<int> deleteContract({required String id, required bool done}) async {
-    late final BehaviorSubject<Map<String, Contract>> controller;
+    final contract = await getContractById(id);
+    final result = await _deleteContract(id);
 
     if (done == false) {
-      controller = _activeContractStreamController;
+      final controller = _activeContractsStreamController;
+      final contracts = List<Contract>.from(controller.value)
+        ..removeWhere((c) => c.id == id);
+
+      controller.add(contracts);
     } else {
-      controller = _doneContractStreamController;
+      final controller = _finishedContractUpdatesStreamController;
+      final updateData = {
+        'startDate': contract.startDate,
+        'endDate': contract.endDate,
+        'title': contract.title,
+      };
+
+      controller.add(updateData);
     }
 
-    final contracts = Map<String, Contract>.from(controller.value)..remove(id);
-    controller.add(contracts);
-
-    return _deleteContract(id);
+    return result;
   }
 
   /// Close the both controllers
   @override
   Future<void> close() {
-    _activeContractStreamController.close();
-    return _doneContractStreamController.close();
+    _activeContractsStreamController.close();
+    return _finishedContractUpdatesStreamController.close();
   }
 }

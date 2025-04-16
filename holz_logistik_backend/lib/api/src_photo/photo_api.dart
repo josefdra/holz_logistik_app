@@ -7,11 +7,11 @@ abstract class PhotoApi {
   /// {@macro photo_api}
   const PhotoApi();
 
-  /// Provides a [Stream] of all photos.
-  Stream<Map<String, List<Photo>>> get photosByLocation;
+  /// Provides updates on finished photos
+  Stream<Map<String, dynamic>> get photoUpdates;
 
-  /// Provides all current photos.
-  Map<String, List<Photo>> get currentPhotosByLocation;
+  /// Provides photos.
+  Future<List<Photo>> getPhotosByLocation(String locationId);
 
   /// Saves or updates a [photo].
   ///

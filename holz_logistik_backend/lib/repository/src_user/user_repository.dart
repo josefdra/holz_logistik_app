@@ -20,10 +20,10 @@ class UserRepository {
   final UserSyncService _userSyncService;
 
   /// Provides a [Stream] of all users.
-  Stream<Map<String, User>> get users => _userApi.users;
+  Stream<List<User>> get users => _userApi.users;
 
   /// Provides a the current users.
-  Map<String, User> get currentUsers => _userApi.currentUsers;
+  Future<User> getUserById(String id) => _userApi.getUserById(id);
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

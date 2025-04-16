@@ -16,24 +16,16 @@ class ShipmentLocalStorage extends ShipmentApi {
     _coreLocalStorage
       ..registerTable(ShipmentTable.createTable)
       ..registerMigration(_migrateShipmentTable);
-
-    _init();
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _shipmentStreamController =
-      BehaviorSubject<Map<String, List<Shipment>>>.seeded(
+  late final _shipmentUpdatesStreamController =
+      BehaviorSubject<Map<String, dynamic>>.seeded(
     const {},
   );
-  late final _allShipmentsStreamController =
-      BehaviorSubject<List<Shipment>>.seeded(
-    const [],
-  );
 
-  late final Stream<Map<String, List<Shipment>>> _broadcastShipmentsByLocation =
-      _shipmentStreamController.stream;
-  late final Stream<List<Shipment>> _broadcastAllShipments =
-      _allShipmentsStreamController.stream;
+  late final Stream<Map<String, dynamic>> _shipmentUpdates =
+      _shipmentUpdatesStreamController.stream;
 
   /// Migration function for shipment table
   Future<void> _migrateShipmentTable(
@@ -44,43 +36,59 @@ class ShipmentLocalStorage extends ShipmentApi {
     // Migration logic here if needed
   }
 
-  /// Initialization
-  Future<void> _init() async {
-    final shipmentsJson =
-        await _coreLocalStorage.getAll(ShipmentTable.tableName);
+  @override
+  Stream<Map<String, dynamic>> get shipmentUpdates => _shipmentUpdates;
 
-    final shipmentsByLocationId = <String, List<Shipment>>{};
-    final allShipments = <Shipment>[];
+  @override
+  Future<List<Shipment>> getShipmentsByLocation(String locationId) async {
+    final shipmentsJson = await _coreLocalStorage.getByColumn(
+      ShipmentTable.tableName,
+      ShipmentTable.columnLocationId,
+      locationId,
+    );
 
-    for (final shipmentData in shipmentsJson) {
-      final shipment =
-          Shipment.fromJson(Map<String, dynamic>.from(shipmentData));
-
-      if (!shipmentsByLocationId.containsKey(shipment.locationId)) {
-        shipmentsByLocationId[shipment.locationId] = [];
-      }
-
-      allShipments.add(shipment);
-      shipmentsByLocationId[shipment.locationId]!.add(shipment);
+    final shipments = <Shipment>[];
+    for (final shipmentJson in shipmentsJson) {
+      final location = Shipment.fromJson(shipmentJson);
+      shipments.add(location);
     }
 
-    _allShipmentsStreamController.add(allShipments);
-    _shipmentStreamController.add(shipmentsByLocationId);
+    return shipments;
   }
 
   @override
-  Stream<Map<String, List<Shipment>>> get shipmentsByLocation =>
-      _broadcastShipmentsByLocation;
+  Future<List<Shipment>> getShipmentsByDate(
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await _coreLocalStorage.database;
 
-  @override
-  Stream<List<Shipment>> get shipments => _broadcastAllShipments;
+    final shipmentsJson = await db.query(
+      ShipmentTable.tableName,
+      where: '${ShipmentTable.columnLastEdit} >= ? AND '
+          '${ShipmentTable.columnLastEdit} <= ?',
+      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+    );
 
-  @override
-  Map<String, List<Shipment>> get currentShipmentsByLocation =>
-      _shipmentStreamController.value;
+    final shipments = <Shipment>[];
+    for (final shipmentJson in shipmentsJson) {
+      final location = Shipment.fromJson(shipmentJson);
+      shipments.add(location);
+    }
 
+    return shipments;
+  }
+
+  /// Get shipment by id
   @override
-  List<Shipment> get currentShipments => _allShipmentsStreamController.value;
+  Future<Shipment> getShipmentById(String id) async {
+    final shipments = await _coreLocalStorage.getById(
+      ShipmentTable.tableName,
+      id,
+    );
+
+    return Shipment.fromJson(shipments.first);
+  }
 
   /// Insert or Update a `shipment` to the database based on [shipmentData]
   Future<int> _insertOrUpdateShipment(Map<String, dynamic> shipmentData) async {
@@ -92,40 +100,17 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Insert or Update a [shipment]
   @override
-  Future<int> saveShipment(Shipment shipment) {
-    final currentShipmentsByLocation =
-        Map<String, List<Shipment>>.from(_shipmentStreamController.value);
-    final allShipments =
-        List<Shipment>.from(_allShipmentsStreamController.value);
+  Future<int> saveShipment(Shipment shipment) async {
+    final result = await _insertOrUpdateShipment(shipment.toJson());
+    final updateController = _shipmentUpdatesStreamController;
+    final updateData = {
+      'lastEdit': shipment.lastEdit,
+      'locationId': shipment.locationId,
+    };
 
-    if (!currentShipmentsByLocation.containsKey(shipment.locationId)) {
-      currentShipmentsByLocation[shipment.locationId] = [];
-    }
+    updateController.add(updateData);
 
-    final locationShipmentIndex =
-        currentShipmentsByLocation[shipment.locationId]!
-            .indexWhere((s) => s.id == shipment.id);
-
-    if (locationShipmentIndex >= 0) {
-      currentShipmentsByLocation[shipment.locationId]![locationShipmentIndex] =
-          shipment;
-    } else {
-      currentShipmentsByLocation[shipment.locationId]!.add(shipment);
-    }
-
-    final allShipmentIndex =
-        allShipments.indexWhere((s) => s.id == shipment.id);
-
-    if (allShipmentIndex >= 0) {
-      allShipments[allShipmentIndex] = shipment;
-    } else {
-      allShipments.add(shipment);
-    }
-
-    _shipmentStreamController.add(currentShipmentsByLocation);
-    _allShipmentsStreamController.add(allShipments);
-
-    return _insertOrUpdateShipment(shipment.toJson());
+    return result;
   }
 
   /// Delete a Shipment from the database based on [id]
@@ -139,30 +124,23 @@ class ShipmentLocalStorage extends ShipmentApi {
     required String id,
     required String locationId,
   }) async {
-    final currentShipmentsByLocation = _shipmentStreamController.value;
+    final shipment = await getShipmentById(id);
+    final result = await _deleteShipment(id);
+    
+    final controller = _shipmentUpdatesStreamController;
+    final updateData = {
+      'lastEdit': shipment.lastEdit,
+      'locationId': locationId,
+    };
 
-    currentShipmentsByLocation[locationId]!.removeWhere((s) => s.id == id);
-
-    if (currentShipmentsByLocation[locationId]!.isEmpty) {
-      currentShipmentsByLocation.remove(locationId);
-    }
-
-    _shipmentStreamController.add(currentShipmentsByLocation);
-
-    final allShipments = [..._allShipmentsStreamController.value];
-    final contractIndex = allShipments.indexWhere((s) => s.id == id);
-
-    allShipments.removeAt(contractIndex);
-    _allShipmentsStreamController.add(allShipments);
-
-    return _deleteShipment(id);
+    controller.add(updateData);
+    return result;
   }
 
-  /// Close the [_shipmentStreamController] and [_allShipmentsStreamController]
+  /// Close the [_shipmentUpdatesStreamController]
   @override
   Future<void> close() {
-    _shipmentStreamController.close();
-    _allShipmentsStreamController.close();
+    _shipmentUpdatesStreamController.close();
     return Future.value();
   }
 }

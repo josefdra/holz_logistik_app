@@ -19,7 +19,6 @@ class App extends StatelessWidget {
     required this.coreSyncService,
     super.key,
   })  : authenticationApi = AuthenticationLocalStorage(plugin: sharedPrefs),
-        commentApi = CommentLocalStorage(coreLocalStorage: coreLocalStorage),
         contractApi = ContractLocalStorage(coreLocalStorage: coreLocalStorage),
         locationApi = LocationLocalStorage(coreLocalStorage: coreLocalStorage),
         noteApi = NoteLocalStorage(coreLocalStorage: coreLocalStorage),
@@ -31,7 +30,6 @@ class App extends StatelessWidget {
   final CoreLocalStorage coreLocalStorage;
   final CoreSyncService coreSyncService;
   final AuthenticationApi authenticationApi;
-  final CommentApi commentApi;
   final ContractApi contractApi;
   final LocationApi locationApi;
   final NoteApi noteApi;
@@ -49,15 +47,6 @@ class App extends StatelessWidget {
             authenticationApi: authenticationApi,
             authenticationSyncService:
                 AuthenticationSyncService(coreSyncService: coreSyncService),
-          ),
-          dispose: (repository) => repository.dispose(),
-          lazy: false,
-        ),
-        RepositoryProvider(
-          create: (_) => CommentRepository(
-            commentApi: commentApi,
-            commentSyncService:
-                CommentSyncService(coreSyncService: coreSyncService),
           ),
           dispose: (repository) => repository.dispose(),
           lazy: false,
@@ -178,6 +167,7 @@ class AppView extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2C5E1A),
           primary: const Color(0xFF2C5E1A),
+          secondary: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF2C5E1A),

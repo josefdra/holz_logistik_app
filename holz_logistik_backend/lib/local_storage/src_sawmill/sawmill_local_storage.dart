@@ -51,20 +51,17 @@ class SawmillLocalStorage extends SawmillApi {
   Stream<List<Sawmill>> get sawmills => _broadcastSawmills;
 
   @override
-  List<Sawmill> get currentSawmills => _sawmillStreamController.value;
-
-  @override
-  Future<String> getNameById(String id) async {
+  Future<Sawmill> getSawmillById(String id) async {
     final sawmills = [..._sawmillStreamController.value];
     final sawmill = sawmills.firstWhereOrNull((s) => s.id == id);
 
     if (sawmill != null) {
-      return sawmill.name;
+      return sawmill;
     }
 
     final result = await _coreLocalStorage.getById(SawmillTable.tableName, id);
 
-    return result.first[SawmillTable.columnName] as String;
+    return Sawmill.fromJson(result.first);
   }
 
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
@@ -77,17 +74,18 @@ class SawmillLocalStorage extends SawmillApi {
 
   /// Insert or Update a [sawmill]
   @override
-  Future<int> saveSawmill(Sawmill sawmill) {
+  Future<int> saveSawmill(Sawmill sawmill) async {
+    final result = await _insertOrUpdateSawmill(sawmill.toJson());
     final sawmills = [..._sawmillStreamController.value];
     final sawmillIndex = sawmills.indexWhere((s) => s.id == sawmill.id);
-    if (sawmillIndex >= 0) {
+    if (sawmillIndex > -1) {
       sawmills[sawmillIndex] = sawmill;
     } else {
       sawmills.add(sawmill);
     }
 
     _sawmillStreamController.add(sawmills);
-    return _insertOrUpdateSawmill(sawmill.toJson());
+    return result;
   }
 
   /// Delete a Sawmill from the database based on [id]
@@ -98,12 +96,13 @@ class SawmillLocalStorage extends SawmillApi {
   /// Delete a Sawmill based on [id]
   @override
   Future<int> deleteSawmill(String id) async {
+    final result = await _deleteSawmill(id);
     final sawmills = [..._sawmillStreamController.value];
     final sawmillIndex = sawmills.indexWhere((s) => s.id == id);
 
     sawmills.removeAt(sawmillIndex);
     _sawmillStreamController.add(sawmills);
-    return _deleteSawmill(id);
+    return result;
   }
 
   /// Close the [_sawmillStreamController]

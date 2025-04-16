@@ -1,6 +1,6 @@
 part of 'edit_note_bloc.dart';
 
-enum EditNoteStatus { initial, loading, success, failure }
+enum EditNoteStatus { initial, loading, success, invalid, failure }
 
 extension EditNoteStatusX on EditNoteStatus {
   bool get isLoadingOrSuccess => [
@@ -14,11 +14,13 @@ final class EditNoteState extends Equatable {
     this.status = EditNoteStatus.initial,
     this.initialNote,
     this.text = '',
+    this.validationErrors = const {},
   });
 
   final EditNoteStatus status;
   final Note? initialNote;
   final String text;
+  final Map<String, String?> validationErrors;
 
   bool get isNewNote => initialNote == null;
 
@@ -26,11 +28,13 @@ final class EditNoteState extends Equatable {
     EditNoteStatus? status,
     Note? initialNote,
     String? text,
+    Map<String, String?>? validationErrors,
   }) {
     return EditNoteState(
       status: status ?? this.status,
       initialNote: initialNote ?? this.initialNote,
       text: text ?? this.text,
+      validationErrors: validationErrors ?? this.validationErrors,
     );
   }
 
@@ -39,5 +43,6 @@ final class EditNoteState extends Equatable {
         status,
         initialNote,
         text,
+        validationErrors,
       ];
 }

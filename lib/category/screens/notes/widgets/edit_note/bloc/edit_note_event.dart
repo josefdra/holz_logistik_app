@@ -9,9 +9,11 @@ sealed class EditNoteEvent extends Equatable {
 
 final class EditNoteTextChanged extends EditNoteEvent {
   const EditNoteTextChanged(
-    this.text,
-  );
+    this.text, {
+    this.fieldName = 'text',
+  });
 
+  final String fieldName;
   final String text;
 
   @override

@@ -22,9 +22,6 @@ class NoteRepository {
   /// Provides a [Stream] of all notes.
   Stream<List<Note>> get notes => _noteApi.notes;
 
-  /// Provides all current notes
-  List<Note> get currentNotes => _noteApi.currentNotes;
-
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {

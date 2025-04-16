@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
 import 'package:holz_logistik_backend/repository/location_repository.dart';
@@ -16,7 +17,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     required ShipmentRepository shipmentRepository,
   })  : _locationRepository = locationRepository,
         _shipmentRepository = shipmentRepository,
-        super(const LocationListState()) {
+        super(LocationListState()) {
     on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
     on<LocationListLocationDeleted>(_onLocationDeleted);
     on<LocationListSearchQueryChanged>(
@@ -34,16 +35,16 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     LocationListSubscriptionRequested event,
     Emitter<LocationListState> emit,
   ) async {
-    emit(state.copyWith(status: () => LocationListStatus.loading));
+    emit(state.copyWith(status: LocationListStatus.loading));
 
     await emit.forEach<List<Location>>(
       _locationRepository.activeLocations,
       onData: (locations) => state.copyWith(
-        status: () => LocationListStatus.success,
-        locations: () => locations,
+        status: LocationListStatus.success,
+        locations: locations,
       ),
       onError: (_, __) => state.copyWith(
-        status: () => LocationListStatus.failure,
+        status: LocationListStatus.failure,
       ),
     );
   }
@@ -52,7 +53,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     LocationListLocationDeleted event,
     Emitter<LocationListState> emit,
   ) async {
-    emit(state.copyWith(lastDeletedLocation: () => event.location));
+    emit(state.copyWith(lastDeletedLocation: event.location));
     await _locationRepository.deleteLocation(
       id: event.location.id,
       done: event.location.done,
@@ -67,9 +68,14 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   ) {
     emit(
       state.copyWith(
-        searchQuery: () =>
-            LocationListSearchQuery(searchQuery: event.searchQuery),
+        searchQuery: LocationListSearchQuery(searchQuery: event.searchQuery),
       ),
     );
+  }
+
+  @override
+  Future<void> close() {
+    state.scrollController.dispose();
+    return super.close();
   }
 }

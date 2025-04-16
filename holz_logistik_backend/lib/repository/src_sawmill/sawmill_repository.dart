@@ -22,11 +22,8 @@ class SawmillRepository {
   /// Provides a [Stream] of all sawmills.
   Stream<List<Sawmill>> get sawmills => _sawmillApi.sawmills;
 
-  /// Provides all current sawmills
-  List<Sawmill> get currentSawmills => _sawmillApi.currentSawmills;
-
-  /// Gets the name of the sawmill by [id]
-  Future<String> getNameById(String id) => _sawmillApi.getNameById(id);
+  /// Gets the sawmill by [id]
+  Future<Sawmill> getSawmillById(String id) => _sawmillApi.getSawmillById(id);
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

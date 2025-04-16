@@ -7,11 +7,11 @@ abstract class UserApi {
   /// {@macro user_api}
   const UserApi();
 
-  /// Provides a [Stream] of all users.
-  Stream<Map<String, User>> get users;
+  /// Provides a stream of users
+  Stream<List<User>> get users;
 
-  /// Provides all current users.
-  Map<String, User> get currentUsers;
+  /// Provides a single user by [id]
+  Future<User> getUserById(String id);
 
   /// Saves or updates a [user].
   ///

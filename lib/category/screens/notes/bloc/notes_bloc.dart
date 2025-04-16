@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/screens/notes/notes.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
@@ -12,7 +13,7 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
   NotesBloc({
     required NoteRepository noteRepository,
   })  : _noteRepository = noteRepository,
-        super(const NotesState()) {
+        super(NotesState()) {
     on<NotesSubscriptionRequested>(_onSubscriptionRequested);
     on<NotesNoteDeleted>(_onNoteDeleted);
     on<NotesUndoDeletionRequested>(_onUndoDeletionRequested);
@@ -58,5 +59,11 @@ class NotesBloc extends Bloc<NotesEvent, NotesState> {
     final note = state.lastDeletedNote!;
     emit(state.copyWith());
     await _noteRepository.saveNote(note);
+  }
+
+  @override
+  Future<void> close() {
+    state.scrollController.dispose();
+    return super.close();
   }
 }

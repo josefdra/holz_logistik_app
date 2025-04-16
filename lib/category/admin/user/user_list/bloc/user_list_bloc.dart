@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/admin/user/user_list/user_list.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
@@ -12,7 +13,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
   UserListBloc({
     required UserRepository userRepository,
   })  : _userRepository = userRepository,
-        super(const UserListState()) {
+        super(UserListState()) {
     on<UserListSubscriptionRequested>(_onSubscriptionRequested);
     on<UserListUserDeleted>(_onUserDeleted);
     on<UserListUndoDeletionRequested>(_onUndoDeletionRequested);
@@ -25,16 +26,16 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     UserListSubscriptionRequested event,
     Emitter<UserListState> emit,
   ) async {
-    emit(state.copyWith(status: () => UserListStatus.loading));
+    emit(state.copyWith(status: UserListStatus.loading));
 
-    await emit.forEach<Map<String, User>>(
+    await emit.forEach<List<User>>(
       _userRepository.users,
       onData: (users) => state.copyWith(
-        status: () => UserListStatus.success,
-        users: () => users.values.toList(),
+        status: UserListStatus.success,
+        users: users,
       ),
       onError: (_, __) => state.copyWith(
-        status: () => UserListStatus.failure,
+        status: UserListStatus.failure,
       ),
     );
   }
@@ -43,7 +44,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     UserListUserDeleted event,
     Emitter<UserListState> emit,
   ) async {
-    emit(state.copyWith(lastDeletedUser: () => event.user));
+    emit(state.copyWith(lastDeletedUser: event.user));
     await _userRepository.deleteUser(event.user.id);
   }
 
@@ -57,7 +58,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     );
 
     final user = state.lastDeletedUser!;
-    emit(state.copyWith(lastDeletedUser: () => null));
+    emit(state.copyWith());
     await _userRepository.saveUser(user);
   }
 
@@ -65,6 +66,12 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
     UserListFilterChanged event,
     Emitter<UserListState> emit,
   ) {
-    emit(state.copyWith(filter: () => event.filter));
+    emit(state.copyWith(filter: event.filter));
+  }
+
+  @override
+  Future<void> close() {
+    state.scrollController.dispose();
+    return super.close();
   }
 }

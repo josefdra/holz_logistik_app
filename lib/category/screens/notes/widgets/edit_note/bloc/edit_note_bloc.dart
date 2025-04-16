@@ -29,14 +29,40 @@ class EditNoteBloc extends Bloc<EditNoteEvent, EditNoteState> {
     EditNoteTextChanged event,
     Emitter<EditNoteState> emit,
   ) {
-    emit(state.copyWith(text: event.text));
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
+    emit(state.copyWith(validationErrors: updatedErrors, text: event.text));
+  }
+
+  Map<String, String?> _validateFields() {
+    final errors = <String, String?>{};
+
+    if (state.text == '') {
+      errors['text'] = 'Text darf nicht leer sein';
+    }
+
+    return errors;
   }
 
   Future<void> _onSubmitted(
     EditNoteSubmitted event,
     Emitter<EditNoteState> emit,
   ) async {
+    final validationErrors = _validateFields();
+
+    if (validationErrors.isNotEmpty) {
+      emit(
+        state.copyWith(
+          validationErrors: validationErrors,
+          status: EditNoteStatus.invalid,
+        ),
+      );
+      return;
+    }
+
     emit(state.copyWith(status: EditNoteStatus.loading));
+
     final note = (state.initialNote ?? Note.empty()).copyWith(
       lastEdit: DateTime.now(),
       text: state.text,

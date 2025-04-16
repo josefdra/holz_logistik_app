@@ -251,28 +251,41 @@ class _SawmillField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
-    final sawmills = context.watch<SawmillRepository>().currentSawmills;
     final error = state.validationErrors['sawmill'];
 
-    return DropdownButtonFormField<String>(
-      decoration: InputDecoration(
-        labelText: 'Sägewerk',
-        enabled: !state.status.isLoadingOrSuccess,
-        errorText: error,
-        border: const OutlineInputBorder(),
-      ),
-      items: sawmills.map((sawmill) {
-        return DropdownMenuItem<String>(
-          value: sawmill.id,
-          child: Text(sawmill.name),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          context
-              .read<ShipmentFormBloc>()
-              .add(ShipmentFormSawmillUpdate(value));
+    return StreamBuilder<List<Sawmill>>(
+      stream: context.watch<SawmillRepository>().sawmills,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
         }
+
+        final sawmills = snapshot.data!;
+
+        return DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            labelText: 'Sägewerk',
+            enabled: !state.status.isLoadingOrSuccess,
+            errorText: error,
+            border: const OutlineInputBorder(),
+          ),
+          value: state.sawmillId.isNotEmpty ? state.sawmillId : null,
+          items: sawmills.map((sawmill) {
+            return DropdownMenuItem<String>(
+              value: sawmill.id,
+              child: Text(sawmill.name),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              context
+                  .read<ShipmentFormBloc>()
+                  .add(ShipmentFormSawmillUpdate(value));
+            }
+          },
+        );
       },
     );
   }

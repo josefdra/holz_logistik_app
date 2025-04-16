@@ -56,9 +56,11 @@ final class EditLocationInitialQuantityChanged extends EditLocationEvent {
 final class EditLocationInitialOversizeQuantityChanged
     extends EditLocationEvent {
   const EditLocationInitialOversizeQuantityChanged(
-    this.initialOversizeQuantity,
-  );
+    this.initialOversizeQuantity, {
+    this.fieldName = 'initialOversizeQuantity',
+  });
 
+  final String fieldName;
   final double initialOversizeQuantity;
 
   @override
@@ -114,12 +116,12 @@ final class EditLocationOversizeSawmillsChanged extends EditLocationEvent {
 }
 
 final class EditLocationPhotosChanged extends EditLocationEvent {
-  const EditLocationPhotosChanged(this.photos);
+  const EditLocationPhotosChanged(this.locationId);
 
-  final List<Photo> photos;
+  final String locationId;
 
   @override
-  List<Object> get props => [photos];
+  List<Object> get props => [locationId];
 }
 
 final class EditLocationNewSawmillSubmitted extends EditLocationEvent {

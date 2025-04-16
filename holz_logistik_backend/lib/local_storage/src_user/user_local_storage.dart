@@ -21,12 +21,11 @@ class UserLocalStorage extends UserApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _userStreamController = BehaviorSubject<Map<String, User>>.seeded(
-    const {},
+  late final _userStreamController = BehaviorSubject<List<User>>.seeded(
+    const [],
   );
 
-  late final Stream<Map<String, User>> _broadcastUsers =
-      _userStreamController.stream;
+  late final Stream<List<User>> _users = _userStreamController.stream;
 
   /// Migration function for user table
   Future<void> _migrateUserTable(
@@ -40,21 +39,26 @@ class UserLocalStorage extends UserApi {
   /// Initialization
   Future<void> _init() async {
     final usersJson = await _coreLocalStorage.getAll(UserTable.tableName);
-    final usersMap = <String, User>{};
+    final users = <User>[];
 
     for (final userJson in usersJson) {
-      final user = User.fromJson(Map<String, dynamic>.from(userJson));
-      usersMap[user.id] = user;
+      final user = User.fromJson(userJson);
+
+      users.add(user);
     }
 
-    _userStreamController.add(usersMap);
+    _userStreamController.add(users);
   }
 
   @override
-  Stream<Map<String, User>> get users => _broadcastUsers;
+  Stream<List<User>> get users => _users;
 
   @override
-  Map<String, User> get currentUsers => _userStreamController.value;
+  Future<User> getUserById(String id) async {
+    final userJson = await _coreLocalStorage.getById(UserTable.tableName, id);
+
+    return User.fromJson(userJson.first);
+  }
 
   /// Insert or Update a `user` to the database based on [userData]
   Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
@@ -63,11 +67,20 @@ class UserLocalStorage extends UserApi {
 
   /// Insert or Update a [user]
   @override
-  Future<int> saveUser(User user) {
-    final users = Map<String, User>.from(_userStreamController.value);
-    users[user.id] = user;
+  Future<int> saveUser(User user) async {
+    final result = await _insertOrUpdateUser(user.toJson());
+    final users = [..._userStreamController.value];
+    final userIndex = users.indexWhere((u) => u.id == user.id);
+
+    if (userIndex > -1) {
+      users[userIndex] = user;
+    } else {
+      users.add(user);
+    }
+
     _userStreamController.add(users);
-    return _insertOrUpdateUser(user.toJson());
+
+    return result;
   }
 
   /// Delete a User from the database based on [id]
@@ -78,10 +91,14 @@ class UserLocalStorage extends UserApi {
   /// Delete a User based on [id]
   @override
   Future<int> deleteUser(String id) async {
-    final users = Map<String, User>.from(_userStreamController.value)
-      ..remove(id);
+    final result = await _deleteUser(id);
+    final users = [..._userStreamController.value];
+    final userIndex = users.indexWhere((n) => n.id == id);
+
+    users.removeAt(userIndex);
     _userStreamController.add(users);
-    return _deleteUser(id);
+
+    return result;
   }
 
   /// Close the [_userStreamController]

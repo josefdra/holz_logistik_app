@@ -42,7 +42,8 @@ class LocationDetailsBloc
   late final StreamSubscription<Contract>? _contractSubscription;
   late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
   late final StreamSubscription<List<Sawmill>>? _oversizeSawmillSubscription;
-  late final StreamSubscription<List<Shipment>>? _shipmentSubscription;
+  late final StreamSubscription<Map<String, dynamic>>?
+      _shipmentUpdateSubscription;
 
   void _onSubscriptionRequested(
     LocationDetailsSubscriptionRequested event,
@@ -62,17 +63,17 @@ class LocationDetailsBloc
                 add(LocationDetailsLocationUpdate(filteredLocations.first)),
           );
 
-      _contractSubscription = _contractRepository.activeContracts
-          .map(
-            (contractMap) => contractMap.containsKey(state.location.contractId)
-                ? contractMap[state.location.contractId]!
-                : Contract.empty(),
-          )
-          .listen(
-            (contract) => add(
-              LocationDetailsContractUpdate(contract),
-            ),
-          );
+      _contractSubscription =
+          _contractRepository.activeContracts.map((contracts) {
+        return contracts.firstWhere(
+          (contract) => contract.id == state.location.contractId,
+          orElse: Contract.empty,
+        );
+      }).listen(
+        (contract) => add(
+          LocationDetailsContractUpdate(contract),
+        ),
+      );
 
       _sawmillSubscription = _sawmillRepository.sawmills.map(
         (sawmills) {
@@ -110,17 +111,16 @@ class LocationDetailsBloc
         ),
       );
 
-      _shipmentSubscription = _shipmentRepository.shipmentsByLocation
-          .map(
-        (shipmentMap) => shipmentMap.containsKey(state.location.id)
-            ? List<Shipment>.from(shipmentMap[state.location.id]!)
-            : <Shipment>[],
-      )
-          .listen(
-        (filteredShipments) {
-          add(LocationDetailsShipmentUpdate(filteredShipments));
+      _shipmentUpdateSubscription = _shipmentRepository.shipmentUpdates.listen(
+        (shipmentUpdates) {
+          final locationId = state.location.id;
+          if (shipmentUpdates['locationId'] == locationId) {
+            add(LocationDetailsShipmentUpdate(locationId));
+          }
         },
       );
+
+      add(LocationDetailsShipmentUpdate(state.location.id));
 
       emit(
         state.copyWith(
@@ -137,12 +137,11 @@ class LocationDetailsBloc
   }
 
   void _refreshContract() {
-    final contractId = state.location.contractId;
-
-    _contractRepository.activeContracts.first.then((contractMap) {
-      final contract = contractMap.containsKey(contractId)
-          ? contractMap[contractId]!
-          : Contract.empty();
+    _contractRepository.activeContracts.first.then((contracts) {
+      final contract = contracts.firstWhere(
+        (contract) => contract.id == state.location.contractId,
+        orElse: Contract.empty,
+      );
       add(LocationDetailsContractUpdate(contract));
     });
   }
@@ -221,15 +220,17 @@ class LocationDetailsBloc
     emit(state.copyWith(oversizeSawmills: event.oversizeSawmills));
   }
 
-  void _onShipmentUpdate(
+  Future<void> _onShipmentUpdate(
     LocationDetailsShipmentUpdate event,
     Emitter<LocationDetailsState> emit,
-  ) {
-    final values = updateValues(event.shipments, state.location);
+  ) async {
+    final shipments =
+        await _shipmentRepository.getShipmentsByLocation(event.locationId);
+    final values = updateValues(shipments, state.location);
 
     emit(
       state.copyWith(
-        shipments: event.shipments,
+        shipments: shipments,
         currentQuantity: values['quantity'] as double,
         currentOversizeQuantity: values['oversizeQuantity'] as double,
         currentPieceCount: values['pieceCount'] as int,
@@ -243,7 +244,7 @@ class LocationDetailsBloc
     await _contractSubscription?.cancel();
     await _sawmillSubscription?.cancel();
     await _oversizeSawmillSubscription?.cancel();
-    await _shipmentSubscription?.cancel();
+    await _shipmentUpdateSubscription?.cancel();
     return super.close();
   }
 }

@@ -3,25 +3,24 @@ part of 'analytics_bloc.dart';
 enum AnalyticsStatus { initial, loading, success, failure }
 
 final class AnalyticsState extends Equatable {
-  const AnalyticsState({
+  AnalyticsState({
     this.status = AnalyticsStatus.initial,
     this.contracts = const [],
-    this.lastDeletedContract,
-  });
+    ScrollController? scrollController,
+  }) : scrollController = scrollController ?? ScrollController();
 
   final AnalyticsStatus status;
   final List<Contract> contracts;
-  final Contract? lastDeletedContract;
+  final ScrollController scrollController;
 
   AnalyticsState copyWith({
     AnalyticsStatus? status,
     List<Contract>? contracts,
-    Contract? lastDeletedContract,
   }) {
     return AnalyticsState(
       status: status ?? this.status,
       contracts: contracts != null ? sortByLastEdit(contracts) : this.contracts,
-      lastDeletedContract: lastDeletedContract ?? this.lastDeletedContract,
+      scrollController: scrollController,
     );
   }
 
@@ -29,6 +28,5 @@ final class AnalyticsState extends Equatable {
   List<Object?> get props => [
         status,
         contracts,
-        lastDeletedContract,
       ];
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/category/core/l10n/l10n.dart';
 import 'package:holz_logistik/category/screens/location_list/location_list.dart';
+import 'package:holz_logistik/category/screens/location_list/widgets/finished_locations/finished_locations.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 class LocationListPage extends StatelessWidget {
@@ -28,10 +29,34 @@ class LocationListPage extends StatelessWidget {
         locationRepository: context.read<LocationRepository>(),
         shipmentRepository: context.read<ShipmentRepository>(),
       )..add(const LocationListSubscriptionRequested()),
-      child: const Scaffold(
-        body: Row(
+      child: Scaffold(
+        body: Column(
           children: [
-            Expanded(child: LocationList()),
+            const Expanded(
+              child: LocationList(),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Theme.of(context).colorScheme.secondary,
+                  shape: const BeveledRectangleBorder(),
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(FinishedLocationPage.route());
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Abgeschlossene Standorte'),
+                    SizedBox(width: 8),
+                    Icon(Icons.arrow_forward),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -95,8 +120,9 @@ class LocationList extends StatelessWidget {
                 }
 
                 return CupertinoScrollbar(
+                  controller: state.scrollController,
                   child: ListView.builder(
-                    primary: true,
+                    controller: state.scrollController,
                     itemCount: state.searchQueryedLocations.length,
                     itemBuilder: (_, index) {
                       final location =

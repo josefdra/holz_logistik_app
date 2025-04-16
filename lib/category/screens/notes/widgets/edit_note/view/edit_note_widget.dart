@@ -16,7 +16,7 @@ class EditNoteWidget extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => EditNoteBloc(
           authenticatedUser:
-              context.watch<AuthenticationRepository>().currentUser,
+              context.read<AuthenticationRepository>().currentUser,
           notesRepository: context.read<NoteRepository>(),
           initialNote: initialNote,
         ),
@@ -93,6 +93,7 @@ class _TextField extends StatelessWidget {
 
     final state = context.watch<EditNoteBloc>().state;
     final hintText = state.initialNote?.text ?? '';
+    final error = state.validationErrors['text'];
 
     return TextFormField(
       key: const Key('editNoteView_text_textFormField'),
@@ -101,6 +102,8 @@ class _TextField extends StatelessWidget {
         enabled: !state.status.isLoadingOrSuccess,
         labelText: l10n.editNoteTextLabel,
         hintText: hintText,
+        errorText: error,
+        border: const OutlineInputBorder(),
       ),
       maxLength: 300,
       maxLines: 7,

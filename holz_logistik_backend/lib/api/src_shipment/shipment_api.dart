@@ -7,17 +7,17 @@ abstract class ShipmentApi {
   /// {@macro shipment_api}
   const ShipmentApi();
 
-  /// Provides a [Stream] of all shipments as list.
-  Stream<List<Shipment>> get shipments;
+  /// Provides updates on shipments.
+  Stream<Map<String, dynamic>> get shipmentUpdates;
 
-  /// Provides a [Stream] of all shipments by location.
-  Stream<Map<String, List<Shipment>>> get shipmentsByLocation;
+  /// Provides shipments by location.
+  Future<List<Shipment>> getShipmentsByLocation(String locationId);
 
-  /// Provides all current shipments as list
-  List<Shipment> get currentShipments;
+  /// Provides shipments.
+  Future<List<Shipment>> getShipmentsByDate(DateTime start, DateTime end);
 
-  /// Provides all current shipments by location
-  Map<String, List<Shipment>> get currentShipmentsByLocation;
+  /// Get shipment by id
+  Future<Shipment> getShipmentById(String id);
 
   /// Saves or updates a [shipment].
   ///

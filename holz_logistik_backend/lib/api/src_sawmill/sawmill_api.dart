@@ -10,11 +10,8 @@ abstract class SawmillApi {
   /// Provides a [Stream] of all sawmills.
   Stream<List<Sawmill>> get sawmills;
 
-  /// Provides all current sawmills
-  List<Sawmill> get currentSawmills;
-
-  /// Gets the name by [id]
-  Future<String> getNameById(String id);
+  /// Gets the sawmill by [id]
+  Future<Sawmill> getSawmillById(String id);
 
   /// Saves or updates a [sawmill].
   ///

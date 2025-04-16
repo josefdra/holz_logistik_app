@@ -19,6 +19,12 @@ class ContractTable {
   /// The column name for storing the additional info of the contract.
   static const String columnAdditionalInfo = 'additionalInfo';
 
+  /// The column name for the timestamp when a contract starts.
+  static const String columnStartDate = 'startDate';
+
+  /// The column name for the timestamp when a contract ends.
+  static const String columnEndDate = 'endDate';
+
   /// SQL statement for creating the contracts table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -26,7 +32,9 @@ class ContractTable {
       $columnDone INTEGER NOT NULL,
       $columnLastEdit TEXT NOT NULL,
       $columnTitle TEXT NOT NULL,
-      $columnAdditionalInfo TEXT NOT NULL
+      $columnAdditionalInfo TEXT NOT NULL,
+      $columnStartDate TEXT NOT NULL,
+      $columnEndDate TEXT NOT NULL
     )
   ''';
 }

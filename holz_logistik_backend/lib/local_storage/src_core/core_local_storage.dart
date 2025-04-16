@@ -99,6 +99,21 @@ class CoreLocalStorage {
     );
   }
 
+  /// Gets entities of table [tableName] based on [id] of [columnName]
+  Future<List<Map<String, dynamic>>> getByColumn(
+    String tableName,
+    String columnName,
+    String id,
+  ) async {
+    final db = await database;
+    
+    return db.query(
+      tableName,
+      where: '$columnName = ?',
+      whereArgs: [id],
+    );
+  }
+
   /// Inserts [data] into [tableName]
   Future<int> insert(String tableName, Map<String, dynamic> data) async {
     final db = await database;

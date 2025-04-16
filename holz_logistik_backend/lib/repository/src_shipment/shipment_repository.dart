@@ -19,19 +19,17 @@ class ShipmentRepository {
   final ShipmentApi _shipmentApi;
   final ShipmentSyncService _shipmentSyncService;
 
-  /// Provides a [Stream] of all shipments.
-  Stream<List<Shipment>> get allShipments => _shipmentApi.shipments;
+  /// Provides a [Stream] of shipment updates.
+  Stream<Map<String, dynamic>> get shipmentUpdates =>
+      _shipmentApi.shipmentUpdates;
 
-  /// Provides a [Stream] of all shipments by location.
-  Stream<Map<String, List<Shipment>>> get shipmentsByLocation =>
-      _shipmentApi.shipmentsByLocation;
+  /// Provides shipments by location.
+  Future<List<Shipment>> getShipmentsByLocation(String locationId) =>
+      _shipmentApi.getShipmentsByLocation(locationId);
 
-  /// Provides all current shipments
-  List<Shipment> get currentShipments => _shipmentApi.currentShipments;
-
-  /// Provides all current shipments by location
-  Map<String, List<Shipment>> get currentShipmentsByLocation =>
-      _shipmentApi.currentShipmentsByLocation;
+  /// Provides shipments.
+  Future<List<Shipment>> getShipmentsByDate(DateTime start, DateTime end) =>
+      _shipmentApi.getShipmentsByDate(start, end);
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
@@ -70,14 +68,12 @@ class ShipmentRepository {
   }
 
   /// Deletes all `shipment`s for a given locationId.
-  Future<void> deleteShipmentsByLocationId(String locationId) {
-    if (_shipmentApi.currentShipmentsByLocation.containsKey(locationId)) {
-      final shipments = List<Shipment>.from(
-        _shipmentApi.currentShipmentsByLocation[locationId]!,
-      );
+  Future<void> deleteShipmentsByLocationId(String locationId) async {
+    final shipments = await _shipmentApi.getShipmentsByLocation(locationId);
 
+    if (shipments.isNotEmpty) {
       for (final shipment in shipments) {
-        deleteShipment(id: shipment.id, locationId: locationId);
+        await deleteShipment(id: shipment.id, locationId: locationId);
       }
     }
 

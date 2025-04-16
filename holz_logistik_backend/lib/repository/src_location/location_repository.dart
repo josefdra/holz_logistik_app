@@ -19,18 +19,21 @@ class LocationRepository {
   final LocationApi _locationApi;
   final LocationSyncService _locationSyncService;
 
-  /// Provides a [Stream] of done locations.
-  Stream<List<Location>> get doneLocations => _locationApi.doneLocations;
-
   /// Provides a [Stream] of active locations.
   Stream<List<Location>> get activeLocations => _locationApi.activeLocations;
 
-  /// Provides all current active locations
-  List<Location> get currentActiveLocations =>
-      _locationApi.currentActiveLocations;
+  /// Provides updates on finished locations.
+  Stream<Map<String, dynamic>> get finishedLocationUpdates =>
+      _locationApi.finishedLocationUpdates;
 
-  /// Provides all current done locations
-  List<Location> get currentDoneLocations => _locationApi.currentDoneLocations;
+  /// Provides finished locations.
+  Future<List<Location>> getFinishedLocationsByDate(
+          DateTime start, DateTime end,) =>
+      _locationApi.getFinishedLocationsByDate(start, end);
+
+  /// Provides a single location by [id]
+  Future<Location> getLocationById(String id) =>
+      _locationApi.getLocationById(id);
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

@@ -1,5 +1,4 @@
 export 'authentication_local_storage.dart';
-export 'comment_local_storage.dart';
 export 'contract_local_storage.dart';
 export 'core_local_storage.dart';
 export 'location_local_storage.dart';

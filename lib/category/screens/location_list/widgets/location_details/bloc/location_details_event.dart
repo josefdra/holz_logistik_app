@@ -48,10 +48,10 @@ final class LocationDetailsOversizeSawmillUpdate extends LocationDetailsEvent {
 }
 
 final class LocationDetailsShipmentUpdate extends LocationDetailsEvent {
-  const LocationDetailsShipmentUpdate(this.shipments);
+  const LocationDetailsShipmentUpdate(this.locationId);
 
-  final List<Shipment> shipments;
+  final String locationId;
 
   @override
-  List<Object> get props => [shipments];
+  List<Object> get props => [locationId];
 }

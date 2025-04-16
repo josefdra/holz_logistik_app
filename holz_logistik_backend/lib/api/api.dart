@@ -1,5 +1,4 @@
 export 'authentication_api.dart';
-export 'comment_api.dart';
 export 'contract_api.dart';
 export 'location_api.dart';
 export 'note_api.dart';

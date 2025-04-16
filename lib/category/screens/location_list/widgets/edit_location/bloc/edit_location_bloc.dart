@@ -35,9 +35,6 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
             contractId: initialLocation?.contractId ?? '',
             sawmills: initialLocation?.sawmillIds ?? const [],
             oversizeSawmills: initialLocation?.oversizeSawmillIds ?? const [],
-            photos:
-                photoRepository.currentPhotosByLocation[initialLocation?.id] ??
-                    const [],
           ),
         ) {
     on<EditLocationInit>(_onInit);
@@ -64,6 +61,8 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   final PhotoRepository _photoRepository;
 
   late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
+  late final StreamSubscription<Map<String, dynamic>>?
+      _photoUpdatesSubscription;
 
   Future<void> _onInit(
     EditLocationInit event,
@@ -84,6 +83,14 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
         add(EditLocationSawmillUpdate(sawmillIds));
       },
     );
+
+    _photoUpdatesSubscription =
+        _photoRepository.photoUpdates.listen((photoUpdates) {
+      final locationId = state.initialLocation?.id ?? '';
+      if (photoUpdates['locationId'] == locationId) {
+        add(EditLocationPhotosChanged(locationId));
+      }
+    });
   }
 
   void _onPartieNrChanged(
@@ -134,8 +141,14 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     EditLocationInitialOversizeQuantityChanged event,
     Emitter<EditLocationState> emit,
   ) {
+    final updatedErrors = Map<String, String?>.from(state.validationErrors)
+      ..remove(event.fieldName);
+
     emit(
-      state.copyWith(initialOversizeQuantity: event.initialOversizeQuantity),
+      state.copyWith(
+        validationErrors: updatedErrors,
+        initialOversizeQuantity: event.initialOversizeQuantity,
+      ),
     );
   }
 
@@ -182,11 +195,13 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     emit(state.copyWith(oversizeSawmills: event.oversizeSawmills));
   }
 
-  void _onPhotosChanged(
+  Future<void> _onPhotosChanged(
     EditLocationPhotosChanged event,
     Emitter<EditLocationState> emit,
-  ) {
-    emit(state.copyWith(photos: event.photos));
+  ) async {
+    final photos = await _photoRepository.getPhotosByLocation(event.locationId);
+
+    emit(state.copyWith(photos: photos));
   }
 
   Future<void> _onNewSawmillSubmitted(
@@ -214,9 +229,9 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     final sawmillItems = <DropdownItem<String>>[];
 
     for (final sawmillId in event.allSawmills) {
-      final name = await _sawmillRepository.getNameById(sawmillId);
+      final sawmill = await _sawmillRepository.getSawmillById(sawmillId);
       final item = DropdownItem(
-        label: name,
+        label: sawmill.name,
         value: sawmillId,
       );
       sawmillItems.add(item);
@@ -251,6 +266,11 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
 
     if (state.initialQuantity == 0) {
       errors['initialQuantity'] = 'Menge darf nicht 0 sein';
+    }
+
+    if (state.initialOversizeQuantity > state.initialQuantity) {
+      errors['initialOversizeQuantity'] =
+          'Menge ÜS kann nicht \ngrößer als Menge sein';
     }
 
     if (state.initialPieceCount == 0) {
@@ -308,6 +328,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   @override
   Future<void> close() async {
     await _sawmillSubscription?.cancel();
+    await _photoUpdatesSubscription?.cancel();
     state.newSawmillController.dispose();
     state.sawmillController.dispose();
     state.oversizeSawmillController.dispose();

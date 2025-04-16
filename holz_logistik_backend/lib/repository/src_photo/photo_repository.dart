@@ -20,12 +20,11 @@ class PhotoRepository {
   final PhotoSyncService _photoSyncService;
 
   /// Provides a [Stream] of all photos.
-  Stream<Map<String, List<Photo>>> get photosByLocation =>
-      _photoApi.photosByLocation;
+  Stream<Map<String, dynamic>> get photoUpdates => _photoApi.photoUpdates;
 
-  /// Provides all current photos
-  Map<String, List<Photo>> get currentPhotosByLocation =>
-      _photoApi.currentPhotosByLocation;
+  /// Provides photos.
+  Future<List<Photo>> getPhotosByLocation(String locationId) =>
+      _photoApi.getPhotosByLocation(locationId);
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

@@ -32,7 +32,9 @@ class NotesPage extends StatelessWidget {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
           heroTag: 'notesPageFloatingActionButton',
-          shape: const CircleBorder(),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(15)),
+          ),
           onPressed: () => Navigator.of(context).push(
             EditNoteWidget.route(),
           ),
@@ -112,8 +114,9 @@ class NoteList extends StatelessWidget {
           }
 
           return CupertinoScrollbar(
+            controller: state.scrollController,
             child: ListView.builder(
-              controller: ScrollController(),
+              controller: state.scrollController,
               itemCount: state.notes.length,
               itemBuilder: (_, index) {
                 final note = state.notes.elementAt(index);

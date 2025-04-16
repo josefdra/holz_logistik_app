@@ -1,5 +1,4 @@
 export 'authentication_sync_service.dart';
-export 'comment_sync_service.dart';
 export 'contract_sync_service.dart';
 export 'core_sync_service.dart';
 export 'location_sync_service.dart';

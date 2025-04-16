@@ -26,6 +26,8 @@ class Contract extends Equatable {
     required this.lastEdit,
     required this.title,
     required this.additionalInfo,
+    required this.startDate,
+    required this.endDate,
   });
 
   /// {@macro contract_item}
@@ -35,8 +37,12 @@ class Contract extends Equatable {
     DateTime? lastEdit,
     this.title = '',
     this.additionalInfo = '',
+    DateTime? startDate,
+    DateTime? endDate,
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now();
+        lastEdit = lastEdit ?? DateTime.now(),
+        startDate = startDate ?? DateTime.now(),
+        endDate = endDate ?? DateTime.now();
 
   /// The id of the `contract`.
   ///
@@ -67,6 +73,16 @@ class Contract extends Equatable {
   /// Cannot be empty.
   final String additionalInfo;
 
+  /// Start date of the `contract`.
+  ///
+  /// Cannot be empty.
+  final DateTime startDate;
+
+  /// End date of the `contract`.
+  ///
+  /// Cannot be empty.
+  final DateTime endDate;
+
   /// Returns a copy of this `contract` with the given values updated.
   ///
   /// {@macro contract_item}
@@ -76,6 +92,8 @@ class Contract extends Equatable {
     DateTime? lastEdit,
     String? title,
     String? additionalInfo,
+    DateTime? startDate,
+    DateTime? endDate,
   }) {
     return Contract(
       id: id ?? this.id,
@@ -83,6 +101,8 @@ class Contract extends Equatable {
       lastEdit: lastEdit ?? this.lastEdit,
       title: title ?? this.title,
       additionalInfo: additionalInfo ?? this.additionalInfo,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
     );
   }
 
@@ -99,5 +119,7 @@ class Contract extends Equatable {
         lastEdit,
         title,
         additionalInfo,
+        startDate,
+        endDate,
       ];
 }

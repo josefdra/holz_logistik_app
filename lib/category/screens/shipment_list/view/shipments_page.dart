@@ -25,7 +25,7 @@ class ShipmentsPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => ShipmentsBloc(
         shipmentRepository: context.read<ShipmentRepository>(),
-          locationRepository: context.read<LocationRepository>(),
+        locationRepository: context.read<LocationRepository>(),
       )..add(const ShipmentsSubscriptionRequested()),
       child: const Scaffold(
         body: ShipmentList(),
@@ -85,38 +85,97 @@ class ShipmentList extends StatelessWidget {
       ],
       child: BlocBuilder<ShipmentsBloc, ShipmentsState>(
         builder: (context, state) {
-          if (state.shipments.isEmpty) {
-            if (state.status == ShipmentsStatus.loading) {
-              return const Center(child: CupertinoActivityIndicator());
-            } else if (state.status != ShipmentsStatus.success) {
-              return const SizedBox();
-            } else {
-              return Center(
-                child: Text(
-                  'Nix',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              );
-            }
-          }
+          return Column(
+            children: [
+              _buildDatePickerRow(context, state),
+              Expanded(
+                child: _buildContent(context, state),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
-          return CupertinoScrollbar(
-            child: ListView.builder(
-              controller: ScrollController(),
-              itemCount: state.shipments.length,
-              itemBuilder: (_, index) {
-                final shipment = state.shipments.elementAt(index);
-                return ShipmentListTile(
-                  shipment: shipment,
-                  onDismissed: (_) {
-                    context.read<ShipmentsBloc>().add(
-                          ShipmentsShipmentDeleted(shipment),
-                        );
-                  },
-                  onTap: () {},
-                );
-              },
-            ),
+  Widget _buildDatePickerRow(BuildContext context, ShipmentsState state) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        IconButton(
+          onPressed: () async {
+            final pickedDateRange = await showDateRangePicker(
+              context: context,
+              initialDateRange: DateTimeRange(
+                start: state.startDate,
+                end: state.endDate,
+              ),
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2100),
+            );
+
+            if (pickedDateRange != null) {
+              final startDate = pickedDateRange.start;
+              final endDate = pickedDateRange.end;
+
+              if (context.mounted) {
+                context
+                    .read<ShipmentsBloc>()
+                    .add(ShipmentsDateChanged(startDate, endDate));
+              }
+            }
+          },
+          icon: const Icon(
+            Icons.date_range,
+          ),
+        ),
+        Center(
+          child: Text('${state.startDate.day}.${state.startDate.month}.'
+              '${state.startDate.year} - ${state.endDate.day}.'
+              '${state.endDate.month}.${state.endDate.year}'),
+        ),
+        IconButton(
+          onPressed: () =>
+              context.read<ShipmentsBloc>().add(const ShipmentsAutomaticDate()),
+          icon: const Icon(
+            Icons.schedule,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ShipmentsState state) {
+    if (state.shipments.isEmpty) {
+      if (state.status == ShipmentsStatus.loading) {
+        return const Center(child: CupertinoActivityIndicator());
+      } else if (state.status != ShipmentsStatus.success) {
+        return const SizedBox();
+      } else {
+        return Center(
+          child: Text(
+            'Nix',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        );
+      }
+    }
+
+    return CupertinoScrollbar(
+      controller: state.scrollController,
+      child: ListView.builder(
+        controller: state.scrollController,
+        itemCount: state.shipments.length,
+        itemBuilder: (_, index) {
+          final shipment = state.shipments.elementAt(index);
+          return ShipmentListTile(
+            shipment: shipment,
+            onDeleted: () {
+              context.read<ShipmentsBloc>().add(
+                    ShipmentsShipmentDeleted(shipment),
+                  );
+            },
+            onTap: () {},
           );
         },
       ),

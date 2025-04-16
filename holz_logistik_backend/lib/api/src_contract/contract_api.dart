@@ -8,16 +8,19 @@ abstract class ContractApi {
   const ContractApi();
 
   /// Provides a [Stream] of all active contracts.
-  Stream<Map<String, Contract>> get activeContracts;
+  Stream<List<Contract>> get activeContracts;
 
-  /// Provides a [Stream] of all finished contracts.
-  Stream<Map<String, Contract>> get doneContracts;
+  /// Provides updates on finished contracts
+  Stream<Map<String, dynamic>> get finishedContractUpdates;
 
-  /// Provides all current active contracts.
-  Map<String, Contract> get currentActiveContracts;
+  /// Provides finished contracts by date.
+  Future<List<Contract>> getFinishedContractsByDate(
+    DateTime start,
+    DateTime end,
+  );
 
-  /// Provides a current finished contracts.
-  Map<String, Contract> get currentDoneContracts;
+  /// Provides finished contracts by search query.
+  Future<List<Contract>> getFinishedContractsByQuery(String query);
 
   /// Provides a single contract by [id]
   Future<Contract> getContractById(String id);

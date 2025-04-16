@@ -10,14 +10,12 @@ abstract class LocationApi {
   /// Provides a [Stream] of all active locations.
   Stream<List<Location>> get activeLocations;
 
-  /// Provides a [Stream] of all done locations.
-  Stream<List<Location>> get doneLocations;
+  /// Provides updates on finished locations.
+  Stream<Map<String, dynamic>> get finishedLocationUpdates;
 
-  /// Provides all current active locations
-  List<Location> get currentActiveLocations;
-
-  /// Provides all current done locations
-  List<Location> get currentDoneLocations;
+  /// Provides finished locations.
+  Future<List<Location>> getFinishedLocationsByDate(
+      DateTime start, DateTime end,);
 
   /// Provides a single location by [id]
   Future<Location> getLocationById(String id);
