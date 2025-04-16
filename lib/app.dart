@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/category/admin/user/user_list/bloc/user_list_bloc.dart';
-import 'package:holz_logistik/category/core/authentication/bloc/authentication_bloc.dart';
-import 'package:holz_logistik/category/core/home/view/home_page.dart';
-import 'package:holz_logistik/category/core/l10n/l10n.dart';
-import 'package:holz_logistik/category/screens/analytics/analytics.dart';
-import 'package:holz_logistik/category/screens/location_list/location_list.dart';
+import '../lib_old/category/admin/user/user_list/bloc/user_list_bloc.dart';
+import '../lib_old/category/core/authentication/bloc/authentication_bloc.dart';
+import '../lib_old/category/core/home/view/home_page.dart';
+import '../lib_old/category/core/l10n/l10n.dart';
+import '../lib_old/category/screens/analytics/analytics.dart';
+import '../lib_old/category/screens/location_list/location_list.dart';
 import 'package:holz_logistik_backend/api/api.dart';
 import 'package:holz_logistik_backend/local_storage/local_storage.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';

@@ -1,3 +1,6 @@
+/// A dart implementation of all sync services
+library sync;
+
 export 'authentication_sync_service.dart';
 export 'contract_sync_service.dart';
 export 'core_sync_service.dart';

@@ -1,3 +1,6 @@
+/// A dart implementation of the all repositories
+library repository;
+
 export 'authentication_repository.dart';
 export 'contract_repository.dart';
 export 'location_repository.dart';
