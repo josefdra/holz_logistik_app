@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../lib_old/category/screens/location_list/location_list.dart';
-import '../finished_locations.dart';
+import 'package:holz_logistik/screens/locations/finished_locations/finished_locations.dart';
+import 'package:holz_logistik/widgets/locations/location_list_tile.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 class FinishedLocationPage extends StatelessWidget {
@@ -43,7 +42,7 @@ class FinishedLocationList extends StatelessWidget {
       builder: (context, state) {
         if (state.locations.isEmpty) {
           if (state.status == FinishedLocationStatus.loading) {
-            return const Center(child: CupertinoActivityIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (state.status != FinishedLocationStatus.success) {
             return const SizedBox();
           } else {
@@ -56,10 +55,10 @@ class FinishedLocationList extends StatelessWidget {
           }
         }
 
-        return CupertinoScrollbar(
-          controller: state.scrollController,
+        return Scrollbar(
+          controller: context.read<FinishedLocationBloc>().scrollController,
           child: ListView.builder(
-            controller: state.scrollController,
+          controller: context.read<FinishedLocationBloc>().scrollController,
             itemCount: state.locations.length,
             itemBuilder: (_, index) {
               final location = state.locations.elementAt(index);

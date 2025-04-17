@@ -1,10 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/edit_user_bloc.dart';
-import '../edit_user.dart';
-import '../../../../../lib_old/category/core/l10n/l10n.dart';
+import 'package:holz_logistik/l10n/l10n.dart';
+import 'package:holz_logistik/screens/users/edit_user/edit_user.dart';
+import 'package:holz_logistik/widgets/user/user_widgets.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class EditUserPage extends StatelessWidget {
@@ -63,10 +62,10 @@ class EditUserView extends StatelessWidget {
             ? null
             : () => context.read<EditUserBloc>().add(const EditUserSubmitted()),
         child: status.isLoadingOrSuccess
-            ? const CupertinoActivityIndicator()
+            ? const CircularProgressIndicator()
             : const Icon(Icons.check_rounded),
       ),
-      body: const CupertinoScrollbar(
+      body: const Scrollbar(
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.all(16),

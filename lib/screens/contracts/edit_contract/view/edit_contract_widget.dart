@@ -1,13 +1,12 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../l10n/l10n.dart';
-import '../../../../../lib_old/category/screens/analytics/widgets/contracts/contracts.dart';
+import 'package:holz_logistik/l10n/l10n.dart';
+import 'package:holz_logistik/screens/contracts/edit_contract/edit_contract.dart';
 import 'package:holz_logistik_backend/repository/contract_repository.dart';
 
-class EditContractWidget extends StatelessWidget {
-  const EditContractWidget({
+class EditContractPage extends StatelessWidget {
+  const EditContractPage({
     super.key,
   });
 
@@ -18,7 +17,7 @@ class EditContractWidget extends StatelessWidget {
           contractsRepository: context.read<ContractRepository>(),
           initialContract: initialContract,
         ),
-        child: const EditContractWidget(),
+        child: const EditContractPage(),
       ),
     );
   }
@@ -65,10 +64,10 @@ class EditContractView extends StatelessWidget {
                 .read<EditContractBloc>()
                 .add(const EditContractSubmitted()),
         child: status.isLoadingOrSuccess
-            ? const CupertinoActivityIndicator()
+            ? const CircularProgressIndicator()
             : const Icon(Icons.check_rounded),
       ),
-      body: const CupertinoScrollbar(
+      body: const Scrollbar(
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.all(16),

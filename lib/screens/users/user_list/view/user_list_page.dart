@@ -1,15 +1,15 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../edit_user/edit_user.dart';
-import '../user_list.dart';
-import '../../../../../lib_old/category/core/l10n/l10n.dart';
+import 'package:holz_logistik/l10n/l10n.dart';
+import 'package:holz_logistik/screens/users/edit_user/edit_user.dart';
+import 'package:holz_logistik/screens/users/user_list/user_list.dart';
+import 'package:holz_logistik/widgets/user/user_widgets.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 class UserListPage extends StatelessWidget {
   const UserListPage({super.key});
 
-  static Route<void> route({User? initialUser}) {
+  static Route<void> route() {
     return MaterialPageRoute(
       fullscreenDialog: true,
       builder: (context) => BlocProvider(
@@ -106,7 +106,7 @@ class UserList extends StatelessWidget {
         builder: (context, state) {
           if (state.users.isEmpty) {
             if (state.status == UserListStatus.loading) {
-              return const Center(child: CupertinoActivityIndicator());
+              return const Center(child: CircularProgressIndicator());
             } else if (state.status != UserListStatus.success) {
               return const SizedBox();
             } else {
@@ -119,10 +119,10 @@ class UserList extends StatelessWidget {
             }
           }
 
-          return CupertinoScrollbar(
-            controller: state.scrollController,
+          return Scrollbar(
+            controller: context.read<UserListBloc>().scrollController,
             child: ListView.builder(
-              controller: state.scrollController,
+              controller: context.read<UserListBloc>().scrollController,
               itemCount: state.filteredUsers.length,
               itemBuilder: (_, index) {
                 final user = state.filteredUsers.elementAt(index);

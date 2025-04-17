@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../model/save_photos.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
@@ -317,7 +316,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     );
 
     try {
-      savePhotos(_photoRepository, state.photos);
+      await _photoRepository.savePhotos(state.photos);
       await _locationsRepository.saveLocation(location);
       emit(state.copyWith(status: EditLocationStatus.success));
     } catch (e) {

@@ -6,6 +6,24 @@ import 'package:uuid/uuid.dart';
 
 part 'contract.g.dart';
 
+/// Mixin that implements the [Gettable] interface for Contract objects
+/// Maps specific contract properties to standard sortable properties
+mixin ContractSortGettable implements Gettable {
+  /// Original contract edit timestamp
+  DateTime get lastEdit;
+  
+  /// Original contract title
+  String get title;
+  
+  /// Maps [lastEdit] to the standardized [date] property
+  @override
+  DateTime get date => lastEdit;
+  
+  /// Maps [title] to the standardized [name] property
+  @override
+  String get name => title;
+}
+
 /// {@template contract_item}
 /// A single `contract` item.
 ///
@@ -18,7 +36,7 @@ part 'contract.g.dart';
 /// {@endtemplate}
 @immutable
 @JsonSerializable()
-class Contract extends Equatable {
+class Contract extends Equatable with ContractSortGettable {
   /// {@macro contract_item}
   const Contract({
     required this.id,
@@ -61,11 +79,13 @@ class Contract extends Equatable {
   /// The time the `contract` was last modified.
   ///
   /// Cannot be empty.
+  @override
   final DateTime lastEdit;
 
   /// The title of the `contract`.
   ///
   /// Cannot be empty.
+  @override
   final String title;
 
   /// Additional info of the `contract`.

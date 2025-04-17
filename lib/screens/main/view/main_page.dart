@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../main_screen.dart';
-import '../../../../lib_old/category/screens/analytics/analytics.dart';
-import '../../../../lib_old/category/screens/location_list/view/view.dart';
-import '../../../../lib_old/category/screens/map/map.dart';
-import '../../../../lib_old/category/screens/notes/notes.dart';
-import '../../../../lib_old/category/screens/settings/view/settings_page.dart';
-import '../../../../lib_old/category/screens/shipment_list/view/view.dart';
+import 'package:holz_logistik/screens/analytics/analytics.dart';
+import 'package:holz_logistik/screens/locations/location_list/location_list.dart';
+import 'package:holz_logistik/screens/main/main_screen.dart';
+import 'package:holz_logistik/screens/map/map.dart';
+import 'package:holz_logistik/screens/notes_list/notes_list.dart';
+import 'package:holz_logistik/screens/settings/settings.dart';
+import 'package:holz_logistik/screens/shipment_list/shipments.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -42,7 +42,7 @@ class MainView extends StatelessWidget {
         children: const [
           LocationListPage(),
           MapPage(),
-          NotesPage(),
+          NotesListPage(),
           ShipmentsPage(),
           AnalyticsPage(),
         ],

@@ -3,7 +3,8 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../user_list.dart';
+import 'package:holz_logistik/models/general/sort.dart';
+import 'package:holz_logistik/models/users/users.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
 
 part 'user_list_event.dart';
@@ -13,7 +14,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
   UserListBloc({
     required UserRepository userRepository,
   })  : _userRepository = userRepository,
-        super(UserListState()) {
+        super(const UserListState()) {
     on<UserListSubscriptionRequested>(_onSubscriptionRequested);
     on<UserListUserDeleted>(_onUserDeleted);
     on<UserListUndoDeletionRequested>(_onUndoDeletionRequested);
@@ -21,6 +22,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
   }
 
   final UserRepository _userRepository;
+  final scrollController = ScrollController();
 
   Future<void> _onSubscriptionRequested(
     UserListSubscriptionRequested event,
@@ -71,7 +73,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
 
   @override
   Future<void> close() {
-    state.scrollController.dispose();
+    scrollController.dispose();
     return super.close();
   }
 }

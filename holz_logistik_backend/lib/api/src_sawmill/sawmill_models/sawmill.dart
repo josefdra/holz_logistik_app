@@ -1,10 +1,25 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/general/models/json.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 
 part 'sawmill.g.dart';
+
+/// Mixin that implements the [Gettable] interface for Sawmill objects
+/// Maps specific sawmill properties to standard sortable properties
+mixin SawmillSortGettable implements Gettable {
+  /// Original sawmill date
+  DateTime get lastEdit;
+  
+  /// Original sawmill name
+  @override
+  String get name;
+  
+  /// Maps [lastEdit] to the standardized [date] property
+  @override
+  DateTime get date => lastEdit;
+}
 
 /// {@template sawmill_item}
 /// A single `sawmill` item.
@@ -17,7 +32,7 @@ part 'sawmill.g.dart';
 /// {@endtemplate}
 @immutable
 @JsonSerializable()
-class Sawmill extends Equatable {
+class Sawmill extends Equatable with SawmillSortGettable {
   /// {@macro sawmill_item}
   const Sawmill({
     required this.id,
@@ -41,11 +56,13 @@ class Sawmill extends Equatable {
   /// The time the `sawmill` was last modified.
   ///
   /// Cannot be empty.
+  @override
   final DateTime lastEdit;
 
   /// The name of the `sawmill`.
   ///
   /// Cannot be empty.
+  @override
   final String name;
 
   /// Returns a copy of this `sawmill` with the given values updated.

@@ -1,11 +1,8 @@
 import 'package:flutter/widgets.dart';
-import 'bootstrap.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:holz_logistik/bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final sharedPrefs = await SharedPreferences.getInstance();
-
-  bootstrap(sharedPrefs);
+  bootstrap();
 }

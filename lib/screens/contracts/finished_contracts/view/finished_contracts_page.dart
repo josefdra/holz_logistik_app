@@ -1,9 +1,8 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../widgets/contract/contract_list_tile.dart';
-import '../finished_contracts.dart';
-import 'package:holz_logistik_backend/repository/repository.dart';
+import 'package:holz_logistik/screens/contracts/finished_contracts/finished_contracts.dart';
+import 'package:holz_logistik/widgets/contract/contract_list_tile.dart';
+import 'package:holz_logistik_backend/repository/contract_repository.dart';
 
 class FinishedContractPage extends StatelessWidget {
   const FinishedContractPage({super.key});
@@ -43,7 +42,7 @@ class FinishedContractList extends StatelessWidget {
       builder: (context, state) {
         if (state.contracts.isEmpty) {
           if (state.status == FinishedContractStatus.loading) {
-            return const Center(child: CupertinoActivityIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (state.status != FinishedContractStatus.success) {
             return const SizedBox();
           } else {
@@ -56,10 +55,10 @@ class FinishedContractList extends StatelessWidget {
           }
         }
 
-        return CupertinoScrollbar(
-          controller: state.scrollController,
+        return Scrollbar(
+          controller: context.read<FinishedContractBloc>().scrollController,
           child: ListView.builder(
-            controller: state.scrollController,
+            controller: context.read<FinishedContractBloc>().scrollController,
             itemCount: state.contracts.length,
             itemBuilder: (_, index) {
               final contract = state.contracts.elementAt(index);

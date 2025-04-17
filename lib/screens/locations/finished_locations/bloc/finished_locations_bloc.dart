@@ -13,11 +13,12 @@ class FinishedLocationBloc
   FinishedLocationBloc({
     required LocationRepository locationRepository,
   })  : _locationRepository = locationRepository,
-        super(FinishedLocationState()) {
+        super(const FinishedLocationState()) {
     on<FinishedLocationSubscriptionRequested>(_onSubscriptionRequested);
   }
 
   final LocationRepository _locationRepository;
+  final scrollController = ScrollController();
 
   Future<void> _onSubscriptionRequested(
     FinishedLocationSubscriptionRequested event,
@@ -29,7 +30,7 @@ class FinishedLocationBloc
 
   @override
   Future<void> close() {
-    state.scrollController.dispose();
+    scrollController.dispose();
     return super.close();
   }
 }

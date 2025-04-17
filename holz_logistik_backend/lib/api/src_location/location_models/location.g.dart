@@ -20,6 +20,10 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       initialOversizeQuantity:
           (json['initialOversizeQuantity'] as num).toDouble(),
       initialPieceCount: (json['initialPieceCount'] as num).toInt(),
+      currentQuantity: (json['currentQuantity'] as num).toDouble(),
+      currentOversizeQuantity:
+          (json['currentOversizeQuantity'] as num).toDouble(),
+      currentPieceCount: (json['currentPieceCount'] as num).toInt(),
       contractId: json['contractId'] as String,
       sawmillIds: (json['sawmillIds'] as List<dynamic>?)
           ?.map((e) => e as String)
@@ -42,6 +46,9 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'initialQuantity': instance.initialQuantity,
       'initialOversizeQuantity': instance.initialOversizeQuantity,
       'initialPieceCount': instance.initialPieceCount,
+      'currentQuantity': instance.currentQuantity,
+      'currentOversizeQuantity': instance.currentOversizeQuantity,
+      'currentPieceCount': instance.currentPieceCount,
       'contractId': instance.contractId,
       'sawmillIds': instance.sawmillIds,
       'oversizeSawmillIds': instance.oversizeSawmillIds,

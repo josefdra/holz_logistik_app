@@ -1,4 +1,2 @@
-export 'bloc/analytics_bloc.dart';
-export '../../../lib_old/category/screens/analytics/models/models.dart';
+export 'bloc/analytics_page_bloc.dart';
 export 'view/view.dart';
-export '../../../lib_old/category/screens/analytics/widgets/widgets.dart';

@@ -6,6 +6,24 @@ import 'package:uuid/uuid.dart';
 
 part 'note.g.dart';
 
+/// Mixin that implements the [Gettable] interface for Note objects
+/// Maps specific note properties to standard sortable properties
+mixin NoteSortGettable implements Gettable {
+  /// Original note date
+  DateTime get lastEdit;
+  
+  /// Original note text
+  String get text;
+  
+  /// Maps [lastEdit] to the standardized [date] property
+  @override
+  DateTime get date => lastEdit;
+  
+  /// Maps [text] to the standardized [name] property
+  @override
+  String get name => text;
+}
+
 /// {@template note_item}
 /// A single `note` item.
 ///
@@ -17,7 +35,7 @@ part 'note.g.dart';
 /// {@endtemplate}
 @immutable
 @JsonSerializable()
-class Note extends Equatable {
+class Note extends Equatable with NoteSortGettable {
   /// {@macro note_item}
   const Note({
     required this.id,
@@ -43,11 +61,13 @@ class Note extends Equatable {
   /// The time the `note` was last modified.
   ///
   /// Cannot be empty.
+  @override
   final DateTime lastEdit;
 
   /// The text of the `note`.
   ///
   /// Cannot be empty.
+  @override
   final String text;
 
   /// The userId that is associated with the `note`.

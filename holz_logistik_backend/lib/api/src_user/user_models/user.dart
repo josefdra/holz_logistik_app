@@ -6,6 +6,21 @@ import 'package:uuid/uuid.dart';
 
 part 'user.g.dart';
 
+/// Mixin that implements the [Gettable] interface for User objects
+/// Maps specific user properties to standard sortable properties
+mixin UserSortGettable implements Gettable {
+  /// Original user date
+  DateTime get lastEdit;
+
+  /// Original user name
+  @override
+  String get name;
+
+  /// Maps [lastEdit] to the standardized [date] property
+  @override
+  DateTime get date => lastEdit;
+}
+
 /// Defines the possible roles a user can have
 @JsonEnum(valueField: 'value')
 enum Role {
@@ -44,7 +59,7 @@ enum Role {
 /// {@endtemplate}
 @immutable
 @JsonSerializable()
-class User extends Equatable {
+class User extends Equatable with UserSortGettable {
   /// {@macro user_item}
   const User({
     required this.id,
@@ -75,11 +90,13 @@ class User extends Equatable {
   /// The time the `user` was last modified.
   ///
   /// Cannot be empty.
+  @override
   final DateTime lastEdit;
 
   /// The name of the `user`.
   ///
   /// Cannot be empty.
+  @override
   final String name;
 
   /// Returns a copy of this `user` with the given values updated.

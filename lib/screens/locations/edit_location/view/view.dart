@@ -1,1 +1,1 @@
-export 'edit_location_widget.dart';
+export 'edit_location_page.dart';

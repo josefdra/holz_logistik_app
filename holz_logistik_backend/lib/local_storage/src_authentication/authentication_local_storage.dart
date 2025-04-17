@@ -3,22 +3,21 @@ import 'dart:convert';
 
 import 'package:holz_logistik_backend/api/authentication_api.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
+import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:rxdart/subjects.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// {@template authentication_local_storage}
 /// A flutter implementation of the authentication local storage
 /// {@endtemplate}
 class AuthenticationLocalStorage extends AuthenticationApi {
   /// {@macro authentication_local_storage}
-  AuthenticationLocalStorage({
-    required SharedPreferences plugin,
-  }) : _plugin = plugin {
+  AuthenticationLocalStorage({required CoreLocalStorage coreLocalStorage})
+      : _coreLocalStorage = coreLocalStorage {
     _init();
   }
 
   static const _authCollectionKey = '__auth_collection_key__';
-  final SharedPreferences _plugin;
+  final CoreLocalStorage _coreLocalStorage;
 
   // StreamController to broadcast updates on authentication
   final _authenticationStreamController =
@@ -30,12 +29,16 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   /// Authenticated user
   @override
-  User get currentUser => getUser();
+  Future<User> get currentUser => getUser();
 
-  String? _getValue(String key) => _plugin.getString(key);
+  Future<String?> _getValue(String key) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
 
-  void _init() {
-    final storageData = _getValue(_authCollectionKey);
+    return prefs.getString(key);
+  }
+
+  Future<void> _init() async {
+    final storageData = await _getValue(_authCollectionKey);
 
     if (storageData != null) {
       final userJson = jsonDecode(storageData) as Map<String, dynamic>;
@@ -49,8 +52,8 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   }
 
   /// Gets the current authenticated user. Returns an emtpy new user if empty.
-  User getUser() {
-    final storageData = _getValue(_authCollectionKey);
+  Future<User> getUser() async {
+    final storageData = await _getValue(_authCollectionKey);
 
     if (storageData != null) {
       final userJson = jsonDecode(storageData) as Map<String, dynamic>;
@@ -61,8 +64,11 @@ class AuthenticationLocalStorage extends AuthenticationApi {
     }
   }
 
-  Future<void> _setValue(String key, String value) =>
-      _plugin.setString(key, value);
+  Future<bool> _setValue(String key, String value) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+
+    return prefs.setString(key, value);
+  }
 
   @override
   Future<void> updateAuthentication(User user) {
@@ -72,7 +78,11 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   }
 
   @override
-  Future<void> removeAuthentication() => _plugin.remove(_authCollectionKey);
+  Future<bool> removeAuthentication() async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+
+    return prefs.remove(_authCollectionKey);
+  }
 
   Future<void> _dispose() => _authenticationStreamController.close();
 

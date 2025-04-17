@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// {@template core_local_storage}
@@ -17,6 +18,7 @@ class CoreLocalStorage {
 
   static final CoreLocalStorage _instance = CoreLocalStorage._internal();
   static Database? _database;
+  static SharedPreferences? _sharedPrefs;
 
   /// Map of table creation functions registered by feature packages
   final List<String> _tableCreationScripts = [];
@@ -24,6 +26,13 @@ class CoreLocalStorage {
   /// List of migration functions registered by feature packages
   final List<FutureOr<void> Function(Database, int, int)> _migrationCallbacks =
       [];
+
+  /// Get the shared preferences instance, initializing if needed
+  Future<SharedPreferences> get sharedPreferences async {
+    if (_sharedPrefs != null) return _sharedPrefs!;
+    _sharedPrefs = await SharedPreferences.getInstance();
+    return _sharedPrefs!;
+  }
 
   /// Get the database instance, initializing if needed
   Future<Database> get database async {

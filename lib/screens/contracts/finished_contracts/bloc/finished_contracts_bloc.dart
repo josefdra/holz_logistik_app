@@ -13,11 +13,12 @@ class FinishedContractBloc
   FinishedContractBloc({
     required ContractRepository contractRepository,
   })  : _contractRepository = contractRepository,
-        super(FinishedContractState()) {
+        super(const FinishedContractState()) {
     on<FinishedContractSubscriptionRequested>(_onSubscriptionRequested);
   }
 
   final ContractRepository _contractRepository;
+  final scrollController = ScrollController();
 
   Future<void> _onSubscriptionRequested(
     FinishedContractSubscriptionRequested event,
@@ -29,7 +30,7 @@ class FinishedContractBloc
 
   @override
   Future<void> close() {
-    state.scrollController.dispose();
+    scrollController.dispose();
     return super.close();
   }
 }
