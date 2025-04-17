@@ -35,315 +35,276 @@ class LocationDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LocationDetailsBloc, LocationDetailsState>(
-      builder: (context, state) {
-        if (state.status == LocationDetailsStatus.loading) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state.status != LocationDetailsStatus.success) {
-          return const SizedBox();
+    return BlocListener<LocationDetailsBloc, LocationDetailsState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == LocationDetailsStatus.close) {
+          Navigator.of(context).pop();
         }
+      },
+      child: BlocBuilder<LocationDetailsBloc, LocationDetailsState>(
+        builder: (context, state) {
+          if (state.status == LocationDetailsStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state.status != LocationDetailsStatus.success) {
+            return const SizedBox();
+          }
 
-        return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-          child: SizedBox(
-            width: 600,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(28),
-                        topRight: Radius.circular(28),
+          return Dialog(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            child: SizedBox(
+              width: 600,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(28),
+                          topRight: Radius.circular(28),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.location.partieNr,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                              ),
+                              Text(
+                                state.contract.title,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                    ),
+                              ),
+                            ],
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.of(context).pop(),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Table(
+                      columnWidths: const <int, TableColumnWidth>{
+                        0: FixedColumnWidth(120),
+                        1: FlexColumnWidth(),
+                        2: FlexColumnWidth(),
+                        3: FixedColumnWidth(60),
+                      },
+                      defaultVerticalAlignment:
+                          TableCellVerticalAlignment.middle,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              state.location.partieNr,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
-                                  ),
+                        const TableRow(
+                          children: <Widget>[
+                            SizedBox(height: 32),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text('Menge (fm)'),
+                              ),
                             ),
-                            Text(
-                              state.contract.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
-                                  ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text('Davon ÜS'),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text('Stück'),
+                              ),
                             ),
                           ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(context).pop(),
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        TableRow(
+                          children: <Widget>[
+                            const SizedBox(
+                              height: 32,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('Anfangs:'),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child:
+                                    Text('${state.location.initialQuantity}'),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '${state.location.initialOversizeQuantity}',
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child:
+                                    Text('${state.location.initialPieceCount}'),
+                              ),
+                            ),
+                          ],
+                        ),
+                        TableRow(
+                          children: <Widget>[
+                            const SizedBox(
+                              height: 32,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text('Momentan:'),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child:
+                                    Text('${state.location.currentQuantity}'),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '${state.location.currentOversizeQuantity}',
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 32,
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child:
+                                    Text('${state.location.currentPieceCount}'),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                  Table(
-                    columnWidths: const <int, TableColumnWidth>{
-                      0: FixedColumnWidth(120),
-                      1: FlexColumnWidth(),
-                      2: FlexColumnWidth(),
-                      3: FixedColumnWidth(60),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      const TableRow(
-                        children: <Widget>[
-                          SizedBox(height: 32),
-                          SizedBox(
-                            height: 32,
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 120,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 10),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('Menge (fm)'),
+                              child: Text('Sägewerke:'),
                             ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('Davon ÜS'),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('Stück'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: <Widget>[
-                          const SizedBox(
-                            height: 32,
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text('Anfangs:'),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('${state.location.initialQuantity}'),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                '${state.location.initialOversizeQuantity}',
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child:
-                                  Text('${state.location.initialPieceCount}'),
-                            ),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: <Widget>[
-                          const SizedBox(
-                            height: 32,
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 10),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text('Momentan:'),
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text('${state.location.currentQuantity}'),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                '${state.location.currentOversizeQuantity}',
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child:
-                                  Text('${state.location.currentPieceCount}'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      const SizedBox(
-                        width: 120,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 10),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('Sägewerke:'),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          state.sawmills
-                              .map((sawmill) => sawmill.name)
-                              .join(', '),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      const SizedBox(
-                        width: 120,
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 10),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('Sägewerke ÜS:'),
+                        Expanded(
+                          child: Text(
+                            state.sawmills
+                                .map((sawmill) => sawmill.name)
+                                .join(', '),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          state.oversizeSawmills
-                              .map((sawmill) => sawmill.name)
-                              .join(', '),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: Text('Datum: ${state.location.date.day}.'
-                        '${state.location.date.month}.'
-                        '${state.location.date.year}'),
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: Text(state.location.additionalInfo),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      SizedBox(
-                        width: 100,
-                        child: Center(
-                          child: Column(
-                            children: [
-                              IconButton.filled(
-                                onPressed: () {
-                                  showDialog<ShipmentFormWidget>(
-                                    context: context,
-                                    builder: (context) => ShipmentFormWidget(
-                                      currentQuantity:
-                                          state.location.currentQuantity,
-                                      currentOversizeQuantity: state
-                                          .location.currentOversizeQuantity,
-                                      currentPieceCount:
-                                          state.location.currentPieceCount,
-                                      location: state.location,
-                                      userId: state.user.id,
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.local_shipping),
-                                style: IconButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  minimumSize: const Size(48, 48),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text('Abfuhr'),
-                            ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const SizedBox(
+                          width: 120,
+                          child: Padding(
+                            padding: EdgeInsets.only(left: 10),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text('Sägewerke ÜS:'),
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(
-                        width: 100,
-                        child: Center(
-                          child: Column(
-                            children: [
-                              IconButton.filled(
-                                onPressed: () =>
-                                    startNavigation(state.location),
-                                icon: const Icon(Icons.assistant_navigation),
-                                style: IconButton.styleFrom(
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.onPrimary,
-                                  minimumSize: const Size(48, 48),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text('Navigation'),
-                            ],
+                        Expanded(
+                          child: Text(
+                            state.oversizeSawmills
+                                .map((sawmill) => sawmill.name)
+                                .join(', '),
                           ),
                         ),
-                      ),
-                      if (state.user.role != Role.basic)
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Text('Datum: ${state.location.date.day}.'
+                          '${state.location.date.month}.'
+                          '${state.location.date.year}'),
+                    ),
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Text(state.location.additionalInfo),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
                         SizedBox(
                           width: 100,
                           child: Center(
                             child: Column(
                               children: [
                                 IconButton.filled(
-                                  onPressed: () => Navigator.of(context).push(
-                                    EditLocationPage.route(
-                                      initialLocation: state.location,
-                                    ),
-                                  ),
-                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    showDialog<ShipmentFormWidget>(
+                                      context: context,
+                                      builder: (context) => ShipmentFormWidget(
+                                        currentQuantity:
+                                            state.location.currentQuantity,
+                                        currentOversizeQuantity: state
+                                            .location.currentOversizeQuantity,
+                                        currentPieceCount:
+                                            state.location.currentPieceCount,
+                                        location: state.location,
+                                        userId: state.user.id,
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.local_shipping),
                                   style: IconButton.styleFrom(
                                     backgroundColor:
                                         Theme.of(context).colorScheme.primary,
@@ -353,20 +314,72 @@ class LocationDetailsView extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                const Text('Bearbeiten'),
+                                const Text('Abfuhr'),
                               ],
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                ],
+                        SizedBox(
+                          width: 100,
+                          child: Center(
+                            child: Column(
+                              children: [
+                                IconButton.filled(
+                                  onPressed: () =>
+                                      startNavigation(state.location),
+                                  icon: const Icon(Icons.assistant_navigation),
+                                  style: IconButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    foregroundColor:
+                                        Theme.of(context).colorScheme.onPrimary,
+                                    minimumSize: const Size(48, 48),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                const Text('Navigation'),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (state.user.role != Role.basic)
+                          SizedBox(
+                            width: 100,
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  IconButton.filled(
+                                    onPressed: () => Navigator.of(context).push(
+                                      EditLocationPage.route(
+                                        initialLocation: state.location,
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.edit),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      foregroundColor: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                      minimumSize: const Size(48, 48),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text('Bearbeiten'),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

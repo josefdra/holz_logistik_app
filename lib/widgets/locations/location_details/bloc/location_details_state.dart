@@ -1,6 +1,6 @@
 part of 'location_details_bloc.dart';
 
-enum LocationDetailsStatus { initial, loading, success, failure }
+enum LocationDetailsStatus { initial, loading, success, close, failure }
 
 extension LocationDetailsStatusX on LocationDetailsStatus {
   bool get isLoadingOrSuccess => [

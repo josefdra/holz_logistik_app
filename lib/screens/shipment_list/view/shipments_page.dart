@@ -39,50 +39,19 @@ class ShipmentList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<ShipmentsBloc, ShipmentsState>(
-          listenWhen: (previous, current) => previous.status != current.status,
-          listener: (context, state) {
-            if (state.status == ShipmentsStatus.failure) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Error'),
-                  ),
-                );
-            }
-          },
-        ),
-        BlocListener<ShipmentsBloc, ShipmentsState>(
-          listenWhen: (previous, current) =>
-              previous.lastDeletedShipment != current.lastDeletedShipment &&
-              current.lastDeletedShipment != null,
-          listener: (context, state) {
-            final messenger = ScaffoldMessenger.of(context);
-            messenger
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  duration: const Duration(seconds: 5),
-                  content: const Text(
-                    'text',
-                  ),
-                  action: SnackBarAction(
-                    label: 'label',
-                    onPressed: () {
-                      messenger.hideCurrentSnackBar();
-                      context
-                          .read<ShipmentsBloc>()
-                          .add(const ShipmentsUndoDeletionRequested());
-                    },
-                  ),
-                ),
-              );
-          },
-        ),
-      ],
+    return BlocListener<ShipmentsBloc, ShipmentsState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == ShipmentsStatus.failure) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text('Error'),
+              ),
+            );
+        }
+      },
       child: BlocBuilder<ShipmentsBloc, ShipmentsState>(
         builder: (context, state) {
           return Column(

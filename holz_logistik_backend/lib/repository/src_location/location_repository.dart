@@ -76,6 +76,7 @@ class LocationRepository {
     double quantity,
     double oversizeQuantity,
     int pieceCount, {
+    required bool locationFinished,
     bool? started,
   }) async {
     final location = await _locationApi.getLocationById(locationId);
@@ -83,11 +84,15 @@ class LocationRepository {
     final updatedOversizeQuantity =
         location.currentOversizeQuantity + oversizeQuantity;
     final updatedPieceCount = location.currentPieceCount + pieceCount;
+    final updatedLocationFinished = locationFinished
+        ? locationFinished
+        : ((updatedQuantity == 0) || updatedPieceCount == 0);
     final updatedLocation = location.copyWith(
       currentQuantity: updatedQuantity,
       currentOversizeQuantity: updatedOversizeQuantity,
       currentPieceCount: updatedPieceCount,
       started: started,
+      done: updatedLocationFinished,
     );
     await _locationApi.saveLocation(updatedLocation);
 
@@ -99,14 +104,16 @@ class LocationRepository {
     String locationId,
     double quantity,
     double oversizeQuantity,
-    int pieceCount,
-  ) async {
+    int pieceCount, {
+    required bool locationFinished,
+  }) async {
     return _updateCurrentValues(
       locationId,
       -quantity,
       -oversizeQuantity,
       -pieceCount,
       started: true,
+      locationFinished: locationFinished,
     );
   }
 
@@ -124,6 +131,7 @@ class LocationRepository {
       oversizeQuantity,
       pieceCount,
       started: !started,
+      locationFinished: false,
     );
   }
 

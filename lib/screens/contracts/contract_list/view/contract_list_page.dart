@@ -79,23 +79,19 @@ class ContractList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<ContractListBloc, ContractListState>(
-          listenWhen: (previous, current) => previous.status != current.status,
-          listener: (context, state) {
-            if (state.status == ContractListStatus.failure) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.contractListErrorSnackbarText),
-                  ),
-                );
-            }
-          },
-        ),
-      ],
+    return BlocListener<ContractListBloc, ContractListState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == ContractListStatus.failure) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(l10n.contractListErrorSnackbarText),
+              ),
+            );
+        }
+      },
       child: BlocBuilder<ContractListBloc, ContractListState>(
         builder: (context, state) {
           if (state.contracts.isEmpty) {

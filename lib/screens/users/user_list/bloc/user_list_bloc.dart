@@ -17,7 +17,6 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
         super(const UserListState()) {
     on<UserListSubscriptionRequested>(_onSubscriptionRequested);
     on<UserListUserDeleted>(_onUserDeleted);
-    on<UserListUndoDeletionRequested>(_onUndoDeletionRequested);
     on<UserListFilterChanged>(_onFilterChanged);
   }
 
@@ -48,20 +47,6 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
   ) async {
     emit(state.copyWith(lastDeletedUser: event.user));
     await _userRepository.deleteUser(event.user.id);
-  }
-
-  Future<void> _onUndoDeletionRequested(
-    UserListUndoDeletionRequested event,
-    Emitter<UserListState> emit,
-  ) async {
-    assert(
-      state.lastDeletedUser != null,
-      'Last deleted user can not be null.',
-    );
-
-    final user = state.lastDeletedUser!;
-    emit(state.copyWith());
-    await _userRepository.saveUser(user);
   }
 
   void _onFilterChanged(

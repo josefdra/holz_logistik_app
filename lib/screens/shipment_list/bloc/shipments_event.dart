@@ -41,7 +41,3 @@ final class ShipmentsDateChanged extends ShipmentsEvent {
 final class ShipmentsAutomaticDate extends ShipmentsEvent {
   const ShipmentsAutomaticDate();
 }
-
-final class ShipmentsUndoDeletionRequested extends ShipmentsEvent {
-  const ShipmentsUndoDeletionRequested();
-}

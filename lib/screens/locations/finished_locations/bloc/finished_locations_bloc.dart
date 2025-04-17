@@ -121,6 +121,7 @@ class FinishedLocationsBloc
   Future<void> close() {
     scrollController.dispose();
     _finishedLocationUpdateSubscription?.cancel();
+    _dateCheckTimer.cancel();
     return super.close();
   }
 }

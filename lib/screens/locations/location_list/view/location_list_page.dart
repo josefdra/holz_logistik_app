@@ -71,23 +71,19 @@ class LocationList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<LocationListBloc, LocationListState>(
-          listenWhen: (previous, current) => previous.status != current.status,
-          listener: (context, state) {
-            if (state.status == LocationListStatus.failure) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.locationListErrorSnackbarText),
-                  ),
-                );
-            }
-          },
-        ),
-      ],
+    return BlocListener<LocationListBloc, LocationListState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == LocationListStatus.failure) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(l10n.locationListErrorSnackbarText),
+              ),
+            );
+        }
+      },
       child: Column(
         children: [
           TextField(

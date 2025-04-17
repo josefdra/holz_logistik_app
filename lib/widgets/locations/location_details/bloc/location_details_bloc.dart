@@ -184,6 +184,9 @@ class LocationDetailsBloc
     LocationDetailsLocationUpdate event,
     Emitter<LocationDetailsState> emit,
   ) {
+    if (event.location.done) {
+      emit(state.copyWith(status: LocationDetailsStatus.close));
+    }
     emit(state.copyWith(location: event.location));
 
     _refreshContract();

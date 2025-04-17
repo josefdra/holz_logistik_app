@@ -22,7 +22,6 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     on<ShipmentsShipmentDeleted>(_onShipmentDeleted);
     on<ShipmentsDateChanged>(_onDateChanged);
     on<ShipmentsAutomaticDate>(_onAutomaticDate);
-    on<ShipmentsUndoDeletionRequested>(_onUndoDeletionRequested);
 
     _dateCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _checkDateChange();
@@ -151,27 +150,6 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     emit(state.copyWith(customDate: false));
 
     add(const ShipmentsRefreshRequested());
-  }
-
-  Future<void> _onUndoDeletionRequested(
-    ShipmentsUndoDeletionRequested event,
-    Emitter<ShipmentsState> emit,
-  ) async {
-    assert(
-      state.lastDeletedShipment != null,
-      'Last deleted shipment can not be null.',
-    );
-
-    final shipment = state.lastDeletedShipment!;
-    await _shipmentRepository.saveShipment(shipment);
-
-
-    await _locationRepository.addShipment(
-      shipment.locationId,
-      shipment.quantity,
-      shipment.oversizeQuantity,
-      shipment.pieceCount,
-    );
   }
 
   @override

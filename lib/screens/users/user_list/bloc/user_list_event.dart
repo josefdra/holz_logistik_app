@@ -20,10 +20,6 @@ final class UserListUserDeleted extends UserListEvent {
   List<Object> get props => [user];
 }
 
-final class UserListUndoDeletionRequested extends UserListEvent {
-  const UserListUndoDeletionRequested();
-}
-
 class UserListFilterChanged extends UserListEvent {
   const UserListFilterChanged(this.filter);
 

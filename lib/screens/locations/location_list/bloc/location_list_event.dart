@@ -24,10 +24,6 @@ final class LocationListLocationDeleted extends LocationListEvent {
   List<Object> get props => [location];
 }
 
-final class LocationListUndoDeletionRequested extends LocationListEvent {
-  const LocationListUndoDeletionRequested();
-}
-
 class LocationListSearchQueryChanged extends LocationListEvent {
   const LocationListSearchQueryChanged(this.searchQuery);
 

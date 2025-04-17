@@ -22,6 +22,7 @@ final class ShipmentFormState extends Equatable {
     this.pieceCount = 0,
     this.sawmillId = '',
     this.validationErrors = const {},
+    this.locationFinished = false,
   });
 
   final double currentQuantity;
@@ -35,6 +36,7 @@ final class ShipmentFormState extends Equatable {
   final int pieceCount;
   final String sawmillId;
   final Map<String, String?> validationErrors;
+  final bool locationFinished;
 
   ShipmentFormState copyWith({
     double? currentQuantity,
@@ -48,6 +50,7 @@ final class ShipmentFormState extends Equatable {
     int? pieceCount,
     String? sawmillId,
     Map<String, String?>? validationErrors,
+    bool? locationFinished,
   }) {
     return ShipmentFormState(
       currentQuantity: currentQuantity ?? this.currentQuantity,
@@ -62,6 +65,7 @@ final class ShipmentFormState extends Equatable {
       pieceCount: pieceCount ?? this.pieceCount,
       sawmillId: sawmillId ?? this.sawmillId,
       validationErrors: validationErrors ?? this.validationErrors,
+      locationFinished: locationFinished ?? this.locationFinished,
     );
   }
 
@@ -78,5 +82,6 @@ final class ShipmentFormState extends Equatable {
         pieceCount,
         sawmillId,
         validationErrors,
+        locationFinished,
       ];
 }

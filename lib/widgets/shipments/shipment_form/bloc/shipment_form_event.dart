@@ -59,6 +59,16 @@ final class ShipmentFormSawmillUpdate extends ShipmentFormEvent {
   List<Object> get props => [sawmill];
 }
 
+final class ShipmentFormLocationFinishedUpdate extends ShipmentFormEvent {
+  // ignore: avoid_positional_boolean_parameters
+  const ShipmentFormLocationFinishedUpdate(this.locationFinished);
+
+  final bool locationFinished;
+
+  @override
+  List<Object> get props => [locationFinished];
+}
+
 final class ShipmentFormSubmitted extends ShipmentFormEvent {
   const ShipmentFormSubmitted();
 }

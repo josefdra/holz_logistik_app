@@ -58,52 +58,19 @@ class UserList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<UserListBloc, UserListState>(
-          listenWhen: (previous, current) => previous.status != current.status,
-          listener: (context, state) {
-            if (state.status == UserListStatus.failure) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.userListErrorSnackbarText),
-                  ),
-                );
-            }
-          },
-        ),
-        BlocListener<UserListBloc, UserListState>(
-          listenWhen: (previous, current) =>
-              previous.lastDeletedUser != current.lastDeletedUser &&
-              current.lastDeletedUser != null,
-          listener: (context, state) {
-            final deletedUser = state.lastDeletedUser!;
-            final messenger = ScaffoldMessenger.of(context);
-            messenger
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l10n.userListUserDeletedSnackbarText(
-                      deletedUser.name,
-                    ),
-                  ),
-                  action: SnackBarAction(
-                    label: l10n.userListUndoDeletionButtonText,
-                    onPressed: () {
-                      messenger.hideCurrentSnackBar();
-                      context
-                          .read<UserListBloc>()
-                          .add(const UserListUndoDeletionRequested());
-                    },
-                  ),
-                ),
-              );
-          },
-        ),
-      ],
+    return BlocListener<UserListBloc, UserListState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        if (state.status == UserListStatus.failure) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(l10n.userListErrorSnackbarText),
+              ),
+            );
+        }
+      },
       child: BlocBuilder<UserListBloc, UserListState>(
         builder: (context, state) {
           if (state.users.isEmpty) {

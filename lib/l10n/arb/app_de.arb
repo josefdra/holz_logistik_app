@@ -33,10 +33,6 @@
       }
     }
   },
-  "userListUndoDeletionButtonText": "Rückgängig machen",
-  "@userListUndoDeletionButtonText": {
-    "description": "Button text shown in the snackbar that undoes a deletion of a todo"
-  },
   "userListEmptyText": "Keine Nutzer gefunden.",
   "@userListEmptyText": {
     "description": "Text shown in the UserListPage when no users are found with the selected filters"
@@ -73,10 +69,6 @@
         "description": "The partieNr of the location that was deleted"
       }
     }
-  },
-  "locationListUndoDeletionButtonText": "Rückgängig",
-  "@locationListUndoDeletionButtonText": {
-    "description": "Button text shown in the snackbar that undoes a deletion of a location"
   },
   "locationListEmptyText": "Keine Standorte verfügbar.",
   "@locationListEmptyText": {
@@ -138,10 +130,6 @@
         "description": "The title of the contract that was deleted"
       }
     }
-  },
-  "contractListUndoDeletionButtonText": "Rückgängig",
-  "@contractListUndoDeletionButtonText": {
-    "description": "Button text shown in the snackbar that undoes a deletion of a contract"
   },
   "contractListEmptyText": "Keine Verträge verfügbar",
   "@contractListEmptyText": {

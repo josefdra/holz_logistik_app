@@ -29,6 +29,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     on<ShipmentFormOversizeQuantityUpdate>(_onOversizeQuantityUpdate);
     on<ShipmentFormPieceCountUpdate>(_onPieceCountUpdate);
     on<ShipmentFormSawmillUpdate>(_onSawmillUpdate);
+    on<ShipmentFormLocationFinishedUpdate>(_onLocationFinishedUpdate);
     on<ShipmentFormSubmitted>(_onSubmitted);
     on<ShipmentFormCanceled>(_onCanceled);
   }
@@ -93,6 +94,15 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     );
   }
 
+  void _onLocationFinishedUpdate(
+    ShipmentFormLocationFinishedUpdate event,
+    Emitter<ShipmentFormState> emit,
+  ) {
+    emit(
+      state.copyWith(locationFinished: event.locationFinished),
+    );
+  }
+
   Map<String, String?> _validateFields() {
     final errors = <String, String?>{};
 
@@ -153,17 +163,19 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
       );
 
       _shipmentRepository.saveShipment(shipment);
-      _locationRepository.addShipment(
-        shipment.locationId,
-        shipment.quantity,
-        shipment.oversizeQuantity,
-        shipment.pieceCount,
-      );
 
       emit(
         state.copyWith(
           status: ShipmentFormStatus.success,
         ),
+      );
+
+      _locationRepository.addShipment(
+        shipment.locationId,
+        shipment.quantity,
+        shipment.oversizeQuantity,
+        shipment.pieceCount,
+        locationFinished: state.locationFinished,
       );
     } catch (e) {
       emit(
