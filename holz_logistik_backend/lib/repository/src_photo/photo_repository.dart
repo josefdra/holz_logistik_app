@@ -46,6 +46,15 @@ class PhotoRepository {
     return _photoSyncService.sendPhotoUpdate(photo.toJson());
   }
 
+  /// Saves multiple [photos].
+  Future<void> savePhotos(List<Photo> photos) {
+    for (final photo in photos) {
+      savePhoto(photo);
+    }
+
+    return Future<void>.value();
+  }
+
   /// Deletes the `photo` with the given id.
   Future<void> deletePhoto({required String id, required String locationId}) {
     _photoApi.deletePhoto(id: id, locationId: locationId);

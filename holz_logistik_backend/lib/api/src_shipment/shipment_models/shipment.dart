@@ -6,6 +6,24 @@ import 'package:uuid/uuid.dart';
 
 part 'shipment.g.dart';
 
+/// Mixin that implements the [Gettable] interface for Shipment objects
+/// Maps specific shipment properties to standard sortable properties
+mixin ShipmentSortGettable implements Gettable {
+  /// Original shipment date
+  DateTime get lastEdit;
+
+  /// Original shipment locationId
+  String get locationId;
+
+  /// Maps [lastEdit] to the standardized [date] property
+  @override
+  DateTime get date => lastEdit;
+
+  /// Maps [locationId] to the standardized [name] property
+  @override
+  String get name => locationId;
+}
+
 /// {@template shipment_item}
 /// A single `shipment` item.
 ///
@@ -18,7 +36,7 @@ part 'shipment.g.dart';
 /// {@endtemplate}
 @immutable
 @JsonSerializable()
-class Shipment extends Equatable {
+class Shipment extends Equatable with ShipmentSortGettable {
   /// {@macro shipment_item}
   const Shipment({
     required this.id,
@@ -54,6 +72,7 @@ class Shipment extends Equatable {
   /// The time the `shipment` was last modified.
   ///
   /// Cannot be empty.
+  @override
   final DateTime lastEdit;
 
   /// The quantity of the `shipment`.
@@ -89,6 +108,7 @@ class Shipment extends Equatable {
   /// The locationId of the `shipment`.
   ///
   /// Cannot be empty.
+  @override
   final String locationId;
 
   /// Returns a copy of this `shipment` with the given values updated.

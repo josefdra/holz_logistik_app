@@ -5,9 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:holz_logistik/app.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/sync/core_sync_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-void bootstrap(SharedPreferences sharedPrefs) {
+void bootstrap() {
   FlutterError.onError = (details) {
     log(details.exceptionAsString(), stackTrace: details.stack);
   };
@@ -19,13 +18,11 @@ void bootstrap(SharedPreferences sharedPrefs) {
 
   const url = 'ws://localhost:8080/ws';
 
-  // Bloc.observer = const AppBlocObserver();
   final coreLocalStorage = CoreLocalStorage();
   final coreSyncService = CoreSyncService(url: url);
 
   runApp(
     App(
-      sharedPrefs: sharedPrefs,
       coreLocalStorage: coreLocalStorage,
       coreSyncService: coreSyncService,
     ),

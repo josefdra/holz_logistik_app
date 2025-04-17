@@ -28,7 +28,9 @@ class LocationRepository {
 
   /// Provides finished locations.
   Future<List<Location>> getFinishedLocationsByDate(
-          DateTime start, DateTime end,) =>
+    DateTime start,
+    DateTime end,
+  ) =>
       _locationApi.getFinishedLocationsByDate(start, end);
 
   /// Provides a single location by [id]
@@ -66,6 +68,28 @@ class LocationRepository {
     };
 
     return _locationSyncService.sendLocationUpdate(data);
+  }
+
+  /// Updates the current values of a location
+  Future<void> updateCurrentValues(
+    String locationId,
+    double quantity,
+    double oversizeQuantity,
+    int pieceCount,
+  ) async {
+    final location = await _locationApi.getLocationById(locationId);
+    final updatedQuantity = location.currentQuantity + quantity;
+    final updatedOversizeQuantity =
+        location.currentOversizeQuantity + oversizeQuantity;
+    final updatedPieceCount = location.currentPieceCount + pieceCount;
+    final updatedLocation = location.copyWith(
+      currentQuantity: updatedQuantity,
+      currentOversizeQuantity: updatedOversizeQuantity,
+      currentPieceCount: updatedPieceCount,
+    );
+    await _locationApi.saveLocation(updatedLocation);
+
+    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
   }
 
   /// Updates the `started` status of a location

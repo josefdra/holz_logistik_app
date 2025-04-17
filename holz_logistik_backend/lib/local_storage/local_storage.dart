@@ -1,3 +1,6 @@
+/// A flutter implementation of the all local storages
+library local_storage;
+
 export 'authentication_local_storage.dart';
 export 'contract_local_storage.dart';
 export 'core_local_storage.dart';

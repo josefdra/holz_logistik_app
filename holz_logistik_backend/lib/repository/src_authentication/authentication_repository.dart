@@ -25,7 +25,7 @@ class AuthenticationRepository {
   Stream<User> get authenticatedUser => _authenticationApi.authenticatedUser;
 
   /// Provides the authenticated user.
-  User get currentUser => _authenticationApi.currentUser;
+  Future<User> get currentUser => _authenticationApi.currentUser;
 
   /// Handle updates from Server
   void _handleAuthenticationUpdates(Map<String, dynamic> data) {

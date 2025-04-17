@@ -1,4 +1,4 @@
-import 'package:holz_logistik_backend/api/src_contract/contract_models/contract.dart';
+import 'package:holz_logistik_backend/api/contract_api.dart';
 
 /// {@template contract_api}
 /// The interface for an API that provides access to contracts.

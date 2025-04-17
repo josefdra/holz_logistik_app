@@ -1,10 +1,28 @@
 import 'package:equatable/equatable.dart';
-import 'package:holz_logistik_backend/general/models/json.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
 import 'package:uuid/uuid.dart';
 
 part 'photo.g.dart';
+
+/// Mixin that implements the [Gettable] interface for Photo objects
+/// Maps specific photo properties to standard sortable properties
+mixin PhotoSortGettable implements Gettable {
+  /// Original photo date
+  DateTime get lastEdit;
+  
+  /// Original photo locationId
+  String get locationId;
+  
+  /// Maps [lastEdit] to the standardized [date] property
+  @override
+  DateTime get date => lastEdit;
+  
+  /// Maps [locationId] to the standardized [name] property
+  @override
+  String get name => locationId;
+}
 
 /// {@template photo_item}
 /// A single `photo` item.
@@ -18,7 +36,7 @@ part 'photo.g.dart';
 /// {@endtemplate}
 @immutable
 @JsonSerializable()
-class Photo extends Equatable {
+class Photo extends Equatable with PhotoSortGettable {
   /// {@macro photo_item}
   const Photo({
     required this.id,
@@ -46,6 +64,7 @@ class Photo extends Equatable {
   /// The time the `photo` was last modified.
   ///
   /// Cannot be empty.
+  @override
   final DateTime lastEdit;
 
   /// The server url of the `photo`.
@@ -61,6 +80,7 @@ class Photo extends Equatable {
   /// The locationId of the `photo`.
   ///
   /// Cannot be empty.
+  @override
   final String locationId;
 
   /// Returns a copy of this `photo` with the given values updated.

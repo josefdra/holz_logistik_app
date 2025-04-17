@@ -43,6 +43,15 @@ class LocationTable {
   /// The column name for storing the initial piece count of the location.
   static const String columnInitialPieceCount = 'initialPieceCount';
 
+  /// The column name for storing the current quantity of the location.
+  static const String columnCurrentQuantity = 'currentQuantity';
+
+  /// The column name for storing the current oversize quantity of the location.
+  static const String columnCurrentOversizeQuantity = 'currentOversizeQuantity';
+
+  /// The column name for storing the current piece count of the location.
+  static const String columnCurrentPieceCount = 'currentPieceCount';
+
   /// The column name for storing the contract id of the location.
   static const String columnContractId = 'contractId';
 
@@ -61,6 +70,9 @@ class LocationTable {
       $columnInitialQuantity REAL NOT NULL,
       $columnInitialOversizeQuantity REAL NOT NULL,
       $columnInitialPieceCount INTEGER NOT NULL,
+      $columnCurrentQuantity REAL NOT NULL,
+      $columnCurrentOversizeQuantity REAL NOT NULL,
+      $columnCurrentPieceCount INTEGER NOT NULL,
       $columnContractId TEXT NOT NULL,
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId})
     )
