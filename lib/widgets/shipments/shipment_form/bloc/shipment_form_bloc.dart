@@ -153,10 +153,12 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
       );
 
       _shipmentRepository.saveShipment(shipment);
-
-      if (!state.location.started) {
-        _locationRepository.setStarted(state.location.id);
-      }
+      _locationRepository.addShipment(
+        shipment.locationId,
+        shipment.quantity,
+        shipment.oversizeQuantity,
+        shipment.pieceCount,
+      );
 
       emit(
         state.copyWith(

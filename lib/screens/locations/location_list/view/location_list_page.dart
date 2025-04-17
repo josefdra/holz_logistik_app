@@ -45,7 +45,7 @@ class LocationListPage extends StatelessWidget {
                   shape: const BeveledRectangleBorder(),
                 ),
                 onPressed: () {
-                  Navigator.of(context).push(FinishedLocationPage.route());
+                  Navigator.of(context).push(FinishedLocationsPage.route());
                 },
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -120,8 +120,7 @@ class LocationList extends StatelessWidget {
                 }
 
                 return Scrollbar(
-                  controller:
-                      context.read<LocationListBloc>().scrollController,
+                  controller: context.read<LocationListBloc>().scrollController,
                   child: ListView.builder(
                     controller:
                         context.read<LocationListBloc>().scrollController,

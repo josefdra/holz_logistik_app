@@ -71,12 +71,13 @@ class LocationRepository {
   }
 
   /// Updates the current values of a location
-  Future<void> updateCurrentValues(
+  Future<void> _updateCurrentValues(
     String locationId,
     double quantity,
     double oversizeQuantity,
-    int pieceCount,
-  ) async {
+    int pieceCount, {
+    bool? started,
+  }) async {
     final location = await _locationApi.getLocationById(locationId);
     final updatedQuantity = location.currentQuantity + quantity;
     final updatedOversizeQuantity =
@@ -86,28 +87,44 @@ class LocationRepository {
       currentQuantity: updatedQuantity,
       currentOversizeQuantity: updatedOversizeQuantity,
       currentPieceCount: updatedPieceCount,
+      started: started,
     );
     await _locationApi.saveLocation(updatedLocation);
 
     return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
   }
 
-  /// Updates the `started` status of a location
-  Future<void> unsetStarted(String locationId) async {
-    final location = await _locationApi.getLocationById(locationId);
-    final updatedLocation = location.copyWith(started: false);
-    await _locationApi.saveLocation(updatedLocation);
-
-    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
+  /// Updates the values based on a shipment
+  Future<void> addShipment(
+    String locationId,
+    double quantity,
+    double oversizeQuantity,
+    int pieceCount,
+  ) async {
+    return _updateCurrentValues(
+      locationId,
+      -quantity,
+      -oversizeQuantity,
+      -pieceCount,
+      started: true,
+    );
   }
 
-  /// Updates the `started` status of a location
-  Future<void> setStarted(String locationId) async {
-    final location = await _locationApi.getLocationById(locationId);
-    final updatedLocation = location.copyWith(started: true);
-    await _locationApi.saveLocation(updatedLocation);
-
-    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
+  /// Updates the values based on a shipment
+  Future<void> removeShipment(
+    String locationId,
+    double quantity,
+    double oversizeQuantity,
+    int pieceCount, {
+    required bool started,
+  }) async {
+    return _updateCurrentValues(
+      locationId,
+      quantity,
+      oversizeQuantity,
+      pieceCount,
+      started: !started,
+    );
   }
 
   /// Disposes any resources managed by the repository.

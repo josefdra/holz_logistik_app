@@ -119,9 +119,12 @@ class ShipmentList extends StatelessWidget {
               final endDate = pickedDateRange.end;
 
               if (context.mounted) {
-                context
-                    .read<ShipmentsBloc>()
-                    .add(ShipmentsDateChanged(startDate, endDate));
+                context.read<ShipmentsBloc>().add(
+                      ShipmentsDateChanged(
+                        startDate,
+                        endDate.copyWith(hour: 23, minute: 59, second: 59),
+                      ),
+                    );
               }
             }
           },

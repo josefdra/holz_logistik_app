@@ -19,8 +19,8 @@ class AnalyticsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AnalyticsPageBloc()
-        ..add(const AnalyticsPageSubscriptionRequested()),
+      create: (context) =>
+          AnalyticsPageBloc()..add(const AnalyticsPageSubscriptionRequested()),
       child: Scaffold(
         body: Column(
           children: [

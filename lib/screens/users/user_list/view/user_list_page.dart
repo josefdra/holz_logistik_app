@@ -40,9 +40,11 @@ class UserListPage extends StatelessWidget {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: FloatingActionButton(
           heroTag: 'userListPageFloatingActionButton',
-          shape: const CircleBorder(),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(15)),
+          ),
           onPressed: () => Navigator.of(context).push(EditUserPage.route()),
-          child: const Icon(Icons.add),
+          child: const Icon(Icons.add_circle_outline),
         ),
       ),
     );

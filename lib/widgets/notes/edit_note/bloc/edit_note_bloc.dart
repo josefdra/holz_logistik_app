@@ -43,7 +43,7 @@ class EditNoteBloc extends Bloc<EditNoteEvent, EditNoteState> {
         (user) => add(EditNoteUserUpdate(user)),
       );
 
-      emit(state.copyWith(status: EditNoteStatus.success));
+      emit(state.copyWith(status: EditNoteStatus.ready));
     } catch (e) {
       emit(state.copyWith(status: EditNoteStatus.failure));
     }

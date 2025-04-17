@@ -1,23 +1,40 @@
 part of 'finished_contracts_bloc.dart';
 
-enum FinishedContractStatus { initial, loading, success, failure }
+enum FinishedContractsStatus { initial, loading, success, failure }
 
-final class FinishedContractState extends Equatable {
-  const FinishedContractState({
-    this.status = FinishedContractStatus.initial,
+final class FinishedContractsState extends Equatable {
+  FinishedContractsState({
+    this.status = FinishedContractsStatus.initial,
     this.contracts = const [],
-  });
+    DateTime? endDate,
+    DateTime? startDate,
+    this.customDate = false,
+  })  : endDate = endDate ??
+            DateTime.now().copyWith(hour: 23, minute: 59, second: 59),
+        startDate = startDate ??
+            DateTime.now()
+                .copyWith(hour: 23, minute: 59, second: 59)
+                .subtract(const Duration(days: 32));
 
-  final FinishedContractStatus status;
+  final FinishedContractsStatus status;
   final List<Contract> contracts;
+  final DateTime endDate;
+  final DateTime startDate;
+  final bool customDate;
 
-  FinishedContractState copyWith({
-    FinishedContractStatus? status,
+  FinishedContractsState copyWith({
+    FinishedContractsStatus? status,
     List<Contract>? contracts,
+    DateTime? endDate,
+    DateTime? startDate,
+    bool? customDate,
   }) {
-    return FinishedContractState(
+    return FinishedContractsState(
       status: status ?? this.status,
       contracts: contracts ?? this.contracts,
+      endDate: endDate ?? this.endDate,
+      startDate: startDate ?? this.startDate,
+      customDate: customDate ?? this.customDate,
     );
   }
 
@@ -25,5 +42,8 @@ final class FinishedContractState extends Equatable {
   List<Object?> get props => [
         status,
         contracts,
+        endDate,
+        startDate,
+        customDate,
       ];
 }

@@ -20,7 +20,7 @@ class ShipmentListTile extends StatelessWidget {
       title: Text('${shipment.quantity}'),
       trailing: IconButton(
         onPressed: () => onDeleted?.call(),
-        icon: const Icon(Icons.delete),
+        icon: const Icon(Icons.delete_outline),
       ),
     );
   }

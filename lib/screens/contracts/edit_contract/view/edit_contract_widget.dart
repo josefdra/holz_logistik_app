@@ -55,8 +55,8 @@ class EditContractView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'editContractWidgetFloatingActionButton',
-        shape: const ContinuousRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(32)),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(15)),
         ),
         onPressed: status.isLoadingOrSuccess
             ? null
@@ -65,7 +65,7 @@ class EditContractView extends StatelessWidget {
                 .add(const EditContractSubmitted()),
         child: status.isLoadingOrSuccess
             ? const CircularProgressIndicator()
-            : const Icon(Icons.check_rounded),
+            : const Icon(Icons.check_circle_outline),
       ),
       body: const Scrollbar(
         child: SingleChildScrollView(

@@ -113,9 +113,20 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     final shipments =
         await _shipmentRepository.getShipmentsByLocation(locationId);
 
+    late final bool started;
     if (shipments.isEmpty) {
-      await _locationRepository.unsetStarted(locationId);
+      started = false;
+    } else {
+      started = true;
     }
+
+    await _locationRepository.removeShipment(
+      locationId,
+      event.shipment.quantity,
+      event.shipment.oversizeQuantity,
+      event.shipment.pieceCount,
+      started: started,
+    );
   }
 
   Future<void> _onDateChanged(
@@ -154,7 +165,13 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     final shipment = state.lastDeletedShipment!;
     await _shipmentRepository.saveShipment(shipment);
 
-    await _locationRepository.setStarted(shipment.locationId);
+
+    await _locationRepository.addShipment(
+      shipment.locationId,
+      shipment.quantity,
+      shipment.oversizeQuantity,
+      shipment.pieceCount,
+    );
   }
 
   @override

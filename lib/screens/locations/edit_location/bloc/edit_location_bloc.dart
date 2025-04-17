@@ -256,7 +256,11 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     );
   }
 
-  Map<String, String?> _validateFields() {
+  Map<String, String?> _validateFields({
+    double? currentQuantity,
+    double? currentOversizeQuantity,
+    int? currentPieceCount,
+  }) {
     final errors = <String, String?>{};
 
     if (state.partieNr == '') {
@@ -276,6 +280,26 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       errors['initialPieceCount'] = 'Stückzahl darf nicht 0 sein';
     }
 
+    if (state.initialLocation != null) {
+      if (currentQuantity! < 0) {
+        errors['initialQuantity'] =
+            'Neue Anfangsmenge \nkann nicht kleiner als \nschon '
+            'abgefahrene \nMenge sein';
+      }
+
+      if (currentOversizeQuantity! < 0) {
+        errors['initialOversizeQuantity'] =
+            'Neue Menge ÜS \nkann nicht kleiner als \nschon '
+            'abgefahrene \nMenge ÜS sein';
+      }
+
+      if (currentPieceCount! < 0) {
+        errors['initialPieceCount'] =
+            'Neue Anfangsstückzahl \nkann nicht kleiner als \nschon '
+            'abgefahrene \nStückzahl sein';
+      }
+    }
+
     return errors;
   }
 
@@ -283,7 +307,33 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     EditLocationSubmitted event,
     Emitter<EditLocationState> emit,
   ) async {
-    final validationErrors = _validateFields();
+    late final Map<String, String?> validationErrors;
+    late final double currentQuantity;
+    late final double currentOversizeQuantity;
+    late final int currentPieceCount;
+
+    if (state.initialLocation != null) {
+      currentQuantity = state.initialLocation!.currentQuantity +
+          state.initialQuantity -
+          state.initialLocation!.initialQuantity;
+      currentOversizeQuantity = state.initialLocation!.currentOversizeQuantity +
+          state.initialOversizeQuantity -
+          state.initialLocation!.initialOversizeQuantity;
+      currentPieceCount = state.initialLocation!.currentPieceCount +
+          state.initialPieceCount -
+          state.initialLocation!.initialPieceCount;
+
+      validationErrors = _validateFields(
+        currentQuantity: currentQuantity,
+        currentOversizeQuantity: currentOversizeQuantity,
+        currentPieceCount: currentPieceCount,
+      );
+    } else {
+      currentQuantity = state.initialQuantity;
+      currentOversizeQuantity = state.initialOversizeQuantity;
+      currentPieceCount = state.initialPieceCount;
+      validationErrors = _validateFields();
+    }
 
     if (validationErrors.isNotEmpty) {
       emit(
@@ -313,6 +363,9 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       contractId: state.contractId,
       sawmillIds: state.sawmills,
       oversizeSawmillIds: state.oversizeSawmills,
+      currentQuantity: currentQuantity,
+      currentOversizeQuantity: currentOversizeQuantity,
+      currentPieceCount: currentPieceCount,
     );
 
     try {

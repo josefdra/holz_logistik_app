@@ -55,15 +55,15 @@ class EditUserView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'editUserPageFloatingActionButton',
-        shape: const ContinuousRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(32)),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(15)),
         ),
         onPressed: status.isLoadingOrSuccess
             ? null
             : () => context.read<EditUserBloc>().add(const EditUserSubmitted()),
         child: status.isLoadingOrSuccess
             ? const CircularProgressIndicator()
-            : const Icon(Icons.check_rounded),
+            : const Icon(Icons.check_circle_outline),
       ),
       body: const Scrollbar(
         child: SingleChildScrollView(

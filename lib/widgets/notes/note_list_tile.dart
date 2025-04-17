@@ -23,7 +23,7 @@ class NoteListTile extends StatelessWidget {
         title: Text(note.text),
         trailing: IconButton(
           onPressed: () => onDelete?.call(),
-          icon: const Icon(Icons.delete),
+          icon: const Icon(Icons.delete_outline),
         ),
       ),
     );

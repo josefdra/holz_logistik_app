@@ -188,7 +188,7 @@ class Map extends StatelessWidget {
                             .read<MapBloc>()
                             .add(const MapToggleAddMarkerMode()),
                         heroTag: 'mapPageCancelAddMarkerModeButton',
-                        child: const Icon(Icons.close),
+                        child: const Icon(Icons.cancel_outlined),
                       ),
                     if (state.addMarkerMode) const SizedBox(height: 10),
                     FloatingActionButton(
@@ -210,7 +210,9 @@ class Map extends StatelessWidget {
                               .add(const MapToggleAddMarkerMode()),
                       heroTag: 'mapPageAddMarkerButton',
                       child: Icon(
-                        state.addMarkerMode ? Icons.check : Icons.add_location,
+                        state.addMarkerMode
+                            ? Icons.check_circle_outline
+                            : Icons.add_location,
                       ),
                     ),
                   ],
@@ -231,7 +233,7 @@ class Map extends StatelessWidget {
                       .add(const MapToggleMarkerInfoMode()),
                   heroTag: 'mapPageShownInfoButton',
                   child: Icon(
-                    state.showInfoMode ? Icons.info_outline : Icons.info,
+                    state.showInfoMode ? Icons.info : Icons.info_outline,
                   ),
                 ),
               ),

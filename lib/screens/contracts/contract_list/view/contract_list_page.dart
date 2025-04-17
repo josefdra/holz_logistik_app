@@ -41,7 +41,7 @@ class ContractListPage extends StatelessWidget {
               shape: const BeveledRectangleBorder(),
             ),
             onPressed: () {
-              Navigator.of(context).push(FinishedContractPage.route());
+              Navigator.of(context).push(FinishedContractsPage.route());
             },
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -64,7 +64,7 @@ class ContractListPage extends StatelessWidget {
             onPressed: () => Navigator.of(context).push(
               EditContractPage.route(),
             ),
-            child: const Icon(Icons.add),
+            child: const Icon(Icons.add_circle_outline),
           ),
         ),
       ),

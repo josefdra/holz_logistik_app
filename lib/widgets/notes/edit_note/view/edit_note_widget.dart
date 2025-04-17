@@ -22,7 +22,15 @@ class EditNoteWidget extends StatelessWidget {
         notesRepository: context.read<NoteRepository>(),
         initialNote: note,
       )..add(const EditNoteSubscriptionRequested()),
-      child: const EditNoteView(),
+      child: BlocListener<EditNoteBloc, EditNoteState>(
+        listenWhen: (previous, current) =>
+            previous.status != current.status &&
+            (current.status == EditNoteStatus.success),
+        listener: (context, state) {
+          Navigator.of(context).pop();
+        },
+        child: const EditNoteView(),
+      ),
     );
   }
 }
@@ -36,8 +44,6 @@ class EditNoteView extends StatelessWidget {
       builder: (context, state) {
         if (state.status == EditNoteStatus.loading) {
           return const Center(child: CircularProgressIndicator());
-        } else if (state.status != EditNoteStatus.success) {
-          return const SizedBox();
         }
 
         return Dialog(
@@ -45,25 +51,47 @@ class EditNoteView extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           child: SizedBox(
             width: 600,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const _TextField(),
-                  const SizedBox(height: 20),
-                  IconButton.filled(
-                    onPressed: () => context
-                        .read<EditNoteBloc>()
-                        .add(const EditNoteSubmitted()),
-                    icon: const Icon(Icons.check),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      minimumSize: const Size(48, 48),
+            child: Padding(
+              padding: const EdgeInsets.all(15),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _TextField(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton.filled(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.cancel_outlined),
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
+                            minimumSize: const Size(48, 48),
+                          ),
+                        ),
+                        IconButton.filled(
+                          onPressed: () {
+                            context
+                                .read<EditNoteBloc>()
+                                .add(const EditNoteSubmitted());
+                          },
+                          icon: const Icon(Icons.check_circle_outline),
+                          style: IconButton.styleFrom(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
+                            minimumSize: const Size(48, 48),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,13 +1,35 @@
 part of 'finished_locations_bloc.dart';
 
-sealed class FinishedLocationEvent extends Equatable {
-  const FinishedLocationEvent();
+sealed class FinishedLocationsEvent extends Equatable {
+  const FinishedLocationsEvent();
 
   @override
   List<Object> get props => [];
 }
 
-final class FinishedLocationSubscriptionRequested
-    extends FinishedLocationEvent {
-  const FinishedLocationSubscriptionRequested();
+final class FinishedLocationsSubscriptionRequested
+    extends FinishedLocationsEvent {
+  const FinishedLocationsSubscriptionRequested();
+}
+
+final class FinishedLocationsLocationUpdate extends FinishedLocationsEvent {
+  const FinishedLocationsLocationUpdate();
+}
+
+final class FinishedLocationsRefreshRequested extends FinishedLocationsEvent {
+  const FinishedLocationsRefreshRequested();
+}
+
+final class FinishedLocationsDateChanged extends FinishedLocationsEvent {
+  const FinishedLocationsDateChanged(this.startDate, this.endDate);
+
+  final DateTime startDate;
+  final DateTime endDate;
+
+  @override
+  List<Object> get props => [startDate, endDate];
+}
+
+final class FinishedLocationsAutomaticDate extends FinishedLocationsEvent {
+  const FinishedLocationsAutomaticDate();
 }

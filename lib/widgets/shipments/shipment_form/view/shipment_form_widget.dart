@@ -69,7 +69,7 @@ class ShipmentFormView extends StatelessWidget {
                       onPressed: () => context
                           .read<ShipmentFormBloc>()
                           .add(const ShipmentFormCanceled()),
-                      icon: const Icon(Icons.cancel),
+                      icon: const Icon(Icons.cancel_outlined),
                       style: IconButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor:
@@ -81,7 +81,7 @@ class ShipmentFormView extends StatelessWidget {
                       onPressed: () => context
                           .read<ShipmentFormBloc>()
                           .add(const ShipmentFormSubmitted()),
-                      icon: const Icon(Icons.check_circle),
+                      icon: const Icon(Icons.check_circle_outline),
                       style: IconButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor:

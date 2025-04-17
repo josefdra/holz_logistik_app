@@ -1,6 +1,6 @@
 part of 'edit_note_bloc.dart';
 
-enum EditNoteStatus { initial, loading, success, invalid, failure }
+enum EditNoteStatus { initial, loading, ready, success, invalid, failure }
 
 extension EditNoteStatusX on EditNoteStatus {
   bool get isLoadingOrSuccess => [

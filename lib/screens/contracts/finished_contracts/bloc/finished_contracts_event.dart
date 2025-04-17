@@ -1,13 +1,35 @@
 part of 'finished_contracts_bloc.dart';
 
-sealed class FinishedContractEvent extends Equatable {
-  const FinishedContractEvent();
+sealed class FinishedContractsEvent extends Equatable {
+  const FinishedContractsEvent();
 
   @override
   List<Object> get props => [];
 }
 
-final class FinishedContractSubscriptionRequested
-    extends FinishedContractEvent {
-  const FinishedContractSubscriptionRequested();
+final class FinishedContractsSubscriptionRequested
+    extends FinishedContractsEvent {
+  const FinishedContractsSubscriptionRequested();
+}
+
+final class FinishedContractsContractUpdate extends FinishedContractsEvent {
+  const FinishedContractsContractUpdate();
+}
+
+final class FinishedContractsRefreshRequested extends FinishedContractsEvent {
+  const FinishedContractsRefreshRequested();
+}
+
+final class FinishedContractsDateChanged extends FinishedContractsEvent {
+  const FinishedContractsDateChanged(this.startDate, this.endDate);
+
+  final DateTime startDate;
+  final DateTime endDate;
+
+  @override
+  List<Object> get props => [startDate, endDate];
+}
+
+final class FinishedContractsAutomaticDate extends FinishedContractsEvent {
+  const FinishedContractsAutomaticDate();
 }

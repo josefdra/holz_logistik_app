@@ -65,8 +65,8 @@ class EditLocationView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'editLocationWidgetFloatingActionButton',
-        shape: const ContinuousRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(32)),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(15)),
         ),
         onPressed: status.isLoadingOrSuccess
             ? null
@@ -75,7 +75,7 @@ class EditLocationView extends StatelessWidget {
                 .add(const EditLocationSubmitted()),
         child: status.isLoadingOrSuccess
             ? const CircularProgressIndicator()
-            : const Icon(Icons.check_rounded),
+            : const Icon(Icons.check_circle_outline),
       ),
       body: const Scrollbar(
         child: SingleChildScrollView(
@@ -447,7 +447,7 @@ class _NewSawmillField extends StatelessWidget {
           onPressed: () => context
               .read<EditLocationBloc>()
               .add(const EditLocationNewSawmillSubmitted()),
-          icon: const Icon(Icons.check),
+          icon: const Icon(Icons.check_circle_outline),
         ),
         counterText: '',
       ),
