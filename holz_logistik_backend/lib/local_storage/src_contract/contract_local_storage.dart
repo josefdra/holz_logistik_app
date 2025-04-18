@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/contract_api.dart';
 import 'package:holz_logistik_backend/local_storage/contract_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
@@ -25,15 +27,13 @@ class ContractLocalStorage extends ContractApi {
       BehaviorSubject<List<Contract>>.seeded(
     const [],
   );
-  late final _finishedContractUpdatesStreamController =
-      BehaviorSubject<Map<String, dynamic>>.seeded(
-    const {},
-  );
+  late final _contractUpdatesStreamController =
+      StreamController<Contract>.broadcast();
 
   late final Stream<List<Contract>> _activeContracts =
       _activeContractsStreamController.stream;
-  late final Stream<Map<String, dynamic>> _finishedContractUpdates =
-      _finishedContractUpdatesStreamController.stream;
+  late final Stream<Contract> _contractUpdates =
+      _contractUpdatesStreamController.stream;
 
   /// Migration function for contract table
   Future<void> _migrateContractTable(
@@ -75,8 +75,7 @@ class ContractLocalStorage extends ContractApi {
   Stream<List<Contract>> get activeContracts => _activeContracts;
 
   @override
-  Stream<Map<String, dynamic>> get finishedContractUpdates =>
-      _finishedContractUpdates;
+  Stream<Contract> get contractUpdates => _contractUpdates;
 
   @override
   Future<List<Contract>> getFinishedContractsByDate(
@@ -92,7 +91,13 @@ class ContractLocalStorage extends ContractApi {
           ' >= ? AND ${ContractTable.columnStartDate} <= ? OR '
           '${ContractTable.columnEndDate} >= ? AND '
           '${ContractTable.columnEndDate} <= ?',
-      whereArgs: [1, start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+      whereArgs: [
+        1,
+        start.toIso8601String(),
+        end.toIso8601String(),
+        start.toIso8601String(),
+        end.toIso8601String(),
+      ],
     );
 
     final contracts = <Contract>[];
@@ -146,8 +151,8 @@ class ContractLocalStorage extends ContractApi {
   @override
   Future<int> saveContract(Contract contract) async {
     final result = await _insertOrUpdateContract(contract.toJson());
-    final activeController = _activeContractsStreamController;
-    final activeContracts = List<Contract>.from(activeController.value);
+    final activeContracts =
+        List<Contract>.from(_activeContractsStreamController.value);
 
     if (contract.done == false) {
       final index = activeContracts.indexWhere((c) => c.id == contract.id);
@@ -158,17 +163,10 @@ class ContractLocalStorage extends ContractApi {
       }
     } else {
       activeContracts.removeWhere((c) => c.id == contract.id);
-      final updateController = _finishedContractUpdatesStreamController;
-      final updateData = {
-        'startDate': contract.startDate,
-        'endDate': contract.endDate,
-        'title': contract.title,
-      };
-
-      updateController.add(updateData);
     }
 
-    activeController.add(activeContracts);
+    _contractUpdatesStreamController.add(contract);
+    _activeContractsStreamController.add(activeContracts);
 
     return result;
   }
@@ -185,21 +183,14 @@ class ContractLocalStorage extends ContractApi {
     final result = await _deleteContract(id);
 
     if (done == false) {
-      final controller = _activeContractsStreamController;
-      final contracts = List<Contract>.from(controller.value)
-        ..removeWhere((c) => c.id == id);
+      final contracts =
+          List<Contract>.from(_activeContractsStreamController.value)
+            ..removeWhere((c) => c.id == id);
 
-      controller.add(contracts);
-    } else {
-      final controller = _finishedContractUpdatesStreamController;
-      final updateData = {
-        'startDate': contract.startDate,
-        'endDate': contract.endDate,
-        'title': contract.title,
-      };
-
-      controller.add(updateData);
+      _activeContractsStreamController.add(contracts);
     }
+
+    _contractUpdatesStreamController.add(contract);
 
     return result;
   }
@@ -208,6 +199,6 @@ class ContractLocalStorage extends ContractApi {
   @override
   Future<void> close() {
     _activeContractsStreamController.close();
-    return _finishedContractUpdatesStreamController.close();
+    return _contractUpdatesStreamController.close();
   }
 }

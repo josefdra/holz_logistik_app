@@ -20,7 +20,7 @@ class ShipmentRepository {
   final ShipmentSyncService _shipmentSyncService;
 
   /// Provides a [Stream] of shipment updates.
-  Stream<Map<String, dynamic>> get shipmentUpdates =>
+  Stream<Shipment> get shipmentUpdates =>
       _shipmentApi.shipmentUpdates;
 
   /// Provides shipments by location.

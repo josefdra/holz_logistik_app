@@ -48,6 +48,15 @@ enum Role {
   }
 }
 
+/// Check if user has elevated privileges
+extension RoleX on Role {
+  /// returns true if user is privileged
+  bool get isPrivileged => [
+        Role.privileged,
+        Role.admin,
+      ].contains(this);
+}
+
 /// {@template user_item}
 /// A single `user` item.
 ///

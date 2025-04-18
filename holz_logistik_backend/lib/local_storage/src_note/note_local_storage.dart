@@ -25,7 +25,8 @@ class NoteLocalStorage extends NoteApi {
     const [],
   );
 
-  late final Stream<List<Note>> _notes = _noteStreamController.stream;
+  late final Stream<List<Note>> _notes =
+      _noteStreamController.stream;
 
   /// Migration function for note table
   Future<void> _migrateNoteTable(

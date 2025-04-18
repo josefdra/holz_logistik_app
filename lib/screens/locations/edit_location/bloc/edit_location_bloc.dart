@@ -13,11 +13,13 @@ part 'edit_location_state.dart';
 class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   EditLocationBloc({
     required LocationRepository locationsRepository,
+    required ContractRepository contractRepository,
     required SawmillRepository sawmillRepository,
     required PhotoRepository photoRepository,
     required Location? initialLocation,
     required LatLng? newMarkerPosition,
   })  : _locationsRepository = locationsRepository,
+        _contractRepository = contractRepository,
         _sawmillRepository = sawmillRepository,
         _photoRepository = photoRepository,
         super(
@@ -45,6 +47,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       _onInitialOversizeQuantityChanged,
     );
     on<EditLocationInitialPieceCountChanged>(_onInitialPieceCountChanged);
+    on<EditLocationContractUpdate>(_onContractUpdate);
     on<EditLocationContractChanged>(_onContractChanged);
     on<EditLocationNewSawmillChanged>(_onNewSawmillChanged);
     on<EditLocationSawmillsChanged>(_onSawmillChanged);
@@ -56,12 +59,12 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   }
 
   final LocationRepository _locationsRepository;
+  final ContractRepository _contractRepository;
   final SawmillRepository _sawmillRepository;
   final PhotoRepository _photoRepository;
 
   late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
-  late final StreamSubscription<Map<String, dynamic>>?
-      _photoUpdatesSubscription;
+  late final StreamSubscription<List<Contract>>? _contractSubscription;
 
   Future<void> _onInit(
     EditLocationInit event,
@@ -83,13 +86,11 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       },
     );
 
-    _photoUpdatesSubscription =
-        _photoRepository.photoUpdates.listen((photoUpdates) {
-      final locationId = state.initialLocation?.id ?? '';
-      if (photoUpdates['locationId'] == locationId) {
-        add(EditLocationPhotosChanged(locationId));
-      }
-    });
+    _contractSubscription = _contractRepository.activeContracts.listen(
+      (contracts) {
+        add(EditLocationContractUpdate(contracts));
+      },
+    );
   }
 
   void _onPartieNrChanged(
@@ -256,6 +257,17 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     );
   }
 
+  Future<void> _onContractUpdate(
+    EditLocationContractUpdate event,
+    Emitter<EditLocationState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        contracts: event.contracts,
+      ),
+    );
+  }
+
   Map<String, String?> _validateFields({
     double? currentQuantity,
     double? currentOversizeQuantity,
@@ -380,7 +392,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   @override
   Future<void> close() async {
     await _sawmillSubscription?.cancel();
-    await _photoUpdatesSubscription?.cancel();
+    await _contractSubscription?.cancel();
     state.newSawmillController.dispose();
     state.sawmillController.dispose();
     state.oversizeSawmillController.dispose();

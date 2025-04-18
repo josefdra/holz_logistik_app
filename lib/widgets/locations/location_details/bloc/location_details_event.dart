@@ -64,3 +64,7 @@ final class LocationDetailsUserUpdate extends LocationDetailsEvent {
   @override
   List<Object> get props => [user];
 }
+
+final class LocationDetailsLocationReactivated extends LocationDetailsEvent {
+  const LocationDetailsLocationReactivated();
+}

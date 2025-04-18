@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/location_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/location_local_storage.dart';
@@ -27,15 +29,13 @@ class LocationLocalStorage extends LocationApi {
       BehaviorSubject<List<Location>>.seeded(
     const [],
   );
-  late final _finishedLocationUpdatesStreamController =
-      BehaviorSubject<Map<String, dynamic>>.seeded(
-    const {},
-  );
+  late final _locationUpdatesStreamController =
+      StreamController<Location>.broadcast();
 
   late final Stream<List<Location>> _activeLocations =
       _activeLocationStreamController.stream;
-  late final Stream<Map<String, dynamic>> _finishedLocationUpdates =
-      _finishedLocationUpdatesStreamController.stream;
+  late final Stream<Location> _locationUpdates =
+      _locationUpdatesStreamController.stream;
 
   /// Migration function for location table
   Future<void> _migrateLocationSawmillTable(
@@ -75,17 +75,9 @@ class LocationLocalStorage extends LocationApi {
         .toList();
   }
 
-  Future<List<Location>> _getLocationsByCondition({
-    required bool isDone,
-  }) async {
-    final db = await _coreLocalStorage.database;
-
-    final locationsJson = await db.query(
-      LocationTable.tableName,
-      where: '${LocationTable.columnDone} = ?',
-      whereArgs: [if (isDone) 1 else 0],
-    );
-
+  Future<List<Location>> _addSawmillsToLocations(
+    List<Map<String, dynamic>> locationsJson,
+  ) async {
     final locations = locationsJson
         .map(
           (location) => Location.fromJson(Map<String, dynamic>.from(location)),
@@ -108,6 +100,20 @@ class LocationLocalStorage extends LocationApi {
     return locations;
   }
 
+  Future<List<Location>> _getLocationsByCondition({
+    required bool isDone,
+  }) async {
+    final db = await _coreLocalStorage.database;
+
+    final locationsJson = await db.query(
+      LocationTable.tableName,
+      where: '${LocationTable.columnDone} = ?',
+      whereArgs: [if (isDone) 1 else 0],
+    );
+
+    return _addSawmillsToLocations(locationsJson);
+  }
+
   /// Initialization
   Future<void> _init() async {
     final activeLocations = await _getLocationsByCondition(isDone: false);
@@ -119,8 +125,7 @@ class LocationLocalStorage extends LocationApi {
   Stream<List<Location>> get activeLocations => _activeLocations;
 
   @override
-  Stream<Map<String, dynamic>> get finishedLocationUpdates =>
-      _finishedLocationUpdates;
+  Stream<Location> get locationUpdates => _locationUpdates;
 
   @override
   Future<List<Location>> getFinishedLocationsByDate(
@@ -133,16 +138,16 @@ class LocationLocalStorage extends LocationApi {
       LocationTable.tableName,
       where: '${LocationTable.columnDone} = ? AND ${LocationTable.columnDate}'
           ' >= ? AND ${LocationTable.columnDate} <= ?',
-      whereArgs: [1, start.millisecondsSinceEpoch, end.millisecondsSinceEpoch],
+      whereArgs: [
+        1,
+        start.toIso8601String(),
+        end.toIso8601String(),
+        start.toIso8601String(),
+        end.toIso8601String(),
+      ],
     );
 
-    final locations = <Location>[];
-    for (final locationJson in locationsJson) {
-      final location = Location.fromJson(locationJson);
-      locations.add(location);
-    }
-
-    return locations;
+    return _addSawmillsToLocations(locationsJson);
   }
 
   @override
@@ -222,8 +227,8 @@ class LocationLocalStorage extends LocationApi {
   @override
   Future<int> saveLocation(Location location) async {
     final result = await _insertOrUpdateLocation(location.toJson());
-    final activeController = _activeLocationStreamController;
-    final activeLocations = List<Location>.from(activeController.value);
+    final activeLocations =
+        List<Location>.from(_activeLocationStreamController.value);
 
     if (location.done == false) {
       final index = activeLocations.indexWhere((l) => l.id == location.id);
@@ -233,17 +238,11 @@ class LocationLocalStorage extends LocationApi {
         activeLocations.add(location);
       }
     } else {
-      final updateController = _finishedLocationUpdatesStreamController;
       activeLocations.removeWhere((l) => l.id == location.id);
-      final updateData = {
-        'date': location.date,
-        'partieNr': location.partieNr,
-      };
-
-      updateController.add(updateData);
     }
 
-    activeController.add(activeLocations);
+    _locationUpdatesStreamController.add(location);
+    _activeLocationStreamController.add(activeLocations);
 
     return result;
   }
@@ -258,22 +257,16 @@ class LocationLocalStorage extends LocationApi {
   Future<int> deleteLocation({required String id, required bool done}) async {
     final location = await getLocationById(id);
     final result = await _deleteLocation(id);
-    
+
     if (done == false) {
-      final controller = _activeLocationStreamController;
-      final locations = List<Location>.from(controller.value)
-        ..removeWhere((l) => l.id == id);
+      final locations =
+          List<Location>.from(_activeLocationStreamController.value)
+            ..removeWhere((l) => l.id == id);
 
-      controller.add(locations);
-    } else {
-      final controller = _finishedLocationUpdatesStreamController;
-      final updateData = {
-        'date': location.date,
-        'partieNr': location.partieNr,
-      };
-
-      controller.add(updateData);
+      _activeLocationStreamController.add(locations);
     }
+
+    _locationUpdatesStreamController.add(location);
 
     return result;
   }
@@ -282,6 +275,6 @@ class LocationLocalStorage extends LocationApi {
   @override
   Future<void> close() {
     _activeLocationStreamController.close();
-    return _finishedLocationUpdatesStreamController.close();
+    return _locationUpdatesStreamController.close();
   }
 }

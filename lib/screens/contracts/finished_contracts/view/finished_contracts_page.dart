@@ -131,9 +131,6 @@ class FinishedContractsList extends StatelessWidget {
           final contract = state.contracts.elementAt(index);
           return ContractListTile(
             contract: contract,
-            onTap: () {
-              print('Show contract details widget');
-            },
           );
         },
       ),

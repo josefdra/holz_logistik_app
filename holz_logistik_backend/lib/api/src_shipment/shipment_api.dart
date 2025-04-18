@@ -8,7 +8,7 @@ abstract class ShipmentApi {
   const ShipmentApi();
 
   /// Provides updates on shipments.
-  Stream<Map<String, dynamic>> get shipmentUpdates;
+  Stream<Shipment> get shipmentUpdates;
 
   /// Provides shipments by location.
   Future<List<Shipment>> getShipmentsByLocation(String locationId);

@@ -12,10 +12,10 @@ mixin LocationSortGettable implements Gettable {
   /// Original location date
   @override
   DateTime get date;
-  
+
   /// Original location partieNr
   String get partieNr;
-  
+
   /// Maps [partieNr] to the standardized [name] property
   @override
   String get name => partieNr;
@@ -82,6 +82,28 @@ class Location extends Equatable with LocationSortGettable {
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now(),
         date = date ?? DateTime.now();
+
+  /// {@macro location_item}
+  Location.copy({
+    required Location location,
+  })  : id = location.id,
+        done = location.done,
+        started = location.started,
+        lastEdit = location.lastEdit,
+        latitude = location.latitude,
+        longitude = location.longitude,
+        partieNr = location.partieNr,
+        date = location.date,
+        additionalInfo = location.additionalInfo,
+        initialQuantity = location.initialQuantity,
+        initialOversizeQuantity = location.initialOversizeQuantity,
+        initialPieceCount = location.initialPieceCount,
+        currentQuantity = location.currentQuantity,
+        currentOversizeQuantity = location.currentOversizeQuantity,
+        currentPieceCount = location.currentPieceCount,
+        contractId = location.contractId,
+        sawmillIds = location.sawmillIds,
+        oversizeSawmillIds = location.oversizeSawmillIds;
 
   /// The id of the `location`.
   ///

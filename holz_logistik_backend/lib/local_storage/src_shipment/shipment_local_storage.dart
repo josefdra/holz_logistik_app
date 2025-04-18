@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/shipment_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/shipment_local_storage.dart';
-import 'package:rxdart/subjects.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// {@template shipment_local_storage}
@@ -20,11 +21,9 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   final CoreLocalStorage _coreLocalStorage;
   late final _shipmentUpdatesStreamController =
-      BehaviorSubject<Map<String, dynamic>>.seeded(
-    const {},
-  );
+      StreamController<Shipment>.broadcast();
 
-  late final Stream<Map<String, dynamic>> _shipmentUpdates =
+  late final Stream<Shipment> _shipmentUpdates =
       _shipmentUpdatesStreamController.stream;
 
   /// Migration function for shipment table
@@ -37,7 +36,7 @@ class ShipmentLocalStorage extends ShipmentApi {
   }
 
   @override
-  Stream<Map<String, dynamic>> get shipmentUpdates => _shipmentUpdates;
+  Stream<Shipment> get shipmentUpdates => _shipmentUpdates;
 
   @override
   Future<List<Shipment>> getShipmentsByLocation(String locationId) async {
@@ -102,13 +101,8 @@ class ShipmentLocalStorage extends ShipmentApi {
   @override
   Future<int> saveShipment(Shipment shipment) async {
     final result = await _insertOrUpdateShipment(shipment.toJson());
-    final updateController = _shipmentUpdatesStreamController;
-    final updateData = {
-      'lastEdit': shipment.lastEdit,
-      'locationId': shipment.locationId,
-    };
 
-    updateController.add(updateData);
+    _shipmentUpdatesStreamController.add(shipment);
 
     return result;
   }
@@ -126,14 +120,8 @@ class ShipmentLocalStorage extends ShipmentApi {
   }) async {
     final shipment = await getShipmentById(id);
     final result = await _deleteShipment(id);
-    
-    final controller = _shipmentUpdatesStreamController;
-    final updateData = {
-      'lastEdit': shipment.lastEdit,
-      'locationId': locationId,
-    };
 
-    controller.add(updateData);
+    _shipmentUpdatesStreamController.add(shipment);
     return result;
   }
 

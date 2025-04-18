@@ -13,14 +13,18 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
         super(
           EditContractState(
             initialContract: initialContract,
-            done: initialContract?.done ?? false,
             title: initialContract?.title ?? '',
             additionalInfo: initialContract?.additionalInfo ?? '',
+            startDate: initialContract?.startDate,
+            endDate: initialContract?.endDate,
           ),
         ) {
     on<EditContractTitleChanged>(_onTitleChanged);
+    on<EditContractDateRangeChanged>(_onDateRangeChanged);
     on<EditContractAdditionalInfoChanged>(_onAdditionalInfoChanged);
+    on<EditContractContractFinishedUpdate>(_onContractFinishedUpdate);
     on<EditContractSubmitted>(_onSubmitted);
+    on<EditContractCanceled>(_onCanceled);
   }
 
   final ContractRepository _contractsRepository;
@@ -33,6 +37,18 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
       ..remove(event.fieldName);
 
     emit(state.copyWith(validationErrors: updatedErrors, title: event.title));
+  }
+
+  Future<void> _onDateRangeChanged(
+    EditContractDateRangeChanged event,
+    Emitter<EditContractState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        startDate: event.startDate,
+        endDate: event.endDate,
+      ),
+    );
   }
 
   void _onAdditionalInfoChanged(
@@ -50,6 +66,15 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
     }
 
     return errors;
+  }
+
+  void _onContractFinishedUpdate(
+    EditContractContractFinishedUpdate event,
+    Emitter<EditContractState> emit,
+  ) {
+    emit(
+      state.copyWith(contractFinished: event.contractFinished),
+    );
   }
 
   Future<void> _onSubmitted(
@@ -71,10 +96,12 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
     emit(state.copyWith(status: EditContractStatus.loading));
 
     final contract = (state.initialContract ?? Contract.empty()).copyWith(
-      done: state.done,
+      done: state.contractFinished,
       lastEdit: DateTime.now(),
       title: state.title,
       additionalInfo: state.additionalInfo,
+      startDate: state.startDate,
+      endDate: state.endDate,
     );
 
     try {
@@ -83,5 +110,16 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
     } catch (e) {
       emit(state.copyWith(status: EditContractStatus.failure));
     }
+  }
+
+  void _onCanceled(
+    EditContractCanceled event,
+    Emitter<EditContractState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        status: EditContractStatus.success,
+      ),
+    );
   }
 }

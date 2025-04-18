@@ -21,6 +21,7 @@ class EditLocationPage extends StatelessWidget {
         create: (context) => EditLocationBloc(
           locationsRepository: context.read<LocationRepository>(),
           sawmillRepository: context.read<SawmillRepository>(),
+          contractRepository: context.read<ContractRepository>(),
           photoRepository: context.read<PhotoRepository>(),
           initialLocation: initialLocation,
           newMarkerPosition: newMarkerPosition,
@@ -206,6 +207,7 @@ class _DateField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<EditLocationBloc>().state;
+    final today = DateTime.now();
 
     return TextField(
       readOnly: true,
@@ -237,7 +239,7 @@ class _DateField extends StatelessWidget {
       controller: TextEditingController(
         text: state.date != null
             ? '${state.date!.day}.${state.date!.month}.${state.date!.year}'
-            : 'Datum',
+            : '${today.day}.${today.month}.${today.year}',
       ),
     );
   }
@@ -381,47 +383,35 @@ class _ContractField extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
 
-    return StreamBuilder<List<Contract>>(
-      stream: context.watch<ContractRepository>().activeContracts,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const CircularProgressIndicator();
-        }
+    final selectedId = state.contractId.isNotEmpty
+        ? state.contractId
+        : state.initialLocation?.contractId;
 
-        final contracts = {
-          for (final contract in snapshot.data!) contract.id: contract,
-        };
+    final value = selectedId != null &&
+            state.contracts.any((contract) => contract.id == selectedId)
+        ? selectedId
+        : null;
 
-        final selectedId = state.contractId != ''
-            ? state.contractId
-            : state.initialLocation?.contractId;
-        final value = selectedId != null && contracts.containsKey(selectedId)
-            ? selectedId
-            : null;
-
-        return DropdownButtonFormField<String>(
-          isExpanded: true,
-          decoration: InputDecoration(
-            labelText: l10n.editLocationContractLabel,
-            enabled: !state.status.isLoadingOrSuccess,
-            border: const OutlineInputBorder(),
-          ),
-          value: value,
-          items: contracts.entries.map((entry) {
-            final contract = entry.value;
-            return DropdownMenuItem<String>(
-              value: contract.id,
-              child: Text(contract.title),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) {
-              context
-                  .read<EditLocationBloc>()
-                  .add(EditLocationContractChanged(value));
-            }
-          },
+    return DropdownButtonFormField<String>(
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: l10n.editLocationContractLabel,
+        enabled: !state.status.isLoadingOrSuccess,
+        border: const OutlineInputBorder(),
+      ),
+      value: value,
+      items: state.contracts.map((contract) {
+        return DropdownMenuItem<String>(
+          value: contract.id,
+          child: Text(contract.title),
         );
+      }).toList(),
+      onChanged: (value) {
+        if (value != null) {
+          context
+              .read<EditLocationBloc>()
+              .add(EditLocationContractChanged(value));
+        }
       },
     );
   }

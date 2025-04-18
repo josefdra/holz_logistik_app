@@ -57,10 +57,14 @@ class ShipmentFormView extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
+                const Center(
+                  child: Text('Neue Abfuhr'),
+                ),
                 const _QuantityField(),
                 const _OversizeQuantityField(),
                 const _PieceCountField(),
                 const _SawmillField(),
+                const _FinishLocationField(),
                 const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -132,6 +136,7 @@ class _QuantityField extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text('Verfügbare Menge: ${state.currentQuantity}'),
         ),
+        const SizedBox(height: 10),
         TextFormField(
           key: const Key('shipmentForm_quantity_textFormField'),
           initialValue: '',
@@ -174,6 +179,7 @@ class _OversizeQuantityField extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text('Verfügbare Menge ÜS: ${state.currentOversizeQuantity}'),
         ),
+        const SizedBox(height: 10),
         TextFormField(
           key: const Key('shipmentForm_oversizeQuantity_textFormField'),
           initialValue: '',
@@ -216,6 +222,7 @@ class _PieceCountField extends StatelessWidget {
           alignment: Alignment.centerLeft,
           child: Text('Verfügbare Stückzahl: ${state.currentPieceCount}'),
         ),
+        const SizedBox(height: 10),
         TextFormField(
           key: const Key('shipmentForm_pieceCount_textFormField'),
           initialValue: '',
@@ -286,6 +293,37 @@ class _SawmillField extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _FinishLocationField extends StatelessWidget {
+  const _FinishLocationField();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<ShipmentFormBloc>().state;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Checkbox(
+          value: state.locationFinished,
+          onChanged: state.status.isLoadingOrSuccess
+              ? null
+              : (bool? value) {
+                  if (value != null) {
+                    context
+                        .read<ShipmentFormBloc>()
+                        .add(ShipmentFormLocationFinishedUpdate(value));
+                  }
+                },
+        ),
+        Text(
+          'Standort abschließen',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 }

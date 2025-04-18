@@ -137,6 +137,15 @@ final class EditLocationSawmillUpdate extends EditLocationEvent {
   List<Object> get props => [allSawmills];
 }
 
+final class EditLocationContractUpdate extends EditLocationEvent {
+  const EditLocationContractUpdate(this.contracts);
+
+  final List<Contract> contracts;
+
+  @override
+  List<Object> get props => [contracts];
+}
+
 final class EditLocationSubmitted extends EditLocationEvent {
   const EditLocationSubmitted();
 }

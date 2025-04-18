@@ -33,6 +33,7 @@ class LocationDetailsBloc
     on<LocationDetailsOversizeSawmillUpdate>(_onOversizeSawmillUpdate);
     on<LocationDetailsShipmentUpdate>(_onShipmentUpdate);
     on<LocationDetailsUserUpdate>(_onUserUpdate);
+    on<LocationDetailsLocationReactivated>(_onLocationReactivated);
   }
 
   final LocationRepository _locationsRepository;
@@ -41,12 +42,11 @@ class LocationDetailsBloc
   final ShipmentRepository _shipmentRepository;
   final AuthenticationRepository _authenticationRepository;
 
-  late final StreamSubscription<List<Location>>? _locationSubscription;
-  late final StreamSubscription<Contract>? _contractSubscription;
+  late final StreamSubscription<Location>? _locationUpdatesSubscription;
+  late final StreamSubscription<Contract>? _contractUpdatesSubscription;
   late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
   late final StreamSubscription<List<Sawmill>>? _oversizeSawmillSubscription;
-  late final StreamSubscription<Map<String, dynamic>>?
-      _shipmentUpdateSubscription;
+  late final StreamSubscription<Shipment>? _shipmentUpdateSubscription;
   late final StreamSubscription<User>? _authenticationSubscription;
 
   void _onSubscriptionRequested(
@@ -56,28 +56,19 @@ class LocationDetailsBloc
     emit(state.copyWith(status: LocationDetailsStatus.loading));
 
     try {
-      _locationSubscription = _locationsRepository.activeLocations
-          .map(
-            (locations) => locations
-                .where((location) => location.id == state.location.id)
-                .toList(),
-          )
-          .listen(
-            (filteredLocations) =>
-                add(LocationDetailsLocationUpdate(filteredLocations.first)),
-          );
+      _locationUpdatesSubscription =
+          _locationsRepository.locationUpdates.listen((location) {
+        if (location.id == state.location.id) {
+          add(LocationDetailsLocationUpdate(location));
+        }
+      });
 
-      _contractSubscription =
-          _contractRepository.activeContracts.map((contracts) {
-        return contracts.firstWhere(
-          (contract) => contract.id == state.location.contractId,
-          orElse: Contract.empty,
-        );
-      }).listen(
-        (contract) => add(
-          LocationDetailsContractUpdate(contract),
-        ),
-      );
+      _contractUpdatesSubscription =
+          _contractRepository.contractUpdates.listen((contract) {
+        if (contract.id == state.location.contractId) {
+          add(LocationDetailsContractUpdate(contract));
+        }
+      });
 
       _sawmillSubscription = _sawmillRepository.sawmills.map(
         (sawmills) {
@@ -116,10 +107,9 @@ class LocationDetailsBloc
       );
 
       _shipmentUpdateSubscription = _shipmentRepository.shipmentUpdates.listen(
-        (shipmentUpdates) {
-          final locationId = state.location.id;
-          if (shipmentUpdates['locationId'] == locationId) {
-            add(LocationDetailsShipmentUpdate(locationId));
+        (shipment) {
+          if (shipment.locationId == state.location.id) {
+            add(LocationDetailsShipmentUpdate(shipment.locationId));
           }
         },
       );
@@ -184,9 +174,6 @@ class LocationDetailsBloc
     LocationDetailsLocationUpdate event,
     Emitter<LocationDetailsState> emit,
   ) {
-    if (event.location.done) {
-      emit(state.copyWith(status: LocationDetailsStatus.close));
-    }
     emit(state.copyWith(location: event.location));
 
     _refreshContract();
@@ -232,10 +219,19 @@ class LocationDetailsBloc
     emit(state.copyWith(user: event.user));
   }
 
+  Future<void> _onLocationReactivated(
+    LocationDetailsLocationReactivated event,
+    Emitter<LocationDetailsState> emit,
+  ) async {
+    await _locationsRepository
+        .saveLocation(state.location.copyWith(done: false));
+    emit(state.copyWith(status: LocationDetailsStatus.close));
+  }
+
   @override
   Future<void> close() async {
-    await _locationSubscription?.cancel();
-    await _contractSubscription?.cancel();
+    await _locationUpdatesSubscription?.cancel();
+    await _contractUpdatesSubscription?.cancel();
     await _sawmillSubscription?.cancel();
     await _oversizeSawmillSubscription?.cancel();
     await _shipmentUpdateSubscription?.cancel();

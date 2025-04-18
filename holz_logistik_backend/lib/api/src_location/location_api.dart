@@ -11,7 +11,7 @@ abstract class LocationApi {
   Stream<List<Location>> get activeLocations;
 
   /// Provides updates on finished locations.
-  Stream<Map<String, dynamic>> get finishedLocationUpdates;
+  Stream<Location> get locationUpdates;
 
   /// Provides finished locations.
   Future<List<Location>> getFinishedLocationsByDate(

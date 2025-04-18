@@ -23,8 +23,8 @@ class LocationRepository {
   Stream<List<Location>> get activeLocations => _locationApi.activeLocations;
 
   /// Provides updates on finished locations.
-  Stream<Map<String, dynamic>> get finishedLocationUpdates =>
-      _locationApi.finishedLocationUpdates;
+  Stream<Location> get locationUpdates =>
+      _locationApi.locationUpdates;
 
   /// Provides finished locations.
   Future<List<Location>> getFinishedLocationsByDate(

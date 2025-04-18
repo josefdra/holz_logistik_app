@@ -32,14 +32,14 @@ class MapPage extends StatelessWidget {
         authenticationRepository: context.read<AuthenticationRepository>(),
       )..add(const MapSubscriptionRequested()),
       child: const Scaffold(
-        body: Map(),
+        body: MapView(),
       ),
     );
   }
 }
 
-class Map extends StatelessWidget {
-  const Map({super.key});
+class MapView extends StatelessWidget {
+  const MapView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -68,175 +68,220 @@ class Map extends StatelessWidget {
 
           return Stack(
             children: [
-              FlutterMap(
-                mapController: context.read<MapBloc>().mapController,
-                options: MapOptions(
-                  initialCenter: const LatLng(47.9831, 11.9050),
-                  initialZoom: 15,
-                  interactionOptions: const InteractionOptions(
-                    rotationThreshold: 30,
-                  ),
-                  onTap: (tapPosition, point) => context.read<MapBloc>().add(
-                        MapMapTap(position: point),
-                      ),
-                  onMapEvent: (event) {
-                    if (event is MapEventMoveStart) {
-                      if (event.source == MapEventSource.dragStart ||
-                          event.source ==
-                              MapEventSource.multiFingerGestureStart) {
-                        context
-                            .read<MapBloc>()
-                            .add(const MapDisableTrackingMode());
-                      }
-                    }
-                  },
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.draexl_it.holz_logistik',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      if (state.userLocation != null)
-                        Marker(
-                          width: 25,
-                          height: 25,
-                          point: state.userLocation!,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withAlpha(51),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      if (state.addMarkerMode == true &&
-                          state.newMarkerPosition != null)
-                        Marker(
-                          width: 50,
-                          height: 50,
-                          point: state.newMarkerPosition!,
-                          child:
-                              const Icon(Icons.location_on, color: Colors.red),
-                        ),
-                      ...state.locations.map(
-                        (location) => Marker(
-                          width: 50,
-                          height: 50,
-                          point: LatLng(location.latitude, location.longitude),
-                          child: GestureDetector(
-                            onTap: () => showDialog<LocationDetailsWidget>(
-                              context: context,
-                              builder: (context) => LocationDetailsWidget(
-                                location: location,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.location_pin,
-                              color: !location.started
-                                  ? Colors.red
-                                  : const Color.fromARGB(255, 0, 17, 255),
-                              size: 50,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Positioned(
-                bottom: 10,
-                right: 10,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FloatingActionButton(
-                      onPressed: () => context.read<MapBloc>().add(
-                            const MapResetMapRotation(),
-                          ),
-                      heroTag: 'mapPageNorthButton',
-                      child: const Icon(Icons.navigation),
-                    ),
-                    const SizedBox(height: 10),
-                    FloatingActionButton(
-                      onPressed: () => context.read<MapBloc>().add(
-                            const MapCenterToPosition(),
-                          ),
-                      heroTag: 'mapPageCenterPositionButton',
-                      child: const Icon(Icons.my_location),
-                    ),
-                    const SizedBox(height: 10),
-                    if (state.addMarkerMode)
-                      FloatingActionButton(
-                        onPressed: () => context
-                            .read<MapBloc>()
-                            .add(const MapToggleAddMarkerMode()),
-                        heroTag: 'mapPageCancelAddMarkerModeButton',
-                        child: const Icon(Icons.cancel_outlined),
-                      ),
-                    if (state.addMarkerMode) const SizedBox(height: 10),
-                    FloatingActionButton(
-                      onPressed: state.addMarkerMode
-                          ? () {
-                              if (state.newMarkerPosition != null) {
-                                context
-                                    .read<MapBloc>()
-                                    .add(const MapToggleAddMarkerMode());
-                                Navigator.of(context).push(
-                                  EditLocationPage.route(
-                                    newMarkerPosition: state.newMarkerPosition,
-                                  ),
-                                );
-                              }
-                            }
-                          : () => context
-                              .read<MapBloc>()
-                              .add(const MapToggleAddMarkerMode()),
-                      heroTag: 'mapPageAddMarkerButton',
-                      child: Icon(
-                        state.addMarkerMode
-                            ? Icons.check_circle_outline
-                            : Icons.add_location,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Center(child: Text('© OpenStreetMap')),
-              ),
-              Positioned(
-                bottom: 10,
-                left: 10,
-                child: FloatingActionButton(
-                  onPressed: () => context
-                      .read<MapBloc>()
-                      .add(const MapToggleMarkerInfoMode()),
-                  heroTag: 'mapPageShownInfoButton',
-                  child: Icon(
-                    state.showInfoMode ? Icons.info : Icons.info_outline,
-                  ),
-                ),
-              ),
+              _buildMap(context, state),
+              _buildRightActionButtons(context, state),
+              _buildCopyrightNotice(),
+              _buildInfoButton(context, state),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMap(BuildContext context, MapState state) {
+    return FlutterMap(
+      mapController: context.read<MapBloc>().mapController,
+      options: MapOptions(
+        initialCenter: const LatLng(47.9831, 11.9050),
+        initialZoom: 15,
+        interactionOptions: const InteractionOptions(
+          rotationThreshold: 30,
+        ),
+        onTap: (tapPosition, point) => context.read<MapBloc>().add(
+              MapMapTap(position: point),
+            ),
+        onMapEvent: (event) {
+          if (event is MapEventMoveStart) {
+            if (event.source == MapEventSource.dragStart ||
+                event.source == MapEventSource.multiFingerGestureStart) {
+              context.read<MapBloc>().add(const MapDisableTrackingMode());
+            }
+          }
+        },
+      ),
+      children: [
+        _buildTileLayer(),
+        _buildMarkerLayer(context, state),
+      ],
+    );
+  }
+
+  Widget _buildTileLayer() {
+    return TileLayer(
+      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      userAgentPackageName: 'com.draexl_it.holz_logistik',
+    );
+  }
+
+  Widget _buildMarkerLayer(BuildContext context, MapState state) {
+    return MarkerLayer(
+      markers: [
+        // User location marker
+        if (state.userLocation != null)
+          _buildUserLocationMarker(state.userLocation!),
+
+        // New marker in add marker mode
+        if (state.addMarkerMode == true && state.newMarkerPosition != null)
+          _buildNewPositionMarker(state.newMarkerPosition!),
+
+        // Location markers
+        ...state.locations.map(
+          (location) => _buildLocationMarker(context, location),
+        ),
+      ],
+    );
+  }
+
+  Marker _buildUserLocationMarker(LatLng position) {
+    return Marker(
+      width: 25,
+      height: 25,
+      point: position,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white,
+            width: 3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(51),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Marker _buildNewPositionMarker(LatLng position) {
+    return Marker(
+      width: 50,
+      height: 50,
+      point: position,
+      child: const Icon(Icons.location_on, color: Colors.red),
+    );
+  }
+
+  Marker _buildLocationMarker(BuildContext context, Location location) {
+    return Marker(
+      width: 50,
+      height: 50,
+      point: LatLng(location.latitude, location.longitude),
+      child: GestureDetector(
+        onTap: () {
+          final locationCopy = location.copyWith();
+          showDialog<LocationDetailsWidget>(
+            context: context,
+            builder: (context) => LocationDetailsWidget(
+              location: locationCopy,
+            ),
+          );
+        },
+        child: Icon(
+          Icons.location_pin,
+          color: !location.started
+              ? Colors.red
+              : const Color.fromARGB(255, 0, 17, 255),
+          size: 50,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRightActionButtons(BuildContext context, MapState state) {
+    return Positioned(
+      bottom: 10,
+      right: 10,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildActionButton(
+            onPressed: () => context.read<MapBloc>().add(
+                  const MapResetMapRotation(),
+                ),
+            heroTag: 'mapPageNorthButton',
+            icon: Icons.navigation,
+          ),
+          const SizedBox(height: 10),
+          _buildActionButton(
+            onPressed: () => context.read<MapBloc>().add(
+                  const MapCenterToPosition(),
+                ),
+            heroTag: 'mapPageCenterPositionButton',
+            icon: Icons.my_location,
+          ),
+          if (state.user.role.isPrivileged) const SizedBox(height: 10),
+          if (state.addMarkerMode)
+            _buildActionButton(
+              onPressed: () =>
+                  context.read<MapBloc>().add(const MapToggleAddMarkerMode()),
+              heroTag: 'mapPageCancelAddMarkerModeButton',
+              icon: Icons.cancel_outlined,
+            ),
+          if (state.addMarkerMode) const SizedBox(height: 10),
+          if (state.user.role.isPrivileged)
+            _buildActionButton(
+              onPressed: state.addMarkerMode
+                  ? () {
+                      if (state.newMarkerPosition != null) {
+                        context
+                            .read<MapBloc>()
+                            .add(const MapToggleAddMarkerMode());
+                        Navigator.of(context).push(
+                          EditLocationPage.route(
+                            newMarkerPosition: state.newMarkerPosition,
+                          ),
+                        );
+                      }
+                    }
+                  : () => context
+                      .read<MapBloc>()
+                      .add(const MapToggleAddMarkerMode()),
+              heroTag: 'mapPageAddMarkerButton',
+              icon: state.addMarkerMode
+                  ? Icons.check_circle_outline
+                  : Icons.add_location,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCopyrightNotice() {
+    return const Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Center(child: Text('© OpenStreetMap')),
+    );
+  }
+
+  Widget _buildInfoButton(BuildContext context, MapState state) {
+    return Positioned(
+      bottom: 10,
+      left: 10,
+      child: _buildActionButton(
+        onPressed: () =>
+            context.read<MapBloc>().add(const MapToggleMarkerInfoMode()),
+        heroTag: 'mapPageShownInfoButton',
+        icon: state.showInfoMode ? Icons.info : Icons.info_outline,
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required String heroTag,
+    required IconData icon,
+  }) {
+    return FloatingActionButton(
+      onPressed: onPressed,
+      heroTag: heroTag,
+      child: Icon(icon),
     );
   }
 }

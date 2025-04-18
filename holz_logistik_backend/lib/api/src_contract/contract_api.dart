@@ -11,7 +11,7 @@ abstract class ContractApi {
   Stream<List<Contract>> get activeContracts;
 
   /// Provides updates on finished contracts
-  Stream<Map<String, dynamic>> get finishedContractUpdates;
+  Stream<Contract> get contractUpdates;
 
   /// Provides finished contracts by date.
   Future<List<Contract>> getFinishedContractsByDate(

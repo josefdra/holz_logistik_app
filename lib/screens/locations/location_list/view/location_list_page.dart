@@ -73,7 +73,7 @@ class LocationList extends StatelessWidget {
 
     return BlocListener<LocationListBloc, LocationListState>(
       listenWhen: (previous, current) => previous.status != current.status,
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.status == LocationListStatus.failure) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -103,7 +103,7 @@ class LocationList extends StatelessWidget {
                 if (state.locations.isEmpty) {
                   if (state.status == LocationListStatus.loading) {
                     return const Center(child: CircularProgressIndicator());
-                  } else if (state.status != LocationListStatus.success) {
+                  } else if (!state.status.isShowDetailsOrSuccess) {
                     return const SizedBox();
                   } else {
                     return Center(
@@ -126,19 +126,15 @@ class LocationList extends StatelessWidget {
                           state.searchQueryedLocations.elementAt(index);
                       return LocationListTile(
                         location: location,
-                        onTap: () {
-                          showDialog<LocationDetailsWidget>(
-                            context: context,
-                            builder: (context) => LocationDetailsWidget(
-                              location: location,
-                            ),
-                          );
-                        },
-                        onDelete: () {
-                          context
-                              .read<LocationListBloc>()
-                              .add(LocationListLocationDeleted(location));
-                        },
+                        onTap: () => showDialog<LocationDetailsWidget>(
+                          context: context,
+                          builder: (context) => LocationDetailsWidget(
+                            location: location,
+                          ),
+                        ),
+                        onDelete: () => context
+                            .read<LocationListBloc>()
+                            .add(LocationListLocationDeleted(location)),
                       );
                     },
                   ),

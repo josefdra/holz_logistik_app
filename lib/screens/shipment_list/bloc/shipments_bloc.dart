@@ -33,8 +33,7 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
-  late final StreamSubscription<Map<String, dynamic>>?
-      _shipmentUpdateSubscription;
+  late final StreamSubscription<Shipment>? _shipmentUpdateSubscription;
 
   void _checkDateChange() {
     final now = DateTime.now();
@@ -52,11 +51,10 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     add(const ShipmentsShipmentUpdate());
 
     _shipmentUpdateSubscription =
-        _shipmentRepository.shipmentUpdates.listen((shipmentUpdate) {
-      if (shipmentUpdate.isNotEmpty &&
-          state.startDate.millisecondsSinceEpoch <=
-              (shipmentUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch &&
-          (shipmentUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch <=
+        _shipmentRepository.shipmentUpdates.listen((shipment) {
+      if (state.startDate.millisecondsSinceEpoch <=
+              shipment.date.millisecondsSinceEpoch &&
+          shipment.date.millisecondsSinceEpoch <=
               state.endDate.millisecondsSinceEpoch) {
         add(const ShipmentsShipmentUpdate());
       }

@@ -8,7 +8,7 @@ abstract class PhotoApi {
   const PhotoApi();
 
   /// Provides updates on finished photos
-  Stream<Map<String, dynamic>> get photoUpdates;
+  Stream<String> get photoUpdates;
 
   /// Provides photos.
   Future<List<Photo>> getPhotosByLocation(String locationId);

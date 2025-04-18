@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/photo_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/photo_local_storage.dart';
-import 'package:rxdart/subjects.dart';
 import 'package:sqflite/sqflite.dart';
 
 /// {@template photo_local_storage}
@@ -20,11 +21,9 @@ class PhotoLocalStorage extends PhotoApi {
 
   final CoreLocalStorage _coreLocalStorage;
   late final _photoUpdatesStreamController =
-      BehaviorSubject<Map<String, dynamic>>.seeded(
-    const {},
-  );
+      StreamController<String>.broadcast();
 
-  late final Stream<Map<String, dynamic>> _photoUpdates =
+  late final Stream<String> _photoUpdates =
       _photoUpdatesStreamController.stream;
 
   /// Migration function for photo table
@@ -37,7 +36,7 @@ class PhotoLocalStorage extends PhotoApi {
   }
 
   @override
-  Stream<Map<String, dynamic>> get photoUpdates => _photoUpdates;
+  Stream<String> get photoUpdates => _photoUpdates;
 
   @override
   Future<List<Photo>> getPhotosByLocation(String locationId) async {
@@ -62,12 +61,8 @@ class PhotoLocalStorage extends PhotoApi {
   @override
   Future<int> savePhoto(Photo photo) async {
     final result = await _insertOrUpdatePhoto(photo.toJson());
-    final updateController = _photoUpdatesStreamController;
-    final updateData = {
-      'locationId': photo.locationId,
-    };
 
-    updateController.add(updateData);
+    _photoUpdatesStreamController.add(photo.locationId);
 
     return result;
   }
@@ -84,12 +79,7 @@ class PhotoLocalStorage extends PhotoApi {
     required String locationId,
   }) async {
     final result = await _deletePhoto(id);
-    final updateController = _photoUpdatesStreamController;
-    final updateData = {
-      'locationId': locationId,
-    };
-
-    updateController.add(updateData);
+    _photoUpdatesStreamController.add(locationId);
 
     return result;
   }

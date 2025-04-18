@@ -29,8 +29,7 @@ class FinishedContractsBloc
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
-  late final StreamSubscription<Map<String, dynamic>>?
-      _finishedContractUpdateSubscription;
+  late final StreamSubscription<Contract>? _contractUpdateSubscription;
 
   void _checkDateChange() {
     final now = DateTime.now();
@@ -47,12 +46,11 @@ class FinishedContractsBloc
     emit(state.copyWith(status: FinishedContractsStatus.loading));
     add(const FinishedContractsContractUpdate());
 
-    _finishedContractUpdateSubscription =
-        _contractRepository.finishedContractUpdates.listen((contractUpdate) {
-      if (contractUpdate.isNotEmpty &&
-          state.startDate.millisecondsSinceEpoch <=
-              (contractUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch &&
-          (contractUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch <=
+    _contractUpdateSubscription =
+        _contractRepository.contractUpdates.listen((contract) {
+      if (state.startDate.millisecondsSinceEpoch <=
+              contract.lastEdit.millisecondsSinceEpoch &&
+          contract.lastEdit.millisecondsSinceEpoch <=
               state.endDate.millisecondsSinceEpoch) {
         add(const FinishedContractsContractUpdate());
       }
@@ -120,7 +118,7 @@ class FinishedContractsBloc
   @override
   Future<void> close() {
     scrollController.dispose();
-    _finishedContractUpdateSubscription?.cancel();
+    _contractUpdateSubscription?.cancel();
     _dateCheckTimer.cancel();
     return super.close();
   }

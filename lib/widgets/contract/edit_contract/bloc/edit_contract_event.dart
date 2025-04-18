@@ -19,6 +19,16 @@ final class EditContractTitleChanged extends EditContractEvent {
   List<Object> get props => [title];
 }
 
+final class EditContractDateRangeChanged extends EditContractEvent {
+  const EditContractDateRangeChanged(this.startDate, this.endDate);
+
+  final DateTime startDate;
+  final DateTime endDate;
+
+  @override
+  List<Object> get props => [startDate, endDate];
+}
+
 final class EditContractAdditionalInfoChanged extends EditContractEvent {
   const EditContractAdditionalInfoChanged(this.additionalInfo);
 
@@ -28,6 +38,20 @@ final class EditContractAdditionalInfoChanged extends EditContractEvent {
   List<Object> get props => [additionalInfo];
 }
 
+final class EditContractContractFinishedUpdate extends EditContractEvent {
+  // ignore: avoid_positional_boolean_parameters
+  const EditContractContractFinishedUpdate(this.contractFinished);
+
+  final bool contractFinished;
+
+  @override
+  List<Object> get props => [contractFinished];
+}
+
 final class EditContractSubmitted extends EditContractEvent {
   const EditContractSubmitted();
+}
+
+final class EditContractCanceled extends EditContractEvent {
+  const EditContractCanceled();
 }

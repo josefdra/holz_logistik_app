@@ -53,7 +53,6 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     LocationListLocationDeleted event,
     Emitter<LocationListState> emit,
   ) async {
-    emit(state.copyWith(lastDeletedLocation: event.location));
     await _locationRepository.deleteLocation(
       id: event.location.id,
       done: event.location.done,

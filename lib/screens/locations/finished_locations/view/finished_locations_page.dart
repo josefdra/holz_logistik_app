@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/screens/locations/finished_locations/finished_locations.dart';
-import 'package:holz_logistik/widgets/locations/location_list_tile.dart';
+import 'package:holz_logistik/widgets/locations/location_widgets.dart';
 import 'package:holz_logistik_backend/repository/location_repository.dart';
 
 class FinishedLocationsPage extends StatelessWidget {
@@ -131,9 +131,12 @@ class FinishedLocationsList extends StatelessWidget {
           final location = state.locations.elementAt(index);
           return LocationListTile(
             location: location,
-            onTap: () {
-              print('Show location details widget');
-            },
+            onTap: () => showDialog<LocationDetailsWidget>(
+              context: context,
+              builder: (context) => LocationDetailsWidget(
+                location: location,
+              ),
+            ),
           );
         },
       ),

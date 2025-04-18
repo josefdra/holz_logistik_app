@@ -13,40 +13,50 @@ final class EditContractState extends Equatable {
   EditContractState({
     this.status = EditContractStatus.initial,
     this.initialContract,
-    this.done = false,
     DateTime? lastEdit,
     this.title = '',
     this.additionalInfo = '',
     this.validationErrors = const {},
-  }) : lastEdit = lastEdit ?? DateTime.now();
+    this.contractFinished = false,
+    DateTime? endDate,
+    DateTime? startDate,
+  })  : lastEdit = lastEdit ?? DateTime.now(),
+        startDate = startDate ?? DateTime.now(),
+        endDate = endDate ?? DateTime.now();
 
   final EditContractStatus status;
   final Contract? initialContract;
-  final bool done;
   final DateTime lastEdit;
   final String title;
   final String additionalInfo;
   final Map<String, String?> validationErrors;
+  final bool contractFinished;
+  final DateTime endDate;
+  final DateTime startDate;
 
   bool get isNewContract => initialContract == null;
 
   EditContractState copyWith({
     EditContractStatus? status,
     Contract? initialContract,
-    bool? done,
     DateTime? lastEdit,
     String? title,
     String? additionalInfo,
     Map<String, String?>? validationErrors,
+    bool? contractFinished,
+    DateTime? endDate,
+    DateTime? startDate,
   }) {
     return EditContractState(
       status: status ?? this.status,
       initialContract: initialContract ?? this.initialContract,
-      done: done ?? this.done,
       lastEdit: lastEdit ?? this.lastEdit,
       title: title ?? this.title,
       additionalInfo: additionalInfo ?? this.additionalInfo,
       validationErrors: validationErrors ?? this.validationErrors,
+      contractFinished: contractFinished ?? this.contractFinished,
+      endDate: endDate ?? this.endDate,
+      startDate: startDate ?? this.startDate,
     );
   }
 
@@ -54,10 +64,12 @@ final class EditContractState extends Equatable {
   List<Object?> get props => [
         status,
         initialContract,
-        done,
         lastEdit,
         title,
         additionalInfo,
         validationErrors,
+        contractFinished,
+        endDate,
+        startDate,
       ];
 }

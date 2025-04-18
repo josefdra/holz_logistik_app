@@ -147,7 +147,6 @@ class ShipmentList extends StatelessWidget {
                     ShipmentsShipmentDeleted(shipment),
                   );
             },
-            onTap: () {},
           );
         },
       ),

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/contracts/contract_list/contract_list.dart';
-import 'package:holz_logistik/screens/contracts/edit_contract/edit_contract.dart';
 import 'package:holz_logistik/screens/contracts/finished_contracts/finished_contracts.dart';
 import 'package:holz_logistik/widgets/contract/contract_list_tile.dart';
+import 'package:holz_logistik/widgets/contract/edit_contract/edit_contract.dart';
 import 'package:holz_logistik_backend/repository/contract_repository.dart';
 
 class ContractListPage extends StatelessWidget {
@@ -61,8 +61,9 @@ class ContractListPage extends StatelessWidget {
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(15)),
             ),
-            onPressed: () => Navigator.of(context).push(
-              EditContractPage.route(),
+            onPressed: () => showDialog<EditContractWidget>(
+              context: context,
+              builder: (context) => const EditContractWidget(),
             ),
             child: const Icon(Icons.add_circle_outline),
           ),
@@ -118,11 +119,11 @@ class ContractList extends StatelessWidget {
                 final contract = state.contracts.elementAt(index);
                 return ContractListTile(
                   contract: contract,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      EditContractPage.route(initialContract: contract),
-                    );
-                  },
+                  onTap: () => showDialog<EditContractWidget>(
+                    context: context,
+                    builder: (context) =>
+                        EditContractWidget(contract: contract),
+                  ),
                 );
               },
             ),

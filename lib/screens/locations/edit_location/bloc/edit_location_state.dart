@@ -22,6 +22,7 @@ final class EditLocationState extends Equatable {
     this.contractId = '',
     this.allSawmills = const [],
     this.sawmills = const [],
+    this.contracts = const [],
     this.oversizeSawmills = const [],
     this.photos = const [],
     this.newSawmill,
@@ -47,6 +48,7 @@ final class EditLocationState extends Equatable {
   final String contractId;
   final List<String> allSawmills;
   final List<String> sawmills;
+  final List<Contract> contracts;
   final List<String> oversizeSawmills;
   final List<Photo> photos;
   final Sawmill? newSawmill;
@@ -70,6 +72,7 @@ final class EditLocationState extends Equatable {
     String? contractId,
     List<String>? allSawmills,
     List<String>? sawmills,
+    List<Contract>? contracts,
     List<String>? oversizeSawmills,
     List<Photo>? photos,
     Sawmill? newSawmill,
@@ -92,6 +95,7 @@ final class EditLocationState extends Equatable {
       contractId: contractId ?? this.contractId,
       allSawmills: allSawmills ?? this.allSawmills,
       sawmills: sawmills ?? this.sawmills,
+      contracts: contracts ?? this.contracts,
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
       photos: photos ?? this.photos,
       newSawmill: newSawmill ?? this.newSawmill,
@@ -117,6 +121,7 @@ final class EditLocationState extends Equatable {
         contractId,
         allSawmills,
         sawmills,
+        contracts,
         oversizeSawmills,
         photos,
         newSawmill,

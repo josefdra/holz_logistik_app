@@ -29,8 +29,7 @@ class FinishedLocationsBloc
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
-  late final StreamSubscription<Map<String, dynamic>>?
-      _finishedLocationUpdateSubscription;
+  late final StreamSubscription<Location>? _locationUpdateSubscription;
 
   void _checkDateChange() {
     final now = DateTime.now();
@@ -47,12 +46,11 @@ class FinishedLocationsBloc
     emit(state.copyWith(status: FinishedLocationsStatus.loading));
     add(const FinishedLocationsLocationUpdate());
 
-    _finishedLocationUpdateSubscription =
-        _locationRepository.finishedLocationUpdates.listen((locationUpdate) {
-      if (locationUpdate.isNotEmpty &&
-          state.startDate.millisecondsSinceEpoch <=
-              (locationUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch &&
-          (locationUpdate['lastEdit'] as DateTime).millisecondsSinceEpoch <=
+    _locationUpdateSubscription =
+        _locationRepository.locationUpdates.listen((location) {
+      if (state.startDate.millisecondsSinceEpoch <=
+              location.date.millisecondsSinceEpoch &&
+          location.date.millisecondsSinceEpoch <=
               state.endDate.millisecondsSinceEpoch) {
         add(const FinishedLocationsLocationUpdate());
       }
@@ -120,7 +118,7 @@ class FinishedLocationsBloc
   @override
   Future<void> close() {
     scrollController.dispose();
-    _finishedLocationUpdateSubscription?.cancel();
+    _locationUpdateSubscription?.cancel();
     _dateCheckTimer.cancel();
     return super.close();
   }

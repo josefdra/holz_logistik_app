@@ -39,16 +39,17 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   Future<void> _init() async {
     final storageData = await _getValue(_authCollectionKey);
+    late final User user;
 
     if (storageData != null) {
       final userJson = jsonDecode(storageData) as Map<String, dynamic>;
 
-      final user = User.fromJson(userJson);
-      _authenticationStreamController.add(user);
+      user = User.fromJson(userJson);
     } else {
-      final user = User.empty();
-      _authenticationStreamController.add(user);
+      user = User.empty();
     }
+    
+    _authenticationStreamController.add(user);
   }
 
   /// Gets the current authenticated user. Returns an emtpy new user if empty.
