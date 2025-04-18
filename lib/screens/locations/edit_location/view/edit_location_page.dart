@@ -76,7 +76,7 @@ class EditLocationView extends StatelessWidget {
                 .add(const EditLocationSubmitted()),
         child: status.isLoadingOrSuccess
             ? const CircularProgressIndicator()
-            : const Icon(Icons.check_circle_outline),
+            : const Icon(Icons.check),
       ),
       body: const Scrollbar(
         child: SingleChildScrollView(
@@ -437,7 +437,7 @@ class _NewSawmillField extends StatelessWidget {
           onPressed: () => context
               .read<EditLocationBloc>()
               .add(const EditLocationNewSawmillSubmitted()),
-          icon: const Icon(Icons.check_circle_outline),
+          icon: const Icon(Icons.check),
         ),
         counterText: '',
       ),

@@ -65,7 +65,7 @@ class ContractListPage extends StatelessWidget {
               context: context,
               builder: (context) => const EditContractWidget(),
             ),
-            child: const Icon(Icons.add_circle_outline),
+            child: const Icon(Icons.add),
           ),
         ),
       ),

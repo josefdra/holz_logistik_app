@@ -67,7 +67,7 @@ class EditContractView extends StatelessWidget {
                       onPressed: () => context
                           .read<EditContractBloc>()
                           .add(const EditContractCanceled()),
-                      icon: const Icon(Icons.cancel_outlined),
+                      icon: const Icon(Icons.close),
                       style: IconButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor:
@@ -79,7 +79,7 @@ class EditContractView extends StatelessWidget {
                       onPressed: () => context
                           .read<EditContractBloc>()
                           .add(const EditContractSubmitted()),
-                      icon: const Icon(Icons.check_circle_outline),
+                      icon: const Icon(Icons.check),
                       style: IconButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor:

@@ -38,7 +38,7 @@ class NotesListPage extends StatelessWidget {
             context: context,
             builder: (context) => const EditNoteWidget(),
           ),
-          child: const Icon(Icons.add_circle_outline),
+          child: const Icon(Icons.add),
         ),
       ),
     );

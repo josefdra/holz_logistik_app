@@ -220,7 +220,7 @@ class MapView extends StatelessWidget {
               onPressed: () =>
                   context.read<MapBloc>().add(const MapToggleAddMarkerMode()),
               heroTag: 'mapPageCancelAddMarkerModeButton',
-              icon: Icons.cancel_outlined,
+              icon: Icons.cancel,
             ),
           if (state.addMarkerMode) const SizedBox(height: 10),
           if (state.user.role.isPrivileged)
@@ -243,7 +243,7 @@ class MapView extends StatelessWidget {
                       .add(const MapToggleAddMarkerMode()),
               heroTag: 'mapPageAddMarkerButton',
               icon: state.addMarkerMode
-                  ? Icons.check_circle_outline
+                  ? Icons.check
                   : Icons.add_location,
             ),
         ],
@@ -268,7 +268,7 @@ class MapView extends StatelessWidget {
         onPressed: () =>
             context.read<MapBloc>().add(const MapToggleMarkerInfoMode()),
         heroTag: 'mapPageShownInfoButton',
-        icon: state.showInfoMode ? Icons.info : Icons.info_outline,
+        icon: state.showInfoMode ? Icons.info_outline : Icons.info,
       ),
     );
   }

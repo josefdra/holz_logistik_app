@@ -41,7 +41,7 @@ class LocationListTile extends StatelessWidget {
           trailing: privileged
               ? IconButton(
                   onPressed: () => onDelete?.call(),
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(Icons.delete),
                 )
               : null,
         );

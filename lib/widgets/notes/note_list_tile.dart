@@ -34,7 +34,7 @@ class NoteListTile extends StatelessWidget {
             trailing: canModify
                 ? IconButton(
                     onPressed: () => onDelete?.call(),
-                    icon: const Icon(Icons.delete_outline),
+                    icon: const Icon(Icons.delete),
                   )
                 : null,
           ),

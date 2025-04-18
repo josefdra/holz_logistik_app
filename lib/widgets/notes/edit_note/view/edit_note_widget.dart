@@ -64,7 +64,7 @@ class EditNoteView extends StatelessWidget {
                       children: [
                         IconButton.filled(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.cancel_outlined),
+                          icon: const Icon(Icons.close),
                           style: IconButton.styleFrom(
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,
@@ -79,7 +79,7 @@ class EditNoteView extends StatelessWidget {
                                 .read<EditNoteBloc>()
                                 .add(const EditNoteSubmitted());
                           },
-                          icon: const Icon(Icons.check_circle_outline),
+                          icon: const Icon(Icons.check),
                           style: IconButton.styleFrom(
                             backgroundColor:
                                 Theme.of(context).colorScheme.primary,

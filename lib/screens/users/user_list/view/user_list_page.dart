@@ -44,7 +44,7 @@ class UserListPage extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(15)),
           ),
           onPressed: () => Navigator.of(context).push(EditUserPage.route()),
-          child: const Icon(Icons.add_circle_outline),
+          child: const Icon(Icons.add),
         ),
       ),
     );

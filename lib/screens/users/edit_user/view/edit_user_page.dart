@@ -63,7 +63,7 @@ class EditUserView extends StatelessWidget {
             : () => context.read<EditUserBloc>().add(const EditUserSubmitted()),
         child: status.isLoadingOrSuccess
             ? const CircularProgressIndicator()
-            : const Icon(Icons.check_circle_outline),
+            : const Icon(Icons.check),
       ),
       body: const Scrollbar(
         child: SingleChildScrollView(

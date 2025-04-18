@@ -26,7 +26,7 @@ class UserListTile extends StatelessWidget {
         color: theme.colorScheme.error,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: const Icon(
-          Icons.delete_outline,
+          Icons.delete,
           color: Color(0xAAFFFFFF),
         ),
       ),
@@ -44,7 +44,7 @@ class UserListTile extends StatelessWidget {
         ),
         trailing: IconButton(
           onPressed: () => onDismissed?.call(DismissDirection.endToStart),
-          icon: const Icon(Icons.delete_outline),
+          icon: const Icon(Icons.delete),
         ),
       ),
     );
