@@ -44,7 +44,7 @@ class UserListTile extends StatelessWidget {
         ),
         trailing: IconButton(
           onPressed: () => onDismissed?.call(DismissDirection.endToStart),
-          icon: const Icon(Icons.delete),
+          icon: const Icon(Icons.delete_outline),
         ),
       ),
     );
