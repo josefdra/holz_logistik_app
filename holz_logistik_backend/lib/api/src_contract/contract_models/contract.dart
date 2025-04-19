@@ -11,14 +11,14 @@ part 'contract.g.dart';
 mixin ContractSortGettable implements Gettable {
   /// Original contract edit timestamp
   DateTime get lastEdit;
-  
+
   /// Original contract title
   String get title;
-  
+
   /// Maps [lastEdit] to the standardized [date] property
   @override
   DateTime get date => lastEdit;
-  
+
   /// Maps [title] to the standardized [name] property
   @override
   String get name => title;
@@ -46,6 +46,9 @@ class Contract extends Equatable with ContractSortGettable {
     required this.additionalInfo,
     required this.startDate,
     required this.endDate,
+    required this.availableQuantity,
+    required this.bookedQuantity,
+    required this.shippedQuantity,
   });
 
   /// {@macro contract_item}
@@ -57,6 +60,9 @@ class Contract extends Equatable with ContractSortGettable {
     this.additionalInfo = '',
     DateTime? startDate,
     DateTime? endDate,
+    this.availableQuantity = 0,
+    this.bookedQuantity = 0,
+    this.shippedQuantity = 0,
   })  : id = id ?? const Uuid().v4(),
         lastEdit = lastEdit ?? DateTime.now(),
         startDate = startDate ?? DateTime.now(),
@@ -103,6 +109,21 @@ class Contract extends Equatable with ContractSortGettable {
   /// Cannot be empty.
   final DateTime endDate;
 
+  /// The available quantity of the `contract`.
+  ///
+  /// Cannot be empty.
+  final double availableQuantity;
+
+  /// The booked quantity of the `contract`.
+  ///
+  /// Cannot be empty.
+  final double bookedQuantity;
+
+  /// The shipped quantity of the `contract`.
+  ///
+  /// Cannot be empty.
+  final double shippedQuantity;
+
   /// Returns a copy of this `contract` with the given values updated.
   ///
   /// {@macro contract_item}
@@ -114,6 +135,9 @@ class Contract extends Equatable with ContractSortGettable {
     String? additionalInfo,
     DateTime? startDate,
     DateTime? endDate,
+    double? availableQuantity,
+    double? bookedQuantity,
+    double? shippedQuantity,
   }) {
     return Contract(
       id: id ?? this.id,
@@ -123,6 +147,9 @@ class Contract extends Equatable with ContractSortGettable {
       additionalInfo: additionalInfo ?? this.additionalInfo,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
+      availableQuantity: availableQuantity ?? this.availableQuantity,
+      bookedQuantity: bookedQuantity ?? this.bookedQuantity,
+      shippedQuantity: shippedQuantity ?? this.shippedQuantity,
     );
   }
 
@@ -141,5 +168,8 @@ class Contract extends Equatable with ContractSortGettable {
         additionalInfo,
         startDate,
         endDate,
+        availableQuantity,
+        bookedQuantity,
+        shippedQuantity,
       ];
 }

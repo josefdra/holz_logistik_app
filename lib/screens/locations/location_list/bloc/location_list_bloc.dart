@@ -14,8 +14,10 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   LocationListBloc({
     required LocationRepository locationRepository,
     required ShipmentRepository shipmentRepository,
+    required PhotoRepository photoRepository,
   })  : _locationRepository = locationRepository,
         _shipmentRepository = shipmentRepository,
+        _photoRepository = photoRepository,
         super(const LocationListState()) {
     on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
     on<LocationListLocationDeleted>(_onLocationDeleted);
@@ -29,6 +31,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
 
   final LocationRepository _locationRepository;
   final ShipmentRepository _shipmentRepository;
+  final PhotoRepository _photoRepository;
   final scrollController = ScrollController();
 
   Future<void> _onSubscriptionRequested(
@@ -59,8 +62,9 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     );
 
     await _shipmentRepository.deleteShipmentsByLocationId(event.location.id);
-    // ignore: lines_longer_than_80_chars
-    // TODO(josef): await _photoRepository.deletePhotosByLocationId(event.location.id).
+    await _photoRepository.deletePhotosByLocationId(
+      locationId: event.location.id,
+    );
   }
 
   void _onSearchQueryChanged(

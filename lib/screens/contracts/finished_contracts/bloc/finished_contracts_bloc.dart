@@ -19,6 +19,7 @@ class FinishedContractsBloc
     on<FinishedContractsRefreshRequested>(_onRefreshRequested);
     on<FinishedContractsDateChanged>(_onDateChanged);
     on<FinishedContractsAutomaticDate>(_onAutomaticDate);
+    on<FinishedContractsReactivateContract>(_onReactivateContract);
 
     _dateCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _checkDateChange();
@@ -113,6 +114,16 @@ class FinishedContractsBloc
     emit(state.copyWith(customDate: false));
 
     add(const FinishedContractsRefreshRequested());
+  }
+
+  Future<void> _onReactivateContract(
+    FinishedContractsReactivateContract event,
+    Emitter<FinishedContractsState> emit,
+  ) async {
+    await _contractRepository
+        .saveContract(event.contract.copyWith(done: false));
+
+    emit(state);
   }
 
   @override

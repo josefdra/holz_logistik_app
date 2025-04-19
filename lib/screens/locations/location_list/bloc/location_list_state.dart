@@ -13,11 +13,13 @@ final class LocationListState extends Equatable {
   const LocationListState({
     this.status = LocationListStatus.initial,
     this.locations = const [],
+    this.photos = const {},
     this.searchQuery = const SearchQuery<Location>(),
   });
 
   final LocationListStatus status;
   final List<Location> locations;
+  final Map<String, Photo> photos;
   final SearchQuery<Location> searchQuery;
 
   Iterable<Location> get searchQueryedLocations =>
@@ -26,11 +28,13 @@ final class LocationListState extends Equatable {
   LocationListState copyWith({
     LocationListStatus? status,
     List<Location>? locations,
+    Map<String, Photo>? photos,
     SearchQuery<Location>? searchQuery,
   }) {
     return LocationListState(
       status: status ?? this.status,
       locations: locations != null ? sortByDate(locations) : this.locations,
+      photos: photos ?? this.photos,
       searchQuery: searchQuery ?? this.searchQuery,
     );
   }
@@ -39,6 +43,7 @@ final class LocationListState extends Equatable {
   List<Object?> get props => [
         status,
         locations,
+        photos,
         searchQuery,
       ];
 }

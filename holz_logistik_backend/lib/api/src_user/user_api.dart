@@ -8,10 +8,7 @@ abstract class UserApi {
   const UserApi();
 
   /// Provides a stream of users
-  Stream<List<User>> get users;
-
-  /// Provides a single user by [id]
-  Future<User> getUserById(String id);
+  Stream<Map<String, User>> get users;
 
   /// Saves or updates a [user].
   ///

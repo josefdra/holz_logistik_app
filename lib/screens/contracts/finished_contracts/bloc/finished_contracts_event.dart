@@ -33,3 +33,12 @@ final class FinishedContractsDateChanged extends FinishedContractsEvent {
 final class FinishedContractsAutomaticDate extends FinishedContractsEvent {
   const FinishedContractsAutomaticDate();
 }
+
+final class FinishedContractsReactivateContract extends FinishedContractsEvent {
+  const FinishedContractsReactivateContract(this.contract);
+
+  final Contract contract;
+
+  @override
+  List<Object> get props => [contract];
+}

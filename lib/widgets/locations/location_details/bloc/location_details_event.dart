@@ -56,6 +56,15 @@ final class LocationDetailsShipmentUpdate extends LocationDetailsEvent {
   List<Object> get props => [locationId];
 }
 
+final class LocationDetailsPhotosChanged extends LocationDetailsEvent {
+  const LocationDetailsPhotosChanged(this.locationId);
+
+  final String locationId;
+
+  @override
+  List<Object> get props => [locationId];
+}
+
 final class LocationDetailsUserUpdate extends LocationDetailsEvent {
   const LocationDetailsUserUpdate(this.user);
 

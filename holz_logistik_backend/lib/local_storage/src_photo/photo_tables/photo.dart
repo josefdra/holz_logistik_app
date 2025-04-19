@@ -12,11 +12,8 @@ class PhotoTable {
   /// The column name for the timestamp when a photo was last modified.
   static const String columnLastEdit = 'lastEdit';
 
-  /// The column name for storing the server Url of a photo.
-  static const String columnPhotoServerUrl = 'serverPhotoUrl';
-
-  /// The column name for storing the local Url of a photo.
-  static const String columnPhotoLocalUrl = 'localPhotoUrl';
+  /// The column name for storing the binary photo data
+  static const String columnPhoto = 'photoFile';
 
   /// The column name for storing the location id of the photo.
   static const String columnLocationId = 'locationId';
@@ -26,8 +23,7 @@ class PhotoTable {
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
       $columnLastEdit TEXT NOT NULL,
-      $columnPhotoServerUrl TEXT NOT NULL,
-      $columnPhotoLocalUrl TEXT NOT NULL,
+      $columnPhoto BLOB NOT NULL,
       $columnLocationId TEXT NOT NULL,
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId})
     )

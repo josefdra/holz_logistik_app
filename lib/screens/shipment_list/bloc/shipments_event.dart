@@ -11,6 +11,24 @@ final class ShipmentsSubscriptionRequested extends ShipmentsEvent {
   const ShipmentsSubscriptionRequested();
 }
 
+final class ShipmentsUsersUpdate extends ShipmentsEvent {
+  const ShipmentsUsersUpdate(this.users);
+
+  final Map<String, User> users;
+
+  @override
+  List<Object> get props => [users];
+}
+
+final class ShipmentsSawmillsUpdate extends ShipmentsEvent {
+  const ShipmentsSawmillsUpdate(this.sawmills);
+
+  final Map<String, Sawmill> sawmills;
+
+  @override
+  List<Object> get props => [sawmills];
+}
+
 final class ShipmentsShipmentUpdate extends ShipmentsEvent {
   const ShipmentsShipmentUpdate();
 }

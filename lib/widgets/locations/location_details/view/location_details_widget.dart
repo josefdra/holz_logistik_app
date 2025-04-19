@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/models/locations/locations.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik/widgets/locations/location_details/location_details.dart';
+import 'package:holz_logistik/widgets/photos/photo_viewer/view/photo_view_page.dart';
 import 'package:holz_logistik/widgets/shipments/shipment_widgets.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
@@ -22,6 +23,7 @@ class LocationDetailsWidget extends StatelessWidget {
         contractRepository: context.read<ContractRepository>(),
         sawmillRepository: context.read<SawmillRepository>(),
         shipmentRepository: context.read<ShipmentRepository>(),
+        photoRepository: context.read<PhotoRepository>(),
         authenticationRepository: context.read<AuthenticationRepository>(),
         initialLocation: location,
       )..add(const LocationDetailsSubscriptionRequested()),
@@ -52,34 +54,39 @@ class LocationDetailsView extends StatelessWidget {
 
           return Dialog(
             insetPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            child: SizedBox(
-              width: 600,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildHeader(context, state),
-                    _buildQuantityTable(state),
-                    const SizedBox(height: 20),
-                    _buildSawmillRow(
-                      label: 'Sägewerke:',
-                      sawmills: state.sawmills,
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 70),
+            child: Column(
+              children: [
+                _buildHeader(context, state),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (state.photos.isNotEmpty) _buildPhotos(state),
+                        if (state.photos.isNotEmpty) const SizedBox(height: 20),
+                        _buildQuantityTable(state),
+                        const SizedBox(height: 20),
+                        _buildSawmillRow(
+                          label: 'Sägewerke:',
+                          sawmills: state.sawmills,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildSawmillRow(
+                          label: 'Sägewerke ÜS:',
+                          sawmills: state.oversizeSawmills,
+                        ),
+                        const SizedBox(height: 20),
+                        _buildDateAndInfo(state),
+                        const SizedBox(height: 20),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    _buildSawmillRow(
-                      label: 'Sägewerke ÜS:',
-                      sawmills: state.oversizeSawmills,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildDateAndInfo(state),
-                    const SizedBox(height: 20),
-                    _buildActionButtons(context, state),
-                    const SizedBox(height: 10),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                _buildActionButtons(context, state),
+                const SizedBox(height: 10),
+              ],
             ),
           );
         },
@@ -123,6 +130,42 @@ class LocationDetailsView extends StatelessWidget {
             color: Theme.of(context).colorScheme.onPrimaryContainer,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPhotos(LocationDetailsState state) {
+    return SizedBox(
+      height: 120,
+      child: Center(
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: state.photos.length,
+          itemBuilder: (context, index) {
+            final photo = state.photos[index];
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    PhotoViewPage.route(
+                      currentIndex: index,
+                      photos: state.photos,
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  height: 120,
+                  width: 120,
+                  child: Image.memory(
+                    photo.photoFile,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

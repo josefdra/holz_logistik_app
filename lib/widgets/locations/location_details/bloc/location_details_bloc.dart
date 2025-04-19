@@ -14,11 +14,13 @@ class LocationDetailsBloc
     required ContractRepository contractRepository,
     required SawmillRepository sawmillRepository,
     required ShipmentRepository shipmentRepository,
+    required PhotoRepository photoRepository,
     required AuthenticationRepository authenticationRepository,
     required Location initialLocation,
   })  : _locationsRepository = locationsRepository,
         _contractRepository = contractRepository,
         _sawmillRepository = sawmillRepository,
+        _photoRepository = photoRepository,
         _shipmentRepository = shipmentRepository,
         _authenticationRepository = authenticationRepository,
         super(
@@ -32,6 +34,7 @@ class LocationDetailsBloc
     on<LocationDetailsSawmillUpdate>(_onSawmillUpdate);
     on<LocationDetailsOversizeSawmillUpdate>(_onOversizeSawmillUpdate);
     on<LocationDetailsShipmentUpdate>(_onShipmentUpdate);
+    on<LocationDetailsPhotosChanged>(_onPhotosChanged);
     on<LocationDetailsUserUpdate>(_onUserUpdate);
     on<LocationDetailsLocationReactivated>(_onLocationReactivated);
   }
@@ -40,6 +43,7 @@ class LocationDetailsBloc
   final ContractRepository _contractRepository;
   final SawmillRepository _sawmillRepository;
   final ShipmentRepository _shipmentRepository;
+  final PhotoRepository _photoRepository;
   final AuthenticationRepository _authenticationRepository;
 
   late final StreamSubscription<Location>? _locationUpdatesSubscription;
@@ -47,6 +51,7 @@ class LocationDetailsBloc
   late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
   late final StreamSubscription<List<Sawmill>>? _oversizeSawmillSubscription;
   late final StreamSubscription<Shipment>? _shipmentUpdateSubscription;
+  late final StreamSubscription<String>? _photoUpdateSubscription;
   late final StreamSubscription<User>? _authenticationSubscription;
 
   void _onSubscriptionRequested(
@@ -76,7 +81,7 @@ class LocationDetailsBloc
           if (sawmillIds == null || sawmillIds.isEmpty) {
             return <Sawmill>[];
           }
-          return sawmills
+          return sawmills.values
               .where(
                 (sawmill) => state.location.sawmillIds!.contains(sawmill.id),
               )
@@ -93,7 +98,7 @@ class LocationDetailsBloc
           if (sawmillIds == null || sawmillIds.isEmpty) {
             return <Sawmill>[];
           }
-          return sawmills
+          return sawmills.values
               .where(
                 (sawmill) =>
                     state.location.oversizeSawmillIds!.contains(sawmill.id),
@@ -114,27 +119,35 @@ class LocationDetailsBloc
         },
       );
 
+      _photoUpdateSubscription = _photoRepository.photoUpdates.listen(
+        (locationId) {
+          add(LocationDetailsPhotosChanged(locationId));
+        },
+      );
+
       add(LocationDetailsShipmentUpdate(state.location.id));
+      add(LocationDetailsPhotosChanged(state.location.id));
+      _refreshContract();
 
       _authenticationSubscription =
           _authenticationRepository.authenticatedUser.listen(
         (user) => add(LocationDetailsUserUpdate(user)),
       );
 
-      emit(state.copyWith(status: LocationDetailsStatus.success));
+      emit(
+        state.copyWith(
+          status: LocationDetailsStatus.success,
+        ),
+      );
     } catch (e) {
       emit(state.copyWith(status: LocationDetailsStatus.failure));
     }
   }
 
-  void _refreshContract() {
-    _contractRepository.activeContracts.first.then((contracts) {
-      final contract = contracts.firstWhere(
-        (contract) => contract.id == state.location.contractId,
-        orElse: Contract.empty,
-      );
-      add(LocationDetailsContractUpdate(contract));
-    });
+  Future<void> _refreshContract() async {
+    final contract =
+        await _contractRepository.getContractById(state.location.contractId);
+    add(LocationDetailsContractUpdate(contract));
   }
 
   void _refreshSawmills() {
@@ -145,9 +158,13 @@ class LocationDetailsBloc
     }
 
     _sawmillRepository.sawmills.first.then((sawmills) {
-      final filteredSawmills = sawmills
-          .where((sawmill) => state.location.sawmillIds!.contains(sawmill.id))
-          .toList();
+      final filteredSawmills = <Sawmill>[];
+      for (final id in sawmillIds) {
+        final sawmill = sawmills[id];
+        if (sawmill != null) {
+          filteredSawmills.add(sawmill);
+        }
+      }
       add(LocationDetailsSawmillUpdate(filteredSawmills));
     });
   }
@@ -160,12 +177,13 @@ class LocationDetailsBloc
     }
 
     _sawmillRepository.sawmills.first.then((sawmills) {
-      final filteredOversizeSawmills = sawmills
-          .where(
-            (sawmill) =>
-                state.location.oversizeSawmillIds!.contains(sawmill.id),
-          )
-          .toList();
+      final filteredOversizeSawmills = <Sawmill>[];
+      for (final id in oversizeSawmillIds) {
+        final sawmill = sawmills[id];
+        if (sawmill != null) {
+          filteredOversizeSawmills.add(sawmill);
+        }
+      }
       add(LocationDetailsOversizeSawmillUpdate(filteredOversizeSawmills));
     });
   }
@@ -212,6 +230,15 @@ class LocationDetailsBloc
     emit(state.copyWith(shipments: shipments));
   }
 
+  Future<void> _onPhotosChanged(
+    LocationDetailsPhotosChanged event,
+    Emitter<LocationDetailsState> emit,
+  ) async {
+    final photos = await _photoRepository.getPhotosByLocation(event.locationId);
+
+    emit(state.copyWith(photos: photos));
+  }
+
   Future<void> _onUserUpdate(
     LocationDetailsUserUpdate event,
     Emitter<LocationDetailsState> emit,
@@ -235,6 +262,7 @@ class LocationDetailsBloc
     await _sawmillSubscription?.cancel();
     await _oversizeSawmillSubscription?.cancel();
     await _shipmentUpdateSubscription?.cancel();
+    await _photoUpdateSubscription?.cancel();
     await _authenticationSubscription?.cancel();
     return super.close();
   }

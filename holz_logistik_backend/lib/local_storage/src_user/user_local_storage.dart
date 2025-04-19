@@ -21,11 +21,11 @@ class UserLocalStorage extends UserApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _userStreamController = BehaviorSubject<List<User>>.seeded(
-    const [],
+  late final _userStreamController = BehaviorSubject<Map<String, User>>.seeded(
+    const {},
   );
 
-  late final Stream<List<User>> _users = _userStreamController.stream;
+  late final Stream<Map<String, User>> _users = _userStreamController.stream;
 
   /// Migration function for user table
   Future<void> _migrateUserTable(
@@ -39,26 +39,19 @@ class UserLocalStorage extends UserApi {
   /// Initialization
   Future<void> _init() async {
     final usersJson = await _coreLocalStorage.getAll(UserTable.tableName);
-    final users = <User>[];
+    final users = <String, User>{};
 
     for (final userJson in usersJson) {
       final user = User.fromJson(userJson);
 
-      users.add(user);
+      users[user.id] = user;
     }
 
     _userStreamController.add(users);
   }
 
   @override
-  Stream<List<User>> get users => _users;
-
-  @override
-  Future<User> getUserById(String id) async {
-    final userJson = await _coreLocalStorage.getById(UserTable.tableName, id);
-
-    return User.fromJson(userJson.first);
-  }
+  Stream<Map<String, User>> get users => _users;
 
   /// Insert or Update a `user` to the database based on [userData]
   Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
@@ -69,15 +62,9 @@ class UserLocalStorage extends UserApi {
   @override
   Future<int> saveUser(User user) async {
     final result = await _insertOrUpdateUser(user.toJson());
-    final users = [..._userStreamController.value];
-    final userIndex = users.indexWhere((u) => u.id == user.id);
+    final users = Map<String, User>.from(_userStreamController.value);
 
-    if (userIndex > -1) {
-      users[userIndex] = user;
-    } else {
-      users.add(user);
-    }
-
+    users[user.id] = user;
     _userStreamController.add(users);
 
     return result;
@@ -92,10 +79,9 @@ class UserLocalStorage extends UserApi {
   @override
   Future<int> deleteUser(String id) async {
     final result = await _deleteUser(id);
-    final users = [..._userStreamController.value];
-    final userIndex = users.indexWhere((n) => n.id == id);
+    final users = Map<String, User>.from(_userStreamController.value)
+      ..removeWhere((key, _) => key == id);
 
-    users.removeAt(userIndex);
     _userStreamController.add(users);
 
     return result;

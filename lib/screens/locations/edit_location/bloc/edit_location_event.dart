@@ -146,6 +146,24 @@ final class EditLocationContractUpdate extends EditLocationEvent {
   List<Object> get props => [contracts];
 }
 
+final class EditLocationPhotosAdded extends EditLocationEvent {
+  const EditLocationPhotosAdded(this.photos);
+
+  final List<Photo> photos;
+
+  @override
+  List<Object> get props => [photos];
+}
+
+final class EditLocationPhotoRemoved extends EditLocationEvent {
+  const EditLocationPhotoRemoved(this.photoId);
+
+  final String photoId;
+
+  @override
+  List<Object> get props => [photoId];
+}
+
 final class EditLocationSubmitted extends EditLocationEvent {
   const EditLocationSubmitted();
 }

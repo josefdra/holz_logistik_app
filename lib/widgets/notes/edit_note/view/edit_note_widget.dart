@@ -47,8 +47,8 @@ class EditNoteView extends StatelessWidget {
         }
 
         return Dialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      insetPadding: 
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 70),
           child: SizedBox(
             width: 600,
             child: Padding(

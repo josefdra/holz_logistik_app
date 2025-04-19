@@ -17,10 +17,12 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
             additionalInfo: initialContract?.additionalInfo ?? '',
             startDate: initialContract?.startDate,
             endDate: initialContract?.endDate,
+            availableQuantity: initialContract?.availableQuantity ?? 0,
           ),
         ) {
     on<EditContractTitleChanged>(_onTitleChanged);
     on<EditContractDateRangeChanged>(_onDateRangeChanged);
+    on<EditContractAvailableQuantityChanged>(_onAvailableQuantityChanged);
     on<EditContractAdditionalInfoChanged>(_onAdditionalInfoChanged);
     on<EditContractContractFinishedUpdate>(_onContractFinishedUpdate);
     on<EditContractSubmitted>(_onSubmitted);
@@ -49,6 +51,13 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
         endDate: event.endDate,
       ),
     );
+  }
+
+  void _onAvailableQuantityChanged(
+    EditContractAvailableQuantityChanged event,
+    Emitter<EditContractState> emit,
+  ) {
+    emit(state.copyWith(availableQuantity: event.availableQuantity));
   }
 
   void _onAdditionalInfoChanged(
@@ -102,6 +111,7 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
       additionalInfo: state.additionalInfo,
       startDate: state.startDate,
       endDate: state.endDate,
+      availableQuantity: state.availableQuantity,
     );
 
     try {

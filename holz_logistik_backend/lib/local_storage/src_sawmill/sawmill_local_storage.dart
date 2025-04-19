@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:holz_logistik_backend/api/sawmill_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/sawmill_local_storage.dart';
@@ -22,11 +21,12 @@ class SawmillLocalStorage extends SawmillApi {
   }
 
   final CoreLocalStorage _coreLocalStorage;
-  late final _sawmillStreamController = BehaviorSubject<List<Sawmill>>.seeded(
-    const [],
+  late final _sawmillStreamController =
+      BehaviorSubject<Map<String, Sawmill>>.seeded(
+    const {},
   );
 
-  late final Stream<List<Sawmill>> _broadcastSawmills =
+  late final Stream<Map<String, Sawmill>> _sawmills =
       _sawmillStreamController.stream;
 
   /// Migration function for sawmill table
@@ -41,28 +41,18 @@ class SawmillLocalStorage extends SawmillApi {
   /// Initialization
   Future<void> _init() async {
     final sawmillsJson = await _coreLocalStorage.getAll(SawmillTable.tableName);
-    final sawmills = sawmillsJson
-        .map((sawmill) => Sawmill.fromJson(Map<String, dynamic>.from(sawmill)))
-        .toList();
+
+    final sawmills = <String, Sawmill>{};
+    for (final sawmillJson in sawmillsJson) {
+      final sawmill = Sawmill.fromJson(sawmillJson);
+      sawmills[sawmill.id] = sawmill;
+    }
+
     _sawmillStreamController.add(sawmills);
   }
 
   @override
-  Stream<List<Sawmill>> get sawmills => _broadcastSawmills;
-
-  @override
-  Future<Sawmill> getSawmillById(String id) async {
-    final sawmills = [..._sawmillStreamController.value];
-    final sawmill = sawmills.firstWhereOrNull((s) => s.id == id);
-
-    if (sawmill != null) {
-      return sawmill;
-    }
-
-    final result = await _coreLocalStorage.getById(SawmillTable.tableName, id);
-
-    return Sawmill.fromJson(result.first);
-  }
+  Stream<Map<String, Sawmill>> get sawmills => _sawmills;
 
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
   Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {
@@ -76,15 +66,11 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Future<int> saveSawmill(Sawmill sawmill) async {
     final result = await _insertOrUpdateSawmill(sawmill.toJson());
-    final sawmills = [..._sawmillStreamController.value];
-    final sawmillIndex = sawmills.indexWhere((s) => s.id == sawmill.id);
-    if (sawmillIndex > -1) {
-      sawmills[sawmillIndex] = sawmill;
-    } else {
-      sawmills.add(sawmill);
-    }
+    final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value);
 
+    sawmills[sawmill.id] = sawmill;
     _sawmillStreamController.add(sawmills);
+
     return result;
   }
 
@@ -97,11 +83,12 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Future<int> deleteSawmill(String id) async {
     final result = await _deleteSawmill(id);
-    final sawmills = [..._sawmillStreamController.value];
-    final sawmillIndex = sawmills.indexWhere((s) => s.id == id);
+    final sawmills =
+        Map<String, Sawmill>.from(_sawmillStreamController.value)
+          ..removeWhere((key, _) => key == id);
 
-    sawmills.removeAt(sawmillIndex);
     _sawmillStreamController.add(sawmills);
+
     return result;
   }
 

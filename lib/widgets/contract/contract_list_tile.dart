@@ -6,10 +6,12 @@ class ContractListTile extends StatelessWidget {
     required this.contract,
     super.key,
     this.onTap,
+    this.onReactivate,
   });
 
   final Contract contract;
   final VoidCallback? onTap;
+  final VoidCallback? onReactivate;
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +19,12 @@ class ContractListTile extends StatelessWidget {
       onTap: onTap,
       title: Text(contract.title),
       subtitle: Text(contract.additionalInfo),
+      trailing: contract.done
+          ? IconButton(
+              onPressed: () => onReactivate?.call(),
+              icon: const Icon(Icons.publish),
+            )
+          : null,
     );
   }
 }

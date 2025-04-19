@@ -20,10 +20,7 @@ class SawmillRepository {
   final SawmillSyncService _sawmillSyncService;
 
   /// Provides a [Stream] of all sawmills.
-  Stream<List<Sawmill>> get sawmills => _sawmillApi.sawmills;
-
-  /// Gets the sawmill by [id]
-  Future<Sawmill> getSawmillById(String id) => _sawmillApi.getSawmillById(id);
+  Stream<Map<String, Sawmill>> get sawmills => _sawmillApi.sawmills;
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {

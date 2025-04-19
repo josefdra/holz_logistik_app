@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:equatable/equatable.dart';
 import 'package:holz_logistik_backend/general/general.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -27,8 +29,7 @@ mixin PhotoSortGettable implements Gettable {
 /// {@template photo_item}
 /// A single `photo` item.
 ///
-/// Contains a [id], time of the [lastEdit], [serverPhotoUrl], [localPhotoUrl]
-/// and [locationId].
+/// Contains a [id], time of the [lastEdit], [photoFile] and [locationId].
 ///
 /// [Photo]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -41,8 +42,7 @@ class Photo extends Equatable with PhotoSortGettable {
   const Photo({
     required this.id,
     required this.lastEdit,
-    required this.serverPhotoUrl,
-    required this.localPhotoUrl,
+    required this.photoFile,
     required this.locationId,
   });
 
@@ -50,11 +50,11 @@ class Photo extends Equatable with PhotoSortGettable {
   Photo.empty({
     String? id,
     DateTime? lastEdit,
-    this.serverPhotoUrl = '',
-    this.localPhotoUrl = '',
+    Uint8List? photoFile,
     this.locationId = '',
   })  : id = id ?? const Uuid().v4(),
-        lastEdit = lastEdit ?? DateTime.now();
+        lastEdit = lastEdit ?? DateTime.now(),
+        photoFile = photoFile ?? Uint8List(0);
 
   /// The id of the `photo`.
   ///
@@ -67,15 +67,11 @@ class Photo extends Equatable with PhotoSortGettable {
   @override
   final DateTime lastEdit;
 
-  /// The server url of the `photo`.
+  /// The photo file.
   ///
   /// Cannot be empty.
-  final String serverPhotoUrl;
-
-  /// The local url of the `photo`.
-  ///
-  /// Cannot be empty.
-  final String localPhotoUrl;
+  @Uint8ListConverter()
+  final Uint8List photoFile;
 
   /// The locationId of the `photo`.
   ///
@@ -89,15 +85,13 @@ class Photo extends Equatable with PhotoSortGettable {
   Photo copyWith({
     String? id,
     DateTime? lastEdit,
-    String? serverPhotoUrl,
-    String? localPhotoUrl,
+    Uint8List? photoFile,
     String? locationId,
   }) {
     return Photo(
       id: id ?? this.id,
       lastEdit: lastEdit ?? this.lastEdit,
-      serverPhotoUrl: serverPhotoUrl ?? this.serverPhotoUrl,
-      localPhotoUrl: localPhotoUrl ?? this.localPhotoUrl,
+      photoFile: photoFile ?? this.photoFile,
       locationId: locationId ?? this.locationId,
     );
   }
@@ -110,5 +104,5 @@ class Photo extends Equatable with PhotoSortGettable {
 
   @override
   List<Object> get props =>
-      [id, lastEdit, serverPhotoUrl, localPhotoUrl, locationId];
+      [id, lastEdit, photoFile, locationId];
 }

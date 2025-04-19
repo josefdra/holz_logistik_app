@@ -29,6 +29,15 @@ final class EditContractDateRangeChanged extends EditContractEvent {
   List<Object> get props => [startDate, endDate];
 }
 
+final class EditContractAvailableQuantityChanged extends EditContractEvent {
+  const EditContractAvailableQuantityChanged(this.availableQuantity);
+
+  final double availableQuantity;
+
+  @override
+  List<Object> get props => [availableQuantity];
+}
+
 final class EditContractAdditionalInfoChanged extends EditContractEvent {
   const EditContractAdditionalInfoChanged(this.additionalInfo);
 

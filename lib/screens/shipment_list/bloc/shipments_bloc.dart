@@ -11,12 +11,18 @@ part 'shipments_state.dart';
 
 class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
   ShipmentsBloc({
+    required UserRepository userRepository,
+    required SawmillRepository sawmillRepository,
     required ShipmentRepository shipmentRepository,
     required LocationRepository locationRepository,
-  })  : _shipmentRepository = shipmentRepository,
+  })  : _userRepository = userRepository,
+        _sawmillRepository = sawmillRepository,
+        _shipmentRepository = shipmentRepository,
         _locationRepository = locationRepository,
         super(ShipmentsState()) {
     on<ShipmentsSubscriptionRequested>(_onSubscriptionRequested);
+    on<ShipmentsUsersUpdate>(_onUsersUpdate);
+    on<ShipmentsSawmillsUpdate>(_onSawmillsUpdate);
     on<ShipmentsShipmentUpdate>(_onShipmentUpdate);
     on<ShipmentsRefreshRequested>(_onRefreshRequested);
     on<ShipmentsShipmentDeleted>(_onShipmentDeleted);
@@ -28,11 +34,16 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     });
   }
 
+  final UserRepository _userRepository;
+  final SawmillRepository _sawmillRepository;
   final ShipmentRepository _shipmentRepository;
   final LocationRepository _locationRepository;
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
+  late final StreamSubscription<Map<String, User>>? _userUpdateSubscription;
+  late final StreamSubscription<Map<String, Sawmill>>?
+      _sawmillUpdateSubscription;
   late final StreamSubscription<Shipment>? _shipmentUpdateSubscription;
 
   void _checkDateChange() {
@@ -43,12 +54,18 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     }
   }
 
-  Future<void> _onSubscriptionRequested(
+  void _onSubscriptionRequested(
     ShipmentsSubscriptionRequested event,
     Emitter<ShipmentsState> emit,
-  ) async {
+  ) {
     emit(state.copyWith(status: ShipmentsStatus.loading));
     add(const ShipmentsShipmentUpdate());
+
+    _userUpdateSubscription = _userRepository.users
+        .listen((users) => add(ShipmentsUsersUpdate(users)));
+
+    _sawmillUpdateSubscription = _sawmillRepository.sawmills
+        .listen((sawmills) => add(ShipmentsSawmillsUpdate(sawmills)));
 
     _shipmentUpdateSubscription =
         _shipmentRepository.shipmentUpdates.listen((shipment) {
@@ -59,6 +76,30 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
         add(const ShipmentsShipmentUpdate());
       }
     });
+  }
+
+  Future<void> _onUsersUpdate(
+    ShipmentsUsersUpdate event,
+    Emitter<ShipmentsState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: ShipmentsStatus.success,
+        users: event.users,
+      ),
+    );
+  }
+
+  Future<void> _onSawmillsUpdate(
+    ShipmentsSawmillsUpdate event,
+    Emitter<ShipmentsState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        status: ShipmentsStatus.success,
+        sawmills: event.sawmills,
+      ),
+    );
   }
 
   Future<void> _onShipmentUpdate(
@@ -99,7 +140,6 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     ShipmentsShipmentDeleted event,
     Emitter<ShipmentsState> emit,
   ) async {
-    emit(state.copyWith(lastDeletedShipment: event.shipment));
     final locationId = event.shipment.locationId;
 
     await _shipmentRepository.deleteShipment(
@@ -152,6 +192,8 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
 
   @override
   Future<void> close() async {
+    await _userUpdateSubscription?.cancel();
+    await _sawmillUpdateSubscription?.cancel();
     await _shipmentUpdateSubscription?.cancel();
     _dateCheckTimer.cancel();
     scrollController.dispose();

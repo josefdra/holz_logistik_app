@@ -136,12 +136,10 @@ class LocationLocalStorage extends LocationApi {
 
     final locationsJson = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnDone} = ? AND ${LocationTable.columnDate}'
-          ' >= ? AND ${LocationTable.columnDate} <= ?',
+      where: '${LocationTable.columnDone} = ? AND (${LocationTable.columnDate}'
+          ' >= ? AND ${LocationTable.columnDate} <= ?)',
       whereArgs: [
         1,
-        start.toIso8601String(),
-        end.toIso8601String(),
         start.toIso8601String(),
         end.toIso8601String(),
       ],

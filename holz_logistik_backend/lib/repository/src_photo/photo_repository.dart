@@ -47,9 +47,22 @@ class PhotoRepository {
   }
 
   /// Saves multiple [photos].
-  Future<void> savePhotos(List<Photo> photos) {
+  Future<void> updatePhotos(List<Photo> photos, String locationId) async {
+    final oldPhotoIds = await _photoApi.getPhotoIdsByLocation(locationId);
+    final newPhotoIds = <String>[];
+
     for (final photo in photos) {
-      savePhoto(photo);
+      final photoExists = await _photoApi.checkIfPhotoExists(photo.id);
+      if (!photoExists) {
+        unawaited(savePhoto(photo.copyWith(locationId: locationId)));
+      }
+      newPhotoIds.add(photo.id);
+    }
+
+    for (final oldId in oldPhotoIds) {
+      if (!newPhotoIds.any((id) => id == oldId)) {
+        unawaited(deletePhoto(id: oldId, locationId: locationId));
+      }
     }
 
     return Future<void>.value();
@@ -61,10 +74,16 @@ class PhotoRepository {
     final data = {
       'id': id,
       'deleted': true,
+      'locationId': locationId,
       'timestamp': DateTime.now().toIso8601String(),
     };
 
     return _photoSyncService.sendPhotoUpdate(data);
+  }
+
+  /// Deletes photos by location id.
+  Future<void> deletePhotosByLocationId({required String locationId}) {
+    return _photoApi.deletePhotosByLocationId(locationId: locationId);
   }
 
   /// Disposes any resources managed by the repository.

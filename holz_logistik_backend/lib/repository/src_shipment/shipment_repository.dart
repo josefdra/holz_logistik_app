@@ -20,8 +20,7 @@ class ShipmentRepository {
   final ShipmentSyncService _shipmentSyncService;
 
   /// Provides a [Stream] of shipment updates.
-  Stream<Shipment> get shipmentUpdates =>
-      _shipmentApi.shipmentUpdates;
+  Stream<Shipment> get shipmentUpdates => _shipmentApi.shipmentUpdates;
 
   /// Provides shipments by location.
   Future<List<Shipment>> getShipmentsByLocation(String locationId) =>
@@ -47,7 +46,16 @@ class ShipmentRepository {
   ///
   /// If a [shipment] with the same id already exists, it will be replaced.
   Future<void> saveShipment(Shipment shipment) {
-    _shipmentApi.saveShipment(shipment);
+    final roundedQuantity = (shipment.quantity * 10).round() / 10;
+    final roundedOversizeQuantity =
+        (shipment.oversizeQuantity * 10).round() / 10;
+
+    _shipmentApi.saveShipment(
+      shipment.copyWith(
+        quantity: roundedQuantity,
+        oversizeQuantity: roundedOversizeQuantity,
+      ),
+    );
     return _shipmentSyncService.sendShipmentUpdate(shipment.toJson());
   }
 

@@ -39,6 +39,19 @@ class PhotoLocalStorage extends PhotoApi {
   Stream<String> get photoUpdates => _photoUpdates;
 
   @override
+  Future<bool> checkIfPhotoExists(String photoId) async {
+    final db = await _coreLocalStorage.database;
+    final res = await db.rawQuery(
+      '''
+    SELECT ${PhotoTable.columnId} FROM ${PhotoTable.tableName} WHERE ${PhotoTable.columnId} = ?
+  ''',
+      [photoId],
+    );
+
+    return res.isNotEmpty;
+  }
+
+  @override
   Future<List<Photo>> getPhotosByLocation(String locationId) async {
     final photos = await _coreLocalStorage.getByColumn(
       PhotoTable.tableName,
@@ -47,6 +60,21 @@ class PhotoLocalStorage extends PhotoApi {
     );
 
     return photos.map(Photo.fromJson).toList();
+  }
+
+  @override
+  Future<List<String>> getPhotoIdsByLocation(String locationId) async {
+    final db = await _coreLocalStorage.database;
+    final res = await db.rawQuery(
+      '''
+    SELECT ${PhotoTable.columnId} FROM ${PhotoTable.tableName} WHERE ${PhotoTable.columnLocationId} = ?
+  ''',
+      [locationId],
+    );
+
+    return res.isNotEmpty
+        ? res.map((element) => element[PhotoTable.columnId]! as String).toList()
+        : const [];
   }
 
   /// Insert or Update a `photo` to the database based on [photoData]
@@ -82,6 +110,18 @@ class PhotoLocalStorage extends PhotoApi {
     _photoUpdatesStreamController.add(locationId);
 
     return result;
+  }
+
+  /// Delete a Photos based on [locationId]
+  @override
+  Future<int> deletePhotosByLocationId({
+    required String locationId,
+  }) async {
+    return _coreLocalStorage.deleteByColumn(
+      PhotoTable.tableName,
+      PhotoTable.columnLocationId,
+      locationId,
+    );
   }
 
   /// Close the [_photoUpdatesStreamController]

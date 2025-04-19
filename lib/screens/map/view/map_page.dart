@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
+import 'package:holz_logistik/models/general/color.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik/screens/map/map.dart';
 import 'package:holz_logistik/widgets/locations/location_details/location_details.dart';
@@ -182,10 +183,8 @@ class MapView extends StatelessWidget {
           );
         },
         child: Icon(
-          Icons.location_pin,
-          color: !location.started
-              ? Colors.red
-              : const Color.fromARGB(255, 0, 17, 255),
+          !location.started ? Icons.location_pin : Icons.location_off,
+          color: colorFromString(location.contractId),
           size: 50,
         ),
       ),
@@ -242,9 +241,7 @@ class MapView extends StatelessWidget {
                       .read<MapBloc>()
                       .add(const MapToggleAddMarkerMode()),
               heroTag: 'mapPageAddMarkerButton',
-              icon: state.addMarkerMode
-                  ? Icons.check
-                  : Icons.add_location,
+              icon: state.addMarkerMode ? Icons.check : Icons.add_location,
             ),
         ],
       ),

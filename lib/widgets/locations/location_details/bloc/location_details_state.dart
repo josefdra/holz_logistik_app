@@ -17,6 +17,7 @@ final class LocationDetailsState extends Equatable {
     this.sawmills = const [],
     this.oversizeSawmills = const [],
     this.shipments = const [],
+    this.photos = const [],
     User? user,
   })  : contract = contract ?? Contract.empty(),
         user = user ?? User.empty();
@@ -27,6 +28,7 @@ final class LocationDetailsState extends Equatable {
   final List<Sawmill> sawmills;
   final List<Sawmill> oversizeSawmills;
   final List<Shipment> shipments;
+  final List<Photo> photos;
   final User user;
 
   LocationDetailsState copyWith({
@@ -36,6 +38,7 @@ final class LocationDetailsState extends Equatable {
     List<Sawmill>? sawmills,
     List<Sawmill>? oversizeSawmills,
     List<Shipment>? shipments,
+    List<Photo>? photos,
     User? user,
   }) {
     return LocationDetailsState(
@@ -45,6 +48,7 @@ final class LocationDetailsState extends Equatable {
       sawmills: sawmills ?? this.sawmills,
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
       shipments: shipments ?? this.shipments,
+      photos: photos ?? this.photos,
       user: user ?? this.user,
     );
   }
@@ -57,6 +61,7 @@ final class LocationDetailsState extends Equatable {
         sawmills,
         oversizeSawmills,
         shipments,
+        photos,
         user,
       ];
 }

@@ -20,6 +20,7 @@ final class EditContractState extends Equatable {
     this.contractFinished = false,
     DateTime? endDate,
     DateTime? startDate,
+    this.availableQuantity = 0,
   })  : lastEdit = lastEdit ?? DateTime.now(),
         startDate = startDate ?? DateTime.now(),
         endDate = endDate ?? DateTime.now();
@@ -33,6 +34,7 @@ final class EditContractState extends Equatable {
   final bool contractFinished;
   final DateTime endDate;
   final DateTime startDate;
+  final double availableQuantity;
 
   bool get isNewContract => initialContract == null;
 
@@ -46,6 +48,7 @@ final class EditContractState extends Equatable {
     bool? contractFinished,
     DateTime? endDate,
     DateTime? startDate,
+    double? availableQuantity,
   }) {
     return EditContractState(
       status: status ?? this.status,
@@ -57,6 +60,7 @@ final class EditContractState extends Equatable {
       contractFinished: contractFinished ?? this.contractFinished,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
+      availableQuantity: availableQuantity ?? this.availableQuantity,
     );
   }
 
@@ -71,5 +75,6 @@ final class EditContractState extends Equatable {
         contractFinished,
         endDate,
         startDate,
+        availableQuantity,
       ];
 }

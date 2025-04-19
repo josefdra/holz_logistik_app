@@ -55,6 +55,8 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     on<EditLocationPhotosChanged>(_onPhotosChanged);
     on<EditLocationNewSawmillSubmitted>(_onNewSawmillSubmitted);
     on<EditLocationSawmillUpdate>(_onSawmillUpdate);
+    on<EditLocationPhotosAdded>(_onPhotosAdded);
+    on<EditLocationPhotoRemoved>(_onPhotoRemoved);
     on<EditLocationSubmitted>(_onSubmitted);
   }
 
@@ -63,8 +65,9 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   final SawmillRepository _sawmillRepository;
   final PhotoRepository _photoRepository;
 
-  late final StreamSubscription<List<Sawmill>>? _sawmillSubscription;
-  late final StreamSubscription<List<Contract>>? _contractSubscription;
+  late final StreamSubscription<Map<String, Sawmill>>? _sawmillSubscription;
+  late final StreamSubscription<Map<String, Contract>>? _contractSubscription;
+  late final StreamSubscription<String>? _photoUpdateSubscription;
 
   Future<void> _onInit(
     EditLocationInit event,
@@ -75,20 +78,29 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
         state.copyWith(
           sawmills: state.initialLocation!.sawmillIds,
           oversizeSawmills: state.initialLocation!.oversizeSawmillIds,
+          photos: await _photoRepository
+              .getPhotosByLocation(state.initialLocation!.id),
         ),
       );
     }
 
     _sawmillSubscription = _sawmillRepository.sawmills.listen(
       (sawmills) {
-        final sawmillIds = sawmills.map((sawmill) => sawmill.id).toList();
+        final sawmillIds =
+            sawmills.values.map((sawmill) => sawmill.id).toList();
         add(EditLocationSawmillUpdate(sawmillIds));
       },
     );
 
     _contractSubscription = _contractRepository.activeContracts.listen(
       (contracts) {
-        add(EditLocationContractUpdate(contracts));
+        add(EditLocationContractUpdate(contracts.values as List<Contract>));
+      },
+    );
+
+    _photoUpdateSubscription = _photoRepository.photoUpdates.listen(
+      (locationId) {
+        add(EditLocationPhotosChanged(locationId));
       },
     );
   }
@@ -229,9 +241,9 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     final sawmillItems = <DropdownItem<String>>[];
 
     for (final sawmillId in event.allSawmills) {
-      final sawmill = await _sawmillRepository.getSawmillById(sawmillId);
+      final sawmills = await _sawmillRepository.sawmills.first;
       final item = DropdownItem(
-        label: sawmill.name,
+        label: sawmills[sawmillId]!.name,
         value: sawmillId,
       );
       sawmillItems.add(item);
@@ -266,6 +278,25 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
         contracts: event.contracts,
       ),
     );
+  }
+
+  Future<void> _onPhotosAdded(
+    EditLocationPhotosAdded event,
+    Emitter<EditLocationState> emit,
+  ) async {
+    final updatedPhotos = [...state.photos, ...event.photos];
+
+    emit(state.copyWith(photos: updatedPhotos));
+  }
+
+  Future<void> _onPhotoRemoved(
+    EditLocationPhotoRemoved event,
+    Emitter<EditLocationState> emit,
+  ) async {
+    final updatedPhotos = [...state.photos]
+      ..removeWhere((p) => p.id == event.photoId);
+
+    emit(state.copyWith(photos: updatedPhotos));
   }
 
   Map<String, String?> _validateFields({
@@ -381,8 +412,8 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     );
 
     try {
-      await _photoRepository.savePhotos(state.photos);
       await _locationsRepository.saveLocation(location);
+      await _photoRepository.updatePhotos(state.photos, location.id);
       emit(state.copyWith(status: EditLocationStatus.success));
     } catch (e) {
       emit(state.copyWith(status: EditLocationStatus.failure));
@@ -393,6 +424,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   Future<void> close() async {
     await _sawmillSubscription?.cancel();
     await _contractSubscription?.cancel();
+    await _photoUpdateSubscription?.cancel();
     state.newSawmillController.dispose();
     state.sawmillController.dispose();
     state.oversizeSawmillController.dispose();

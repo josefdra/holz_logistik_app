@@ -131,6 +131,9 @@ class FinishedContractsList extends StatelessWidget {
           final contract = state.contracts.elementAt(index);
           return ContractListTile(
             contract: contract,
+            onReactivate: () => context
+                .read<FinishedContractsBloc>()
+                .add(FinishedContractsReactivateContract(contract)),
           );
         },
       ),

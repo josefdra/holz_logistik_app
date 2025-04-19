@@ -45,6 +45,7 @@ class EditContractView extends StatelessWidget {
         : 'Vertrag bearbeiten';
 
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 40),
       child: Scrollbar(
         child: SingleChildScrollView(
           child: Padding(
@@ -56,6 +57,7 @@ class EditContractView extends StatelessWidget {
                 ),
                 const _TitleField(),
                 const _DateField(),
+                const _QuantityField(),
                 const SizedBox(height: 10),
                 const _AdditionalInfoField(),
                 const _FinishContractField(),
@@ -173,6 +175,59 @@ class _DateField extends StatelessWidget {
                   ),
                 );
           }
+        }
+      },
+    );
+  }
+}
+
+class DecimalInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final newText = newValue.text.replaceAll(',', '.');
+
+    if (newText.isEmpty || double.tryParse(newText) != null) {
+      return TextEditingValue(
+        text: newText,
+        selection: TextSelection.collapsed(offset: newText.length),
+      );
+    }
+    return oldValue;
+  }
+}
+
+class _QuantityField extends StatelessWidget {
+  const _QuantityField();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<EditContractBloc>().state;
+    final value =
+        state.availableQuantity != 0 ? state.availableQuantity.toString() : '';
+
+    return TextFormField(
+      key: const Key('editLocationView_initialQuantity_textFormField'),
+      initialValue: value,
+      decoration: InputDecoration(
+        enabled: !state.status.isLoadingOrSuccess,
+        labelText: 'Vertragsmenge',
+        border: const OutlineInputBorder(),
+        counterText: '',
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      maxLength: 20,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(20),
+        DecimalInputFormatter(),
+      ],
+      onChanged: (value) {
+        if (value.isNotEmpty) {
+          context
+              .read<EditContractBloc>()
+              .add(EditContractAvailableQuantityChanged(double.parse(value)));
         }
       },
     );

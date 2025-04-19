@@ -25,6 +25,15 @@ class ContractTable {
   /// The column name for the timestamp when a contract ends.
   static const String columnEndDate = 'endDate';
 
+  /// The column name for storing the available quantity of the contract.
+  static const String columnAvailableQuantity = 'availableQuantity';
+
+  /// The column name for storing the booked quantity of the contract.
+  static const String columnBookedQuantity = 'bookedQuantity';
+
+  /// The column name for storing the shipped quantity of the contract.
+  static const String columnShippedQuantity = 'shippedQuantity';
+
   /// SQL statement for creating the contracts table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -34,7 +43,10 @@ class ContractTable {
       $columnTitle TEXT NOT NULL,
       $columnAdditionalInfo TEXT NOT NULL,
       $columnStartDate TEXT NOT NULL,
-      $columnEndDate TEXT NOT NULL
+      $columnEndDate TEXT NOT NULL,
+      $columnAvailableQuantity REAL NOT NULL,
+      $columnBookedQuantity REAL NOT NULL,
+      $columnShippedQuantity REAL NOT NULL
     )
   ''';
 }

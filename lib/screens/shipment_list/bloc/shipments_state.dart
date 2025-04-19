@@ -5,8 +5,9 @@ enum ShipmentsStatus { initial, loading, success, failure }
 final class ShipmentsState extends Equatable {
   ShipmentsState({
     this.status = ShipmentsStatus.initial,
+    this.users = const {},
+    this.sawmills = const {},
     this.shipments = const [],
-    this.lastDeletedShipment,
     DateTime? endDate,
     DateTime? startDate,
     this.customDate = false,
@@ -18,24 +19,27 @@ final class ShipmentsState extends Equatable {
                 .subtract(const Duration(days: 32));
 
   final ShipmentsStatus status;
+  final Map<String, User> users;
+  final Map<String, Sawmill> sawmills;
   final List<Shipment> shipments;
-  final Shipment? lastDeletedShipment;
   final DateTime endDate;
   final DateTime startDate;
   final bool customDate;
 
   ShipmentsState copyWith({
     ShipmentsStatus? status,
+    Map<String, User>? users,
+    Map<String, Sawmill>? sawmills,
     List<Shipment>? shipments,
-    Shipment? lastDeletedShipment,
     DateTime? endDate,
     DateTime? startDate,
     bool? customDate,
   }) {
     return ShipmentsState(
       status: status ?? this.status,
+      users: users ?? this.users,
+      sawmills: sawmills ?? this.sawmills,
       shipments: shipments != null ? sortByDate(shipments) : this.shipments,
-      lastDeletedShipment: lastDeletedShipment ?? this.lastDeletedShipment,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
       customDate: customDate ?? this.customDate,
@@ -45,8 +49,9 @@ final class ShipmentsState extends Equatable {
   @override
   List<Object?> get props => [
         status,
+        users, 
+        sawmills,
         shipments,
-        lastDeletedShipment,
         endDate,
         startDate,
         customDate,

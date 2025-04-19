@@ -51,6 +51,7 @@ class ShipmentFormView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 40),
       child: Scrollbar(
         child: SingleChildScrollView(
           child: Padding(
@@ -259,7 +260,7 @@ class _SawmillField extends StatelessWidget {
     final state = context.watch<ShipmentFormBloc>().state;
     final error = state.validationErrors['sawmill'];
 
-    return StreamBuilder<List<Sawmill>>(
+    return StreamBuilder<Map<String, Sawmill>>(
       stream: context.watch<SawmillRepository>().sawmills,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
@@ -271,6 +272,7 @@ class _SawmillField extends StatelessWidget {
         final sawmills = snapshot.data!;
 
         return DropdownButtonFormField<String>(
+          isExpanded: true,
           decoration: InputDecoration(
             labelText: 'Sägewerk',
             enabled: !state.status.isLoadingOrSuccess,
@@ -278,7 +280,7 @@ class _SawmillField extends StatelessWidget {
             border: const OutlineInputBorder(),
           ),
           value: state.sawmillId.isNotEmpty ? state.sawmillId : null,
-          items: sawmills.map((sawmill) {
+          items: sawmills.values.map((sawmill) {
             return DropdownMenuItem<String>(
               value: sawmill.id,
               child: Text(sawmill.name),

@@ -16,6 +16,7 @@ class LocationListPage extends StatelessWidget {
         create: (context) => LocationListBloc(
           locationRepository: context.read<LocationRepository>(),
           shipmentRepository: context.read<ShipmentRepository>(),
+          photoRepository: context.read<PhotoRepository>(),
         ),
         child: const LocationListPage(),
       ),
@@ -28,6 +29,7 @@ class LocationListPage extends StatelessWidget {
       create: (context) => LocationListBloc(
         locationRepository: context.read<LocationRepository>(),
         shipmentRepository: context.read<ShipmentRepository>(),
+        photoRepository: context.read<PhotoRepository>(),
       )..add(const LocationListSubscriptionRequested()),
       child: Scaffold(
         body: Column(
@@ -126,6 +128,7 @@ class LocationList extends StatelessWidget {
                           state.searchQueryedLocations.elementAt(index);
                       return LocationListTile(
                         location: location,
+                        photo: state.photos[location.id],
                         onTap: () => showDialog<LocationDetailsWidget>(
                           context: context,
                           builder: (context) => LocationDetailsWidget(

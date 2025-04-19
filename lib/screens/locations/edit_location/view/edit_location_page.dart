@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
 
@@ -125,6 +126,8 @@ class EditLocationView extends StatelessWidget {
                 _SawmillsField(),
                 SizedBox(height: 20),
                 _OversizeSawmillsField(),
+                SizedBox(height: 20),
+                _PhotoField(),
               ],
             ),
           ),
@@ -502,6 +505,147 @@ class _OversizeSawmillsField extends StatelessWidget {
           onSelectionChange: (selectedItems) => context
               .read<EditLocationBloc>()
               .add(EditLocationOversizeSawmillsChanged(selectedItems)),
+        );
+      },
+    );
+  }
+}
+
+class _PhotoField extends StatelessWidget {
+  const _PhotoField();
+
+  Future<List<Photo>> _showPhotoSourceBottomSheet(BuildContext context) async {
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Foto aufnehmen'),
+                onTap: () => Navigator.pop(context, 'camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Aus Galerie'),
+                onTap: () => Navigator.pop(context, 'gallery'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (result == 'camera') {
+      return _takePhoto();
+    } else if (result == 'gallery') {
+      return _pickPhotos();
+    }
+
+    return <Photo>[];
+  }
+
+  Future<List<Photo>> _takePhoto() async {
+    final picker = ImagePicker();
+    final photo = await picker.pickImage(source: ImageSource.camera);
+    final photoObjects = <Photo>[];
+
+    if (photo != null) {
+      final bytePhoto = await photo.readAsBytes();
+      final photoObject = Photo.empty(photoFile: bytePhoto);
+      photoObjects.add(photoObject);
+    }
+
+    return photoObjects;
+  }
+
+  Future<List<Photo>> _pickPhotos() async {
+    final picker = ImagePicker();
+    final photos = await picker.pickMultiImage();
+    final photoObjects = <Photo>[];
+
+    if (photos.isNotEmpty) {
+      for (final photo in photos) {
+        final bytePhoto = await photo.readAsBytes();
+        final photoObject = Photo.empty(photoFile: bytePhoto);
+        photoObjects.add(photoObject);
+      }
+    }
+
+    return photoObjects;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<EditLocationBloc, EditLocationState>(
+      builder: (context, state) {
+        return Column(
+          children: [
+            ElevatedButton.icon(
+              onPressed: () async {
+                final photos = await _showPhotoSourceBottomSheet(context);
+                if (photos.isNotEmpty && context.mounted) {
+                  context
+                      .read<EditLocationBloc>()
+                      .add(EditLocationPhotosAdded(photos));
+                }
+              },
+              icon: const Icon(Icons.add_a_photo),
+              label: const Text('Fotos hinzufügen'),
+            ),
+            const SizedBox(height: 16),
+            if (state.photos.isNotEmpty)
+              SizedBox(
+                height: 120,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: state.photos.length,
+                  itemBuilder: (context, index) {
+                    final photo = state.photos[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Stack(
+                        children: [
+                          SizedBox(
+                            height: 120,
+                            width: 120,
+                            child: Image.memory(
+                              photo.photoFile,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () {
+                                context.read<EditLocationBloc>().add(
+                                      EditLocationPhotoRemoved(photo.id),
+                                    );
+                              },
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
         );
       },
     );

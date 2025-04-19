@@ -48,8 +48,8 @@ class ShipmentLocalStorage extends ShipmentApi {
 
     final shipments = <Shipment>[];
     for (final shipmentJson in shipmentsJson) {
-      final location = Shipment.fromJson(shipmentJson);
-      shipments.add(location);
+      final shipment = Shipment.fromJson(shipmentJson);
+      shipments.add(shipment);
     }
 
     return shipments;
@@ -71,8 +71,8 @@ class ShipmentLocalStorage extends ShipmentApi {
 
     final shipments = <Shipment>[];
     for (final shipmentJson in shipmentsJson) {
-      final location = Shipment.fromJson(shipmentJson);
-      shipments.add(location);
+      final shipment = Shipment.fromJson(shipmentJson);
+      shipments.add(shipment);
     }
 
     return shipments;
