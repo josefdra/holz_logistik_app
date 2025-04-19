@@ -24,13 +24,13 @@ class ContractLocalStorage extends ContractApi {
 
   final CoreLocalStorage _coreLocalStorage;
   late final _activeContractsStreamController =
-      BehaviorSubject<Map<String, Contract>>.seeded(
-    const {},
+      BehaviorSubject<List<Contract>>.seeded(
+    const [],
   );
   late final _contractUpdatesStreamController =
       StreamController<Contract>.broadcast();
 
-  late final Stream<Map<String, Contract>> _activeContracts =
+  late final Stream<List<Contract>> _activeContracts =
       _activeContractsStreamController.stream;
   late final Stream<Contract> _contractUpdates =
       _contractUpdatesStreamController.stream;
@@ -44,7 +44,7 @@ class ContractLocalStorage extends ContractApi {
     // Migration logic here if needed
   }
 
-  Future<Map<String, Contract>> _getActiveContracts() async {
+  Future<List<Contract>> _getActiveContracts() async {
     final db = await _coreLocalStorage.database;
 
     final contractsJson = await db.query(
@@ -53,10 +53,10 @@ class ContractLocalStorage extends ContractApi {
       whereArgs: [0],
     );
 
-    final contracts = <String, Contract>{};
+    final contracts = <Contract>[];
     for (final contractJson in contractsJson) {
       final contract = Contract.fromJson(contractJson);
-      contracts[contract.id] = contract;
+      contracts.add(contract);
     }
 
     return contracts;
@@ -70,7 +70,7 @@ class ContractLocalStorage extends ContractApi {
   }
 
   @override
-  Stream<Map<String, Contract>> get activeContracts => _activeContracts;
+  Stream<List<Contract>> get activeContracts => _activeContracts;
 
   @override
   Stream<Contract> get contractUpdates => _contractUpdates;
@@ -150,12 +150,17 @@ class ContractLocalStorage extends ContractApi {
   Future<int> saveContract(Contract contract) async {
     final result = await _insertOrUpdateContract(contract.toJson());
     final activeContracts =
-        Map<String, Contract>.from(_activeContractsStreamController.value);
+        List<Contract>.from(_activeContractsStreamController.value);
 
     if (contract.done == false) {
-      activeContracts[contract.id] = contract;
+      final index = activeContracts.indexWhere((c) => c.id == contract.id);
+      if (index > -1) {
+        activeContracts[index] = contract;
+      } else {
+        activeContracts.add(contract);
+      }
     } else {
-      activeContracts.removeWhere((key, _) => key == contract.id);
+      activeContracts.removeWhere((c) => c.id == contract.id);
     }
 
     _contractUpdatesStreamController.add(contract);
@@ -176,11 +181,11 @@ class ContractLocalStorage extends ContractApi {
     final result = await _deleteContract(id);
 
     if (done == false) {
-      final activeContracts =
-          Map<String, Contract>.from(_activeContractsStreamController.value)
-            ..removeWhere((key, _) => key == id);
+      final contracts =
+          List<Contract>.from(_activeContractsStreamController.value)
+            ..removeWhere((c) => c.id == id);
 
-      _activeContractsStreamController.add(activeContracts);
+      _activeContractsStreamController.add(contracts);
     }
 
     _contractUpdatesStreamController.add(contract);
@@ -188,7 +193,7 @@ class ContractLocalStorage extends ContractApi {
     return result;
   }
 
-  /// Close both controllers
+  /// Close the both controllers
   @override
   Future<void> close() {
     _activeContractsStreamController.close();

@@ -31,28 +31,6 @@ class ContractListPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: const Text('Verträge')),
         body: const ContractList(),
-        bottomSheet: SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 30),
-              backgroundColor: Theme.of(context).primaryColor,
-              foregroundColor: Theme.of(context).colorScheme.secondary,
-              shape: const BeveledRectangleBorder(),
-            ),
-            onPressed: () {
-              Navigator.of(context).push(FinishedContractsPage.route());
-            },
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Abgeschlossene Verträge'),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward),
-              ],
-            ),
-          ),
-        ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 40),
@@ -80,56 +58,86 @@ class ContractList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return BlocListener<ContractListBloc, ContractListState>(
-      listenWhen: (previous, current) => previous.status != current.status,
-      listener: (context, state) {
-        if (state.status == ContractListStatus.failure) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(l10n.contractListErrorSnackbarText),
-              ),
-            );
-        }
-      },
-      child: BlocBuilder<ContractListBloc, ContractListState>(
-        builder: (context, state) {
-          if (state.contracts.isEmpty) {
-            if (state.status == ContractListStatus.loading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state.status != ContractListStatus.success) {
-              return const SizedBox();
-            } else {
-              return Center(
-                child: Text(
-                  l10n.contractListEmptyText,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              );
-            }
-          }
+    return Column(
+      children: [
+        Expanded(
+          child: BlocListener<ContractListBloc, ContractListState>(
+            listenWhen: (previous, current) =>
+                previous.status != current.status,
+            listener: (context, state) {
+              if (state.status == ContractListStatus.failure) {
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.contractListErrorSnackbarText),
+                    ),
+                  );
+              }
+            },
+            child: BlocBuilder<ContractListBloc, ContractListState>(
+              builder: (context, state) {
+                if (state.contracts.isEmpty) {
+                  if (state.status == ContractListStatus.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state.status != ContractListStatus.success) {
+                    return const SizedBox();
+                  } else {
+                    return Center(
+                      child: Text(
+                        l10n.contractListEmptyText,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    );
+                  }
+                }
 
-          return Scrollbar(
-            controller: context.read<ContractListBloc>().scrollController,
-            child: ListView.builder(
-              controller: context.read<ContractListBloc>().scrollController,
-              itemCount: state.contracts.length,
-              itemBuilder: (_, index) {
-                final contract = state.contracts.elementAt(index);
-                return ContractListTile(
-                  contract: contract,
-                  onTap: () => showDialog<EditContractWidget>(
-                    context: context,
-                    builder: (context) =>
-                        EditContractWidget(contract: contract),
+                return Scrollbar(
+                  controller: context.read<ContractListBloc>().scrollController,
+                  child: ListView.builder(
+                    controller:
+                        context.read<ContractListBloc>().scrollController,
+                    itemCount: state.contracts.length,
+                    itemBuilder: (_, index) {
+                      final contract = state.contracts.elementAt(index);
+                      return ContractListTile(
+                        contract: contract,
+                        onTap: () => showDialog<EditContractWidget>(
+                          context: context,
+                          builder: (context) =>
+                              EditContractWidget(contract: contract),
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
-      ),
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton(
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 30),
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Theme.of(context).colorScheme.secondary,
+              shape: const BeveledRectangleBorder(),
+            ),
+            onPressed: () {
+              Navigator.of(context).push(FinishedContractsPage.route());
+            },
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Abgeschlossene Verträge'),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

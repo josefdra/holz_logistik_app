@@ -16,6 +16,7 @@ class AnalyticsPage extends StatelessWidget {
           shipmentRepository: context.read<ShipmentRepository>(),
           sawmillRepository: context.read<SawmillRepository>(),
           locationRepository: context.read<LocationRepository>(),
+          contractRepository: context.read<ContractRepository>(),
         ),
         child: const AnalyticsPage(),
       ),
@@ -29,10 +30,102 @@ class AnalyticsPage extends StatelessWidget {
         shipmentRepository: context.read<ShipmentRepository>(),
         sawmillRepository: context.read<SawmillRepository>(),
         locationRepository: context.read<LocationRepository>(),
+        contractRepository: context.read<ContractRepository>(),
       )..add(const AnalyticsPageSubscriptionRequested()),
-      child: Scaffold(
-        body: const AnalyticsView(),
-        bottomSheet: SizedBox(
+      child: const Scaffold(
+        body: AnalyticsView(),
+      ),
+    );
+  }
+}
+
+class AnalyticsView extends StatelessWidget {
+  const AnalyticsView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: BlocListener<AnalyticsPageBloc, AnalyticsPageState>(
+            listenWhen: (previous, current) =>
+                previous.status != current.status,
+            listener: (context, state) {
+              if (state.status == AnalyticsPageStatus.failure) {
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    const SnackBar(
+                      content: Text('Error'),
+                    ),
+                  );
+              }
+            },
+            child: BlocBuilder<AnalyticsPageBloc, AnalyticsPageState>(
+              builder: (context, state) {
+                if (state.analyticsData.isEmpty) {
+                  if (state.status == AnalyticsPageStatus.loading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state.status != AnalyticsPageStatus.success) {
+                    return const SizedBox();
+                  } else {
+                    return Center(
+                      child: Text(
+                        'Keine Analyse vorhanden',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    );
+                  }
+                }
+
+                return Scrollbar(
+                  controller:
+                      context.read<AnalyticsPageBloc>().scrollController,
+                  child: ListView(
+                    controller:
+                        context.read<AnalyticsPageBloc>().scrollController,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Gesamt verfügbar: ${state.totalCurrentQuantity} '
+                              'fm',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text('Davon ÜS: '
+                                '${state.totalCurrentOversizeQuantity} fm, '
+                                'Stückzahl: ${state.totalCurrentPieceCount} '
+                                'Stk'),
+                          ],
+                        ),
+                      ),
+                      ...state.contracts.map((contract) {
+                        return AnalyticsContractListTile(
+                          contract: contract,
+                        );
+                      }),
+                      _buildDatePickerRow(context, state),
+                      ...state.analyticsData.values
+                          .where((dataElement) => dataElement.quantity > 0)
+                          .map(
+                            (dataElement) => AnalyticsSawmillListTile(
+                              data: dataElement,
+                            ),
+                          ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        SizedBox(
           width: double.infinity,
           child: TextButton(
             style: TextButton.styleFrom(
@@ -54,74 +147,7 @@ class AnalyticsPage extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class AnalyticsView extends StatelessWidget {
-  const AnalyticsView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocListener<AnalyticsPageBloc, AnalyticsPageState>(
-      listenWhen: (previous, current) => previous.status != current.status,
-      listener: (context, state) {
-        if (state.status == AnalyticsPageStatus.failure) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(
-                content: Text('Error'),
-              ),
-            );
-        }
-      },
-      child: BlocBuilder<AnalyticsPageBloc, AnalyticsPageState>(
-        builder: (context, state) {
-          if (state.analyticsData.isEmpty) {
-            if (state.status == AnalyticsPageStatus.loading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state.status != AnalyticsPageStatus.success) {
-              return const SizedBox();
-            } else {
-              return Center(
-                child: Text(
-                  'Keine Analyse vorhanden',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              );
-            }
-          }
-
-          return Scrollbar(
-            controller: context.read<AnalyticsPageBloc>().scrollController,
-            child: ListView(
-              controller: context.read<AnalyticsPageBloc>().scrollController,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Insgesamt verfügbar:'),
-                      Text('Menge: ${state.totalCurrentQuantity}fm'),
-                      Text('Davon ÜS: ${state.totalCurrentOversizeQuantity}fm'),
-                      Text('Stückzahl: ${state.totalCurrentPieceCount}fm'),
-                    ],
-                  ),
-                ),
-                _buildDatePickerRow(context, state),
-                ...state.analyticsData.values.map((dataElement) {
-                  return AnalyticsListTile(
-                    data: dataElement,
-                  );
-                }),
-              ],
-            ),
-          );
-        },
-      ),
+      ],
     );
   }
 

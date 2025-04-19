@@ -118,15 +118,12 @@ class MapView extends StatelessWidget {
   Widget _buildMarkerLayer(BuildContext context, MapState state) {
     return MarkerLayer(
       markers: [
-        // User location marker
         if (state.userLocation != null)
           _buildUserLocationMarker(state.userLocation!),
 
-        // New marker in add marker mode
         if (state.addMarkerMode == true && state.newMarkerPosition != null)
           _buildNewPositionMarker(state.newMarkerPosition!),
 
-        // Location markers
         ...state.locations.map(
           (location) => _buildLocationMarker(context, location),
         ),

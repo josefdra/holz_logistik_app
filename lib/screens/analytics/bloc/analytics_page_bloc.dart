@@ -14,12 +14,15 @@ class AnalyticsPageBloc extends Bloc<AnalyticsPageEvent, AnalyticsPageState> {
     required ShipmentRepository shipmentRepository,
     required SawmillRepository sawmillRepository,
     required LocationRepository locationRepository,
+    required ContractRepository contractRepository,
   })  : _shipmentRepository = shipmentRepository,
         _sawmillRepository = sawmillRepository,
         _locationRepository = locationRepository,
+        _contractRepository = contractRepository,
         super(AnalyticsPageState()) {
     on<AnalyticsPageSubscriptionRequested>(_onSubscriptionRequested);
     on<AnalyticsPageShipmentUpdate>(_onShipmentUpdate);
+    on<AnalyticsPageContractUpdate>(_onContractUpdate);
     on<AnalyticsPageLocationUpdate>(_onLocationUpdate);
     on<AnalyticsPageRefreshRequested>(_onRefreshRequested);
     on<AnalyticsPageDateChanged>(_onDateChanged);
@@ -33,10 +36,12 @@ class AnalyticsPageBloc extends Bloc<AnalyticsPageEvent, AnalyticsPageState> {
   final ShipmentRepository _shipmentRepository;
   final SawmillRepository _sawmillRepository;
   final LocationRepository _locationRepository;
+  final ContractRepository _contractRepository;
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
   late final StreamSubscription<Shipment>? _shipmentUpdateSubscription;
+  late final StreamSubscription<List<Contract>>? _activeContractSubscription;
 
   void _checkDateChange() {
     final now = DateTime.now();
@@ -61,6 +66,11 @@ class AnalyticsPageBloc extends Bloc<AnalyticsPageEvent, AnalyticsPageState> {
               state.endDate.millisecondsSinceEpoch) {
         add(const AnalyticsPageShipmentUpdate());
       }
+    });
+
+    _activeContractSubscription =
+        _contractRepository.activeContracts.listen((contracts) {
+      add(AnalyticsPageContractUpdate(contracts));
     });
 
     await emit.forEach<List<Location>>(
@@ -138,6 +148,13 @@ class AnalyticsPageBloc extends Bloc<AnalyticsPageEvent, AnalyticsPageState> {
     );
   }
 
+  Future<void> _onContractUpdate(
+    AnalyticsPageContractUpdate event,
+    Emitter<AnalyticsPageState> emit,
+  ) async {
+    emit(state.copyWith(contracts: event.contracts));
+  }
+
   Future<void> _onRefreshRequested(
     AnalyticsPageRefreshRequested event,
     Emitter<AnalyticsPageState> emit,
@@ -182,6 +199,7 @@ class AnalyticsPageBloc extends Bloc<AnalyticsPageEvent, AnalyticsPageState> {
   @override
   Future<void> close() async {
     await _shipmentUpdateSubscription?.cancel();
+    await _activeContractSubscription?.cancel();
     scrollController.dispose();
     _dateCheckTimer.cancel();
     return super.close();

@@ -24,6 +24,15 @@ final class AnalyticsPageLocationUpdate extends AnalyticsPageEvent {
   List<Object> get props => [locations];
 }
 
+final class AnalyticsPageContractUpdate extends AnalyticsPageEvent {
+  const AnalyticsPageContractUpdate(this.contracts);
+
+  final List<Contract> contracts;
+
+  @override
+  List<Object> get props => [contracts];
+}
+
 final class AnalyticsPageRefreshRequested extends AnalyticsPageEvent {
   const AnalyticsPageRefreshRequested();
 }

@@ -66,7 +66,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
   final PhotoRepository _photoRepository;
 
   late final StreamSubscription<Map<String, Sawmill>>? _sawmillSubscription;
-  late final StreamSubscription<Map<String, Contract>>? _contractSubscription;
+  late final StreamSubscription<List<Contract>>? _contractSubscription;
   late final StreamSubscription<String>? _photoUpdateSubscription;
 
   Future<void> _onInit(
@@ -94,7 +94,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
 
     _contractSubscription = _contractRepository.activeContracts.listen(
       (contracts) {
-        add(EditLocationContractUpdate(contracts.values as List<Contract>));
+        add(EditLocationContractUpdate(contracts));
       },
     );
 

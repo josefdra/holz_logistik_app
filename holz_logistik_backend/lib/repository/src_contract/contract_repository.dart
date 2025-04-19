@@ -20,7 +20,7 @@ class ContractRepository {
   final ContractSyncService _contractSyncService;
 
   /// Provides a [Stream] of active contracts.
-  Stream<Map<String, Contract>> get activeContracts =>
+  Stream<List<Contract>> get activeContracts =>
       _contractApi.activeContracts;
 
   /// Provides a [Stream] of updates on finished contracts.

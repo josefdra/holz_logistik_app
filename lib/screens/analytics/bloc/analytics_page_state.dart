@@ -6,6 +6,7 @@ final class AnalyticsPageState extends Equatable {
   AnalyticsPageState({
     this.status = AnalyticsPageStatus.initial,
     this.analyticsData = const {},
+    this.contracts = const [],
     DateTime? endDate,
     DateTime? startDate,
     this.customDate = false,
@@ -21,6 +22,7 @@ final class AnalyticsPageState extends Equatable {
 
   final AnalyticsPageStatus status;
   final Map<String, AnalyticsDataElement> analyticsData;
+  final List<Contract> contracts;
   final DateTime endDate;
   final DateTime startDate;
   final bool customDate;
@@ -31,6 +33,7 @@ final class AnalyticsPageState extends Equatable {
   AnalyticsPageState copyWith({
     AnalyticsPageStatus? status,
     Map<String, AnalyticsDataElement>? analyticsData,
+    List<Contract>? contracts,
     DateTime? endDate,
     DateTime? startDate,
     bool? customDate,
@@ -41,6 +44,7 @@ final class AnalyticsPageState extends Equatable {
     return AnalyticsPageState(
       status: status ?? this.status,
       analyticsData: analyticsData ?? this.analyticsData,
+      contracts: contracts ?? this.contracts,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
       customDate: customDate ?? this.customDate,
@@ -56,6 +60,7 @@ final class AnalyticsPageState extends Equatable {
   List<Object?> get props => [
         status,
         analyticsData,
+        contracts,
         endDate,
         startDate,
         customDate,

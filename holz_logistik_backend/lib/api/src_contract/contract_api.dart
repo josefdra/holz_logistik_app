@@ -8,7 +8,7 @@ abstract class ContractApi {
   const ContractApi();
 
   /// Provides a [Stream] of all active contracts.
-  Stream<Map<String, Contract>> get activeContracts;
+  Stream<List<Contract>> get activeContracts;
 
   /// Provides updates on finished contracts
   Stream<Contract> get contractUpdates;

@@ -32,6 +32,7 @@ class LocationListTile extends StatelessWidget {
             decoration: BoxDecoration(
               border: Border.all(
                 color: colorFromString(location.contractId),
+                width: 2,
               ),
               borderRadius: BorderRadius.circular(4),
             ),

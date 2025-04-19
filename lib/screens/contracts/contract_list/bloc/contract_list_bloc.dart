@@ -26,11 +26,11 @@ class ContractListBloc extends Bloc<ContractListEvent, ContractListState> {
   ) async {
     emit(state.copyWith(status: ContractListStatus.loading));
 
-    await emit.forEach<Map<String, Contract>>(
+    await emit.forEach<List<Contract>>(
       _contractRepository.activeContracts,
       onData: (contracts) => state.copyWith(
         status: ContractListStatus.success,
-        contracts: contracts.values as List<Contract>?,
+        contracts: contracts,
       ),
       onError: (_, __) => state.copyWith(
         status: ContractListStatus.failure,
