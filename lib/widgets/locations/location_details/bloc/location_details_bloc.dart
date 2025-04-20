@@ -145,9 +145,11 @@ class LocationDetailsBloc
   }
 
   Future<void> _refreshContract() async {
-    final contract =
-        await _contractRepository.getContractById(state.location.contractId);
-    add(LocationDetailsContractUpdate(contract));
+    if (state.location.contractId != '') {
+      final contract =
+          await _contractRepository.getContractById(state.location.contractId);
+      add(LocationDetailsContractUpdate(contract));
+    }
   }
 
   void _refreshSawmills() {

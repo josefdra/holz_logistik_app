@@ -49,6 +49,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     SettingsAuthenticationVerificationRequested event,
     Emitter<SettingsState> emit,
   ) {
-    _authenticationRepository.requestAuthentication(state.apiKey);
+    _authenticationRepository.updateApiKey(state.apiKey);
   }
 }

@@ -346,6 +346,32 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     return errors;
   }
 
+  Future<void> _updateContract(Location location) async {
+    Contract? updatedInitialContract;
+    if (state.initialLocation != null &&
+        state.initialLocation!.contractId.isNotEmpty) {
+      final initialContract = await _contractRepository
+          .getContractById(state.initialLocation!.contractId);
+      updatedInitialContract = initialContract.copyWith(
+        bookedQuantity: initialContract.bookedQuantity -
+            state.initialLocation!.currentQuantity,
+      );
+      await _contractRepository.saveContract(updatedInitialContract);
+    }
+
+    if (state.contractId.isNotEmpty) {
+      final currentContract = updatedInitialContract != null &&
+              state.contractId == state.initialLocation!.contractId
+          ? updatedInitialContract
+          : await _contractRepository.getContractById(state.contractId);
+      final updatedCurrentContract = currentContract.copyWith(
+        bookedQuantity:
+            currentContract.bookedQuantity + location.currentQuantity,
+      );
+      await _contractRepository.saveContract(updatedCurrentContract);
+    }
+  }
+
   Future<void> _onSubmitted(
     EditLocationSubmitted event,
     Emitter<EditLocationState> emit,
@@ -391,7 +417,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     emit(state.copyWith(status: EditLocationStatus.loading));
 
     final location = (state.initialLocation ??
-            Location.empty(
+            Location(
               latitude: state.newMarkerPosition!.latitude,
               longitude: state.newMarkerPosition!.longitude,
             ))
@@ -413,6 +439,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
 
     try {
       await _locationsRepository.saveLocation(location);
+      await _updateContract(location);
       await _photoRepository.updatePhotos(state.photos, location.id);
       emit(state.copyWith(status: EditLocationStatus.success));
     } catch (e) {

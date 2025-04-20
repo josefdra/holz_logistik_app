@@ -104,7 +104,20 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
 
     emit(state.copyWith(status: EditContractStatus.loading));
 
-    final contract = (state.initialContract ?? Contract.empty()).copyWith(
+    late final double bookedQuantity;
+    late final double shippedQuantity;
+
+    if (state.initialContract != null) {
+      final diff =
+          state.initialContract!.availableQuantity - state.availableQuantity;
+      bookedQuantity = state.initialContract!.bookedQuantity - diff;
+      shippedQuantity = state.initialContract!.shippedQuantity - diff;
+    } else {
+      bookedQuantity = 0;
+      shippedQuantity = 0;
+    }
+
+    final contract = (state.initialContract ?? Contract()).copyWith(
       done: state.contractFinished,
       lastEdit: DateTime.now(),
       title: state.title,
@@ -112,6 +125,8 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
       startDate: state.startDate,
       endDate: state.endDate,
       availableQuantity: state.availableQuantity,
+      bookedQuantity: bookedQuantity,
+      shippedQuantity: shippedQuantity,
     );
 
     try {

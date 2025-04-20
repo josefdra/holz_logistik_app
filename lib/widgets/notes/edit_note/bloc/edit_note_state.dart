@@ -16,7 +16,7 @@ final class EditNoteState extends Equatable {
     this.text = '',
     this.validationErrors = const {},
     User? user,
-  }) : user = user ?? User.empty();
+  }) : user = user ?? User();
 
   final EditNoteStatus status;
   final Note? initialNote;

@@ -32,7 +32,7 @@ class ShipmentListTile extends StatelessWidget {
               children: [
                 Text('${shipment.lastEdit.day}.${shipment.lastEdit.month}.'),
                 Text(userName[0]),
-                Text(userName[1]),
+                if (userName.length > 1) Text(userName[1]),
               ],
             ),
           ),

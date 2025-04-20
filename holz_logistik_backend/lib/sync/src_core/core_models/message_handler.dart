@@ -1,2 +1,2 @@
-/// Handler type definition for message data processing
+/// A callback type for handling incoming websocket messages
 typedef MessageHandler = void Function(dynamic data);

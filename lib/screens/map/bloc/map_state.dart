@@ -13,7 +13,7 @@ final class MapState extends Equatable {
     this.trackingMode = true,
     this.newMarkerPosition,
     User? user,
-  })  : user = user ?? User.empty();
+  })  : user = user ?? User();
 
   final MapStatus status;
   final bool addMarkerMode;

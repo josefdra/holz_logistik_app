@@ -38,20 +38,7 @@ mixin ShipmentSortGettable implements Gettable {
 @JsonSerializable()
 class Shipment extends Equatable with ShipmentSortGettable {
   /// {@macro shipment_item}
-  const Shipment({
-    required this.id,
-    required this.lastEdit,
-    required this.quantity,
-    required this.oversizeQuantity,
-    required this.pieceCount,
-    required this.userId,
-    required this.contractId,
-    required this.sawmillId,
-    required this.locationId,
-  });
-
-  /// {@macro shipment_item}
-  Shipment.empty({
+  Shipment({
     String? id,
     DateTime? lastEdit,
     this.quantity = 0.0,

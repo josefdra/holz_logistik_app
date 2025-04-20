@@ -39,15 +39,7 @@ mixin PhotoSortGettable implements Gettable {
 @JsonSerializable()
 class Photo extends Equatable with PhotoSortGettable {
   /// {@macro photo_item}
-  const Photo({
-    required this.id,
-    required this.lastEdit,
-    required this.photoFile,
-    required this.locationId,
-  });
-
-  /// {@macro photo_item}
-  Photo.empty({
+  Photo({
     String? id,
     DateTime? lastEdit,
     Uint8List? photoFile,

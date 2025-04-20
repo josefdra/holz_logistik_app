@@ -451,7 +451,7 @@ class _NewSawmillField extends StatelessWidget {
       onChanged: (value) {
         context.read<EditLocationBloc>().add(
               EditLocationNewSawmillChanged(
-                Sawmill.empty(name: value),
+                Sawmill(name: value),
               ),
             );
       },
@@ -554,7 +554,7 @@ class _PhotoField extends StatelessWidget {
 
     if (photo != null) {
       final bytePhoto = await photo.readAsBytes();
-      final photoObject = Photo.empty(photoFile: bytePhoto);
+      final photoObject = Photo(photoFile: bytePhoto);
       photoObjects.add(photoObject);
     }
 
@@ -569,7 +569,7 @@ class _PhotoField extends StatelessWidget {
     if (photos.isNotEmpty) {
       for (final photo in photos) {
         final bytePhoto = await photo.readAsBytes();
-        final photoObject = Photo.empty(photoFile: bytePhoto);
+        final photoObject = Photo(photoFile: bytePhoto);
         photoObjects.add(photoObject);
       }
     }

@@ -108,13 +108,15 @@ class App extends StatelessWidget {
           lazy: false,
         ),
       ],
-      child: const AppView(),
+      child: AppView(coreSyncService: coreSyncService),
     );
   }
 }
 
 class AppView extends StatelessWidget {
-  const AppView({super.key});
+  const AppView({required this.coreSyncService, super.key});
+
+  final CoreSyncService coreSyncService;
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +141,7 @@ class AppView extends StatelessWidget {
           foregroundColor: Colors.white,
         ),
       ),
-      home: const MainPage(),
+      home: MainPage(coreSyncService: coreSyncService),
     );
   }
 }

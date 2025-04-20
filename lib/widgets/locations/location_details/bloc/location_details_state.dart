@@ -19,8 +19,8 @@ final class LocationDetailsState extends Equatable {
     this.shipments = const [],
     this.photos = const [],
     User? user,
-  })  : contract = contract ?? Contract.empty(),
-        user = user ?? User.empty();
+  })  : contract = contract ?? Contract(),
+        user = user ?? User();
 
   final LocationDetailsStatus status;
   final Location location;

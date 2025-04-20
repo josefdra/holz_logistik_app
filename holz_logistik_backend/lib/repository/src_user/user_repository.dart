@@ -39,6 +39,13 @@ class UserRepository {
     return _userSyncService.sendUserUpdate(user.toJson());
   }
 
+  /// Saves a future user.
+  Future<void> saveFutureUser(Future<User> userFuture) async {
+    final user = await userFuture;
+    await _userApi.saveUser(user);
+    return _userSyncService.sendUserUpdate(user.toJson());
+  }
+
   /// Deletes the `user` with the given id.
   Future<void> deleteUser(String id) {
     _userApi.deleteUser(id);

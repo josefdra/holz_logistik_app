@@ -43,7 +43,7 @@ class EditUserBloc extends Bloc<EditUserEvent, EditUserState> {
     Emitter<EditUserState> emit,
   ) async {
     emit(state.copyWith(status: EditUserStatus.loading));
-    final user = (state.initialUser ?? User.empty()).copyWith(
+    final user = (state.initialUser ?? User()).copyWith(
       role: state.role,
       lastEdit: DateTime.now(),
       name: state.name,

@@ -17,6 +17,7 @@ class LocationListPage extends StatelessWidget {
           locationRepository: context.read<LocationRepository>(),
           shipmentRepository: context.read<ShipmentRepository>(),
           photoRepository: context.read<PhotoRepository>(),
+          contractRepository: context.read<ContractRepository>(),
         ),
         child: const LocationListPage(),
       ),
@@ -30,6 +31,7 @@ class LocationListPage extends StatelessWidget {
         locationRepository: context.read<LocationRepository>(),
         shipmentRepository: context.read<ShipmentRepository>(),
         photoRepository: context.read<PhotoRepository>(),
+          contractRepository: context.read<ContractRepository>(),
       )..add(const LocationListSubscriptionRequested()),
       child: Scaffold(
         body: Column(

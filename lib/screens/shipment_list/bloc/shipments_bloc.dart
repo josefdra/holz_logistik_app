@@ -15,10 +15,12 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
     required SawmillRepository sawmillRepository,
     required ShipmentRepository shipmentRepository,
     required LocationRepository locationRepository,
+    required ContractRepository contractRepository,
   })  : _userRepository = userRepository,
         _sawmillRepository = sawmillRepository,
         _shipmentRepository = shipmentRepository,
         _locationRepository = locationRepository,
+        _contractRepository = contractRepository,
         super(ShipmentsState()) {
     on<ShipmentsSubscriptionRequested>(_onSubscriptionRequested);
     on<ShipmentsUsersUpdate>(_onUsersUpdate);
@@ -38,6 +40,7 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
   final SawmillRepository _sawmillRepository;
   final ShipmentRepository _shipmentRepository;
   final LocationRepository _locationRepository;
+  final ContractRepository _contractRepository;
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
@@ -163,6 +166,15 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
       event.shipment.oversizeQuantity,
       event.shipment.pieceCount,
       started: started,
+    );
+
+    final contract =
+        await _contractRepository.getContractById(event.shipment.contractId);
+
+    await _contractRepository.saveContract(
+      contract.copyWith(
+        shippedQuantity: contract.shippedQuantity - event.shipment.quantity,
+      ),
     );
   }
 

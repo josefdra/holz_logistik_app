@@ -16,6 +16,7 @@ class ShipmentsPage extends StatelessWidget {
           locationRepository: context.read<LocationRepository>(),
           userRepository: context.read<UserRepository>(),
           sawmillRepository: context.read<SawmillRepository>(),
+        contractRepository: context.read<ContractRepository>(),
         ),
         child: const ShipmentsPage(),
       ),
@@ -30,6 +31,7 @@ class ShipmentsPage extends StatelessWidget {
         locationRepository: context.read<LocationRepository>(),
         userRepository: context.read<UserRepository>(),
         sawmillRepository: context.read<SawmillRepository>(),
+        contractRepository: context.read<ContractRepository>(),
       )..add(const ShipmentsSubscriptionRequested()),
       child: const Scaffold(
         body: ShipmentList(),
@@ -148,7 +150,7 @@ class ShipmentList extends StatelessWidget {
             shipment: shipment,
             userName: state.users[shipment.userId]!.name,
             sawmillName:
-                state.sawmills[shipment.sawmillId]?.name ?? 'Test Name',
+                state.sawmills[shipment.sawmillId]!.name,
             onDeleted: () {
               context.read<ShipmentsBloc>().add(
                     ShipmentsShipmentDeleted(shipment),

@@ -17,11 +17,12 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   }
 
   static const _authCollectionKey = '__auth_collection_key__';
+  static const _apiKey = '__api_key__';
+
   final CoreLocalStorage _coreLocalStorage;
 
   // StreamController to broadcast updates on authentication
-  final _authenticationStreamController =
-      BehaviorSubject<User>.seeded(User.empty());
+  final _authenticationStreamController = BehaviorSubject<User>.seeded(User());
 
   /// Stream of authenticated user
   @override
@@ -30,6 +31,10 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   /// Authenticated user
   @override
   Future<User> get currentUser => getUser();
+
+  /// Authenticated user
+  @override
+  Future<String> get apiKey => getApiKey();
 
   Future<String?> _getValue(String key) async {
     final prefs = await _coreLocalStorage.sharedPreferences;
@@ -46,9 +51,9 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
       user = User.fromJson(userJson);
     } else {
-      user = User.empty();
+      user = User();
     }
-    
+
     _authenticationStreamController.add(user);
   }
 
@@ -61,7 +66,18 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
       return User.fromJson(userJson);
     } else {
-      return User.empty();
+      return User();
+    }
+  }
+
+  /// Gets the api key
+  Future<String> getApiKey() async {
+    final apiKey = await _getValue(_apiKey);
+
+    if (apiKey != null) {
+      return apiKey;
+    } else {
+      return '';
     }
   }
 
@@ -76,6 +92,11 @@ class AuthenticationLocalStorage extends AuthenticationApi {
     _authenticationStreamController.add(user);
 
     return _setValue(_authCollectionKey, json.encode(user));
+  }
+
+  @override
+  Future<void> setApiKey(String apiKey) {
+    return _setValue(_apiKey, apiKey);
   }
 
   @override

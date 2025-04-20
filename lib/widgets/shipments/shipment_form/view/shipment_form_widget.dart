@@ -31,6 +31,7 @@ class ShipmentFormWidget extends StatelessWidget {
         userId: userId,
         shipmentRepository: context.read<ShipmentRepository>(),
         locationRepository: context.read<LocationRepository>(),
+        contractRepository: context.read<ContractRepository>(),
       ),
       child: BlocListener<ShipmentFormBloc, ShipmentFormState>(
         listenWhen: (previous, current) =>

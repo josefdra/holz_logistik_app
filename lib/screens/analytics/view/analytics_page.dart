@@ -63,19 +63,10 @@ class AnalyticsView extends StatelessWidget {
             },
             child: BlocBuilder<AnalyticsPageBloc, AnalyticsPageState>(
               builder: (context, state) {
-                if (state.analyticsData.isEmpty) {
-                  if (state.status == AnalyticsPageStatus.loading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (state.status != AnalyticsPageStatus.success) {
-                    return const SizedBox();
-                  } else {
-                    return Center(
-                      child: Text(
-                        'Keine Analyse vorhanden',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    );
-                  }
+                if (state.status == AnalyticsPageStatus.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state.status != AnalyticsPageStatus.success) {
+                  return const SizedBox();
                 }
 
                 return Scrollbar(
@@ -105,19 +96,58 @@ class AnalyticsView extends StatelessWidget {
                           ],
                         ),
                       ),
-                      ...state.contracts.map((contract) {
-                        return AnalyticsContractListTile(
-                          contract: contract,
-                        );
-                      }),
-                      _buildDatePickerRow(context, state),
-                      ...state.analyticsData.values
-                          .where((dataElement) => dataElement.quantity > 0)
-                          .map(
-                            (dataElement) => AnalyticsSawmillListTile(
-                              data: dataElement,
+                      if (state.contracts.isNotEmpty) ...[
+                        const Padding(
+                          padding:
+                              EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                          child: Text(
+                            'Aktive Verträge',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
+                        ),
+                        ...state.contracts.map((contract) {
+                          return AnalyticsContractListTile(
+                            contract: contract,
+                          );
+                        }),
+                      ],
+                      if (state.analyticsData.values
+                          .any((dataElement) => dataElement.quantity > 0)) ...[
+                        const Padding(
+                          padding:
+                              EdgeInsets.only(left: 16, top: 16, bottom: 8),
+                          child: Text(
+                            'Sägewerksmengen',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        _buildDatePickerRow(context, state),
+                        ...state.analyticsData.values
+                            .where((dataElement) => dataElement.quantity > 0)
+                            .map(
+                              (dataElement) => AnalyticsSawmillListTile(
+                                data: dataElement,
+                              ),
+                            ),
+                      ],
+                      if (state.contracts.isEmpty &&
+                          !state.analyticsData.values
+                              .any((dataElement) => dataElement.quantity > 0))
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
+                            child: Text(
+                              'Keine Analyse vorhanden',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 );
@@ -155,45 +185,51 @@ class AnalyticsView extends StatelessWidget {
     BuildContext context,
     AnalyticsPageState state,
   ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        IconButton(
-          onPressed: () async {
-            final pickedDateRange = await showDateRangePicker(
-              context: context,
-              initialDateRange: DateTimeRange(
-                start: state.startDate,
-                end: state.endDate,
-              ),
-              firstDate: DateTime(2020),
-              lastDate: DateTime(2100),
-            );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          IconButton(
+            onPressed: () async {
+              final pickedDateRange = await showDateRangePicker(
+                context: context,
+                initialDateRange: DateTimeRange(
+                  start: state.startDate,
+                  end: state.endDate,
+                ),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+              );
 
-            if (pickedDateRange != null && context.mounted) {
-              context.read<AnalyticsPageBloc>().add(
-                    AnalyticsPageDateChanged(
-                      pickedDateRange.start,
-                      pickedDateRange.end
-                          .copyWith(hour: 23, minute: 59, second: 59),
-                    ),
-                  );
-            }
-          },
-          icon: const Icon(Icons.date_range),
-        ),
-        Center(
-          child: Text('${state.startDate.day}.${state.startDate.month}.'
+              if (pickedDateRange != null && context.mounted) {
+                context.read<AnalyticsPageBloc>().add(
+                      AnalyticsPageDateChanged(
+                        pickedDateRange.start,
+                        pickedDateRange.end
+                            .copyWith(hour: 23, minute: 59, second: 59),
+                      ),
+                    );
+              }
+            },
+            icon: const Icon(Icons.date_range),
+          ),
+          Flexible(
+            child: Text(
+              '${state.startDate.day}.${state.startDate.month}.'
               '${state.startDate.year} - ${state.endDate.day}.'
-              '${state.endDate.month}.${state.endDate.year}'),
-        ),
-        IconButton(
-          onPressed: () => context
-              .read<AnalyticsPageBloc>()
-              .add(const AnalyticsPageAutomaticDate()),
-          icon: const Icon(Icons.schedule),
-        ),
-      ],
+              '${state.endDate.month}.${state.endDate.year}',
+              textAlign: TextAlign.center,
+            ),
+          ),
+          IconButton(
+            onPressed: () => context
+                .read<AnalyticsPageBloc>()
+                .add(const AnalyticsPageAutomaticDate()),
+            icon: const Icon(Icons.schedule),
+          ),
+        ],
+      ),
     );
   }
 }

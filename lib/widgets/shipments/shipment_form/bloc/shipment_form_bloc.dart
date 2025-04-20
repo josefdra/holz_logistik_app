@@ -14,8 +14,10 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     required String userId,
     required ShipmentRepository shipmentRepository,
     required LocationRepository locationRepository,
+    required ContractRepository contractRepository,
   })  : _shipmentRepository = shipmentRepository,
         _locationRepository = locationRepository,
+        _contractRepository = contractRepository,
         super(
           ShipmentFormState(
             currentQuantity: currentQuantity,
@@ -36,6 +38,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
 
   final ShipmentRepository _shipmentRepository;
   final LocationRepository _locationRepository;
+  final ContractRepository _contractRepository;
 
   void _onQuantityUpdate(
     ShipmentFormQuantityUpdate event,
@@ -141,10 +144,10 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     return errors;
   }
 
-  void _onSubmitted(
+  Future<void> _onSubmitted(
     ShipmentFormSubmitted event,
     Emitter<ShipmentFormState> emit,
-  ) {
+  ) async {
     final validationErrors =
         !state.locationFinished ? _validateFields() : <String, String?>{};
 
@@ -161,7 +164,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     emit(state.copyWith(status: ShipmentFormStatus.loading));
 
     try {
-      final shipment = Shipment.empty().copyWith(
+      final shipment = Shipment().copyWith(
         quantity: state.quantity,
         oversizeQuantity: state.oversizeQuantity,
         pieceCount: state.pieceCount,
@@ -171,7 +174,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         locationId: state.location.id,
       );
 
-      _shipmentRepository.saveShipment(shipment);
+      await _shipmentRepository.saveShipment(shipment);
 
       emit(
         state.copyWith(
@@ -179,12 +182,21 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         ),
       );
 
-      _locationRepository.addShipment(
+      await _locationRepository.addShipment(
         shipment.locationId,
         shipment.quantity,
         shipment.oversizeQuantity,
         shipment.pieceCount,
         locationFinished: state.locationFinished,
+      );
+
+      final contract =
+          await _contractRepository.getContractById(shipment.contractId);
+
+      await _contractRepository.saveContract(
+        contract.copyWith(
+          shippedQuantity: contract.shippedQuantity + shipment.quantity,
+        ),
       );
     } catch (e) {
       emit(

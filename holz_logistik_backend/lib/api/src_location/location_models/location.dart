@@ -38,29 +38,7 @@ mixin LocationSortGettable implements Gettable {
 @JsonSerializable()
 class Location extends Equatable with LocationSortGettable {
   /// {@macro location_item}
-  const Location({
-    required this.id,
-    required this.done,
-    required this.started,
-    required this.lastEdit,
-    required this.latitude,
-    required this.longitude,
-    required this.partieNr,
-    required this.date,
-    required this.additionalInfo,
-    required this.initialQuantity,
-    required this.initialOversizeQuantity,
-    required this.initialPieceCount,
-    required this.currentQuantity,
-    required this.currentOversizeQuantity,
-    required this.currentPieceCount,
-    required this.contractId,
-    required this.sawmillIds,
-    required this.oversizeSawmillIds,
-  });
-
-  /// {@macro location_item}
-  Location.empty({
+  Location({
     String? id,
     this.done = false,
     this.started = false,

@@ -94,7 +94,7 @@ class EditNoteBloc extends Bloc<EditNoteEvent, EditNoteState> {
 
     emit(state.copyWith(status: EditNoteStatus.loading));
 
-    final note = (state.initialNote ?? Note.empty()).copyWith(
+    final note = (state.initialNote ?? Note()).copyWith(
       lastEdit: DateTime.now(),
       text: state.text,
       userId: state.user.id,

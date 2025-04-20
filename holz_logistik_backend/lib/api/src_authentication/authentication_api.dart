@@ -15,8 +15,14 @@ abstract class AuthenticationApi {
   /// Provides the current authenticated user.
   Future<User> get currentUser;
 
+  /// Provides the api key.
+  Future<String> get apiKey;
+
   /// Adds the authentication of [user].
   Future<void> updateAuthentication(User user);
+
+  /// Sets the api key.
+  Future<void> setApiKey(String apiKey);
 
   /// Removes the authenticated `user`.
   Future<void> removeAuthentication();

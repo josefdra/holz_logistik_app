@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -14,11 +15,14 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   MapBloc({
     required LocationRepository locationRepository,
     required AuthenticationRepository authenticationRepository,
+    required SawmillRepository sawmillRepository,
   })  : _locationRepository = locationRepository,
         _authenticationRepository = authenticationRepository,
+        _sawmillRepository = sawmillRepository,
         _locationService = LocationService(),
         super(MapState()) {
     on<MapSubscriptionRequested>(_onSubscriptionRequested);
+    on<MapSawmillsUpdate>(_onSawmillsUpdate);
     on<MapResetMapRotation>(_onResetMapRotation);
     on<MapAuthenticationUpdate>(_onAuthenticationUpdate);
     on<MapCenterToPosition>(_onCenterToPosition);
@@ -27,16 +31,21 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<MapLocationUpdated>(_onLocationUpdated);
     on<MapDisableTrackingMode>(_onDisableTrackingMode);
     on<MapMapTap>(_onMapTap);
+    on<MapConnectivityChanged>(_onConnectivityChanged);
 
     _initLocationTracking();
   }
 
   final LocationRepository _locationRepository;
   final AuthenticationRepository _authenticationRepository;
+  final SawmillRepository _sawmillRepository;
   final MapController mapController = MapController();
   final LocationService _locationService;
 
   late final StreamSubscription<User>? _authenticationSubscription;
+  late final StreamSubscription<Map<String, Sawmill>>? _sawmillSubscription;
+  late final StreamSubscription<List<ConnectivityResult>>?
+      _connectivitySubscription;
 
   Future<void> _initLocationTracking() async {
     await _locationService.initLocationService((latitude, longitude) {
@@ -59,6 +68,16 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         _authenticationRepository.authenticatedUser.listen(
       (user) => add(MapAuthenticationUpdate(user)),
     );
+
+    _sawmillSubscription = _sawmillRepository.sawmills.listen(
+      (sawmills) => add(MapSawmillsUpdate(sawmills)),
+    );
+
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.skip(1).listen(
+              (connectivity) =>
+                  add(MapConnectivityChanged(connectivity: connectivity)),
+            );
 
     await emit.forEach<List<Location>>(
       _locationRepository.activeLocations,
@@ -84,6 +103,13 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Emitter<MapState> emit,
   ) {
     emit(state.copyWith(user: event.user));
+  }
+
+  void _onSawmillsUpdate(
+    MapSawmillsUpdate event,
+    Emitter<MapState> emit,
+  ) {
+    emit(state.copyWith(sawmills: event.sawmills));
   }
 
   Future<void> _onCenterToPosition(
@@ -145,10 +171,27 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     );
   }
 
+  Future<void> _onConnectivityChanged(
+    MapConnectivityChanged event,
+    Emitter<MapState> emit,
+  ) async {
+    final result = event.connectivity[0];
+    if (result == ConnectivityResult.wifi ||
+        result == ConnectivityResult.mobile ||
+        result == ConnectivityResult.ethernet) {
+      mapController.move(
+        mapController.camera.center,
+        mapController.camera.zoom,
+      );
+    }
+  }
+
   @override
   Future<void> close() {
     _locationService.dispose();
     _authenticationSubscription?.cancel();
+    _sawmillSubscription?.cancel();
+    _connectivitySubscription?.cancel();
     return super.close();
   }
 }

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
-import 'package:holz_logistik/models/general/color.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik/screens/map/map.dart';
 import 'package:holz_logistik/widgets/locations/location_details/location_details.dart';
+import 'package:holz_logistik/widgets/map/map_marker.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -19,6 +19,7 @@ class MapPage extends StatelessWidget {
         create: (context) => MapBloc(
           locationRepository: context.read<LocationRepository>(),
           authenticationRepository: context.read<AuthenticationRepository>(),
+          sawmillRepository: context.read<SawmillRepository>(),
         ),
         child: const MapPage(),
       ),
@@ -31,6 +32,7 @@ class MapPage extends StatelessWidget {
       create: (context) => MapBloc(
         locationRepository: context.read<LocationRepository>(),
         authenticationRepository: context.read<AuthenticationRepository>(),
+        sawmillRepository: context.read<SawmillRepository>(),
       )..add(const MapSubscriptionRequested()),
       child: const Scaffold(
         body: MapView(),
@@ -120,10 +122,8 @@ class MapView extends StatelessWidget {
       markers: [
         if (state.userLocation != null)
           _buildUserLocationMarker(state.userLocation!),
-
         if (state.addMarkerMode == true && state.newMarkerPosition != null)
           _buildNewPositionMarker(state.newMarkerPosition!),
-
         ...state.locations.map(
           (location) => _buildLocationMarker(context, location),
         ),
@@ -164,28 +164,29 @@ class MapView extends StatelessWidget {
     );
   }
 
-  Marker _buildLocationMarker(BuildContext context, Location location) {
-    return Marker(
-      width: 50,
-      height: 50,
-      point: LatLng(location.latitude, location.longitude),
-      child: GestureDetector(
-        onTap: () {
-          final locationCopy = location.copyWith();
-          showDialog<LocationDetailsWidget>(
-            context: context,
-            builder: (context) => LocationDetailsWidget(
-              location: locationCopy,
-            ),
-          );
-        },
-        child: Icon(
-          !location.started ? Icons.location_pin : Icons.location_off,
-          color: colorFromString(location.contractId),
-          size: 50,
+  Marker _buildLocationMarker(
+    BuildContext context,
+    Location location,
+  ) {
+    void onTap() {
+      showDialog<void>(
+        context: context,
+        builder: (context) => LocationDetailsWidget(
+          location: location.copyWith(),
         ),
-      ),
+      );
+    }
+
+    final sawmills = context.read<MapBloc>().state.sawmills;
+
+    final mapMarker = MapMarker(
+      location: location,
+      sawmills: sawmills,
+      onTap: onTap,
+      infoMode: context.read<MapBloc>().state.showInfoMode,
     );
+
+    return mapMarker.buildMarker();
   }
 
   Widget _buildRightActionButtons(BuildContext context, MapState state) {
@@ -216,7 +217,7 @@ class MapView extends StatelessWidget {
               onPressed: () =>
                   context.read<MapBloc>().add(const MapToggleAddMarkerMode()),
               heroTag: 'mapPageCancelAddMarkerModeButton',
-              icon: Icons.cancel,
+              icon: Icons.close,
             ),
           if (state.addMarkerMode) const SizedBox(height: 10),
           if (state.user.role.isPrivileged)

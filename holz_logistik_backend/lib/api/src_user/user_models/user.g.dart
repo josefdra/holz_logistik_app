@@ -15,7 +15,7 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'id': instance.id,
-      'role': _$RoleEnumMap[instance.role]!,
+      'role': _$RoleEnumMap[instance.role],
       'lastEdit': instance.lastEdit.toIso8601String(),
       'name': instance.name,
     };

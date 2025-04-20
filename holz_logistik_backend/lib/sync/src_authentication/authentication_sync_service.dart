@@ -36,7 +36,8 @@ class AuthenticationSyncService {
   }
 
   /// Send authentication updates to server
-  Future<void> sendAuthenticationRequest(String apiKey) {
+  Future<void> connect(String apiKey) {
+    _coreSyncService.reconnect();
     return _coreSyncService
         .sendMessage('authentication_request', {'apiKey': apiKey});
   }

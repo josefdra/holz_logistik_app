@@ -15,9 +15,11 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     required LocationRepository locationRepository,
     required ShipmentRepository shipmentRepository,
     required PhotoRepository photoRepository,
+    required ContractRepository contractRepository,
   })  : _locationRepository = locationRepository,
         _shipmentRepository = shipmentRepository,
         _photoRepository = photoRepository,
+        _contractRepository = contractRepository,
         super(const LocationListState()) {
     on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
     on<LocationListLocationDeleted>(_onLocationDeleted);
@@ -32,6 +34,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   final LocationRepository _locationRepository;
   final ShipmentRepository _shipmentRepository;
   final PhotoRepository _photoRepository;
+  final ContractRepository _contractRepository;
   final scrollController = ScrollController();
 
   Future<void> _onSubscriptionRequested(
@@ -65,6 +68,14 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     await _photoRepository.deletePhotosByLocationId(
       locationId: event.location.id,
     );
+
+    final contract =
+        await _contractRepository.getContractById(event.location.contractId);
+    final updatedContract = contract.copyWith(
+      bookedQuantity: contract.bookedQuantity - event.location.currentQuantity,
+    );
+
+    await _contractRepository.saveContract(updatedContract);
   }
 
   void _onSearchQueryChanged(

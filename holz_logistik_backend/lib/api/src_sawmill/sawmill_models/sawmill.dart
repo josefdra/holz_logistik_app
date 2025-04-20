@@ -34,14 +34,7 @@ mixin SawmillSortGettable implements Gettable {
 @JsonSerializable()
 class Sawmill extends Equatable with SawmillSortGettable {
   /// {@macro sawmill_item}
-  const Sawmill({
-    required this.id,
-    required this.lastEdit,
-    required this.name,
-  });
-
-  /// {@macro sawmill_item}
-  Sawmill.empty({
+  Sawmill({
     String? id,
     DateTime? lastEdit,
     this.name = '',

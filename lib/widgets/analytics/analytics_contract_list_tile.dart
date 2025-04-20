@@ -14,12 +14,18 @@ class AnalyticsContractListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final restQuantity = contract.availableQuantity - contract.bookedQuantity;
 
-    final maxValue = contract.availableQuantity;
+    // Safely calculate percentages to avoid negative or invalid values
+    final maxValue =
+        contract.availableQuantity > 0 ? contract.availableQuantity : 1.0;
+
+    // Calculate booked percentage, ensure it's between 0 and 1
     final bookedPercentage =
-        maxValue > 0 ? (contract.bookedQuantity / maxValue) : 1.0;
-    final shippedPercentage = maxValue > 0
-        ? (contract.shippedQuantity / maxValue)
-        : (contract.shippedQuantity / contract.bookedQuantity);
+        (contract.bookedQuantity / maxValue).clamp(0.0, 1.0);
+
+    // Calculate shipped percentage, ensure it's between 0 and 1
+    final shippedPercentage = contract.bookedQuantity > 0
+        ? (contract.shippedQuantity / maxValue).clamp(0.0, 1.0)
+        : 0.0;
 
     return ListTile(
       title: Row(
@@ -58,20 +64,22 @@ class AnalyticsContractListTile extends StatelessWidget {
                   width: double.infinity,
                   color: Colors.grey.shade100,
                 ),
-                FractionallySizedBox(
-                  widthFactor: bookedPercentage > 1 ? 1 : bookedPercentage,
-                  heightFactor: 1,
-                  child: Container(
-                    color: const Color.fromARGB(255, 194, 218, 135),
+                if (bookedPercentage > 0)
+                  FractionallySizedBox(
+                    widthFactor: bookedPercentage,
+                    heightFactor: 1,
+                    child: Container(
+                      color: const Color.fromARGB(255, 194, 218, 135),
+                    ),
                   ),
-                ),
-                FractionallySizedBox(
-                  widthFactor: shippedPercentage > 1 ? 1 : shippedPercentage,
-                  heightFactor: 1,
-                  child: Container(
-                    color: const Color.fromARGB(255, 69, 131, 46),
+                if (shippedPercentage > 0)
+                  FractionallySizedBox(
+                    widthFactor: shippedPercentage,
+                    heightFactor: 1,
+                    child: Container(
+                      color: const Color.fromARGB(255, 69, 131, 46),
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -84,7 +92,7 @@ class AnalyticsContractListTile extends StatelessWidget {
                   children: [
                     _buildLegendItem(
                       text: 'Gebucht: ${contract.bookedQuantity} fm',
-                      color: const Color.fromARGB(255, 69, 131, 46),
+                      color: const Color.fromARGB(255, 194, 218, 135),
                     ),
                     _buildLegendItem(
                       text: 'Verfügbar: $restQuantity fm',
@@ -98,7 +106,7 @@ class AnalyticsContractListTile extends StatelessWidget {
                 children: [
                   _buildLegendItem(
                     text: 'Abgefahren: ${contract.shippedQuantity} fm',
-                    color: const Color.fromARGB(255, 194, 218, 135),
+                    color: const Color.fromARGB(255, 69, 131, 46),
                   ),
                   const SizedBox(height: 17),
                 ],

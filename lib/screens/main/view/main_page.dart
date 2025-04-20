@@ -8,14 +8,21 @@ import 'package:holz_logistik/screens/notes_list/notes_list.dart';
 import 'package:holz_logistik/screens/settings/settings.dart';
 import 'package:holz_logistik/screens/shipment_list/shipments.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
+import 'package:holz_logistik_backend/sync/sync.dart';
 
 class MainPage extends StatelessWidget {
-  const MainPage({super.key});
+  const MainPage({required this.coreSyncService, super.key});
+
+  final CoreSyncService coreSyncService;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => MainCubit(),
+      create: (_) => MainBloc(
+        authenticationRepository: context.read<AuthenticationRepository>(),
+        coreSyncService: coreSyncService,
+        userRepository: context.read<UserRepository>(),
+      )..add(const MainSubscriptionRequested()),
       child: const MainView(),
     );
   }
@@ -26,16 +33,15 @@ class MainView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedTab = context.select((MainCubit cubit) => cubit.state.tab);
+    return BlocBuilder<MainBloc, MainState>(
+      builder: (context, state) {
+        if (state.status == MainStatus.loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    return StreamBuilder<User>(
-      stream: context.read<AuthenticationRepository>().authenticatedUser,
-      builder: (context, snapshot) {
-        final isPrivileged = snapshot.data?.role.isPrivileged ?? false;
-
-        final effectiveIndex = isPrivileged
-            ? selectedTab.index
-            : (selectedTab.index >= 4 ? 0 : selectedTab.index);
+        final effectiveIndex = state.isPrivileged
+            ? state.selectedTab.index
+            : (state.selectedTab.index >= 4 ? 0 : state.selectedTab.index);
 
         final navItems = [
           const BottomNavigationBarItem(
@@ -56,7 +62,7 @@ class MainView extends StatelessWidget {
           ),
         ];
 
-        if (isPrivileged) {
+        if (state.isPrivileged) {
           navItems.add(
             const BottomNavigationBarItem(
               icon: Icon(Icons.analytics),
@@ -71,8 +77,12 @@ class MainView extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.settings),
-                onPressed: () =>
-                    Navigator.of(context).push(SettingsPage.route()),
+                onPressed: () => Navigator.of(context).push(
+                  SettingsPage.route(
+                    onApiKeyChanged: () =>
+                        context.read<MainBloc>().add(const MainApiKeyChanged()),
+                  ),
+                ),
               ),
             ],
           ),
@@ -83,14 +93,16 @@ class MainView extends StatelessWidget {
               const MapPage(),
               const NotesListPage(),
               const ShipmentsPage(),
-              if (isPrivileged) const AnalyticsPage(),
+              if (state.isPrivileged) const AnalyticsPage(),
             ],
           ),
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: effectiveIndex,
             onTap: (index) {
               if (index < navItems.length) {
-                context.read<MainCubit>().setTab(MainTab.values[index]);
+                context
+                    .read<MainBloc>()
+                    .add(MainTabChanged(MainTab.values[index]));
               }
             },
             type: BottomNavigationBarType.fixed,

@@ -7,16 +7,18 @@ import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:holz_logistik_backend/repository/authentication_repository.dart';
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+  const SettingsPage({this.onApiKeyChanged, super.key});
 
-  static Route<void> route() {
+  final VoidCallback? onApiKeyChanged;
+
+  static Route<void> route({VoidCallback? onApiKeyChanged}) {
     return MaterialPageRoute(
       fullscreenDialog: true,
       builder: (context) => BlocProvider(
         create: (context) => SettingsBloc(
           authenticationRepository: context.read<AuthenticationRepository>(),
-        ),
-        child: const SettingsPage(),
+        )..add(const SettingsSubscriptionRequested()),
+        child: SettingsPage(onApiKeyChanged: onApiKeyChanged),
       ),
     );
   }
@@ -27,7 +29,7 @@ class SettingsPage extends StatelessWidget {
       create: (context) => SettingsBloc(
         authenticationRepository: context.read<AuthenticationRepository>(),
       )..add(const SettingsSubscriptionRequested()),
-      child: const SettingsWidget(),
+      child: SettingsWidget(onApiKeyChanged: onApiKeyChanged),
     );
   }
 }
@@ -59,7 +61,9 @@ class CustomScaffold extends StatelessWidget {
 }
 
 class SettingsWidget extends StatelessWidget {
-  const SettingsWidget({super.key});
+  const SettingsWidget({super.key, this.onApiKeyChanged});
+
+  final VoidCallback? onApiKeyChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -111,9 +115,12 @@ class SettingsWidget extends StatelessWidget {
               const SizedBox(height: 16),
               Center(
                 child: ElevatedButton(
-                  onPressed: () => context.read<SettingsBloc>().add(
-                        const SettingsAuthenticationVerificationRequested(),
-                      ),
+                  onPressed: () {
+                    context.read<SettingsBloc>().add(
+                          const SettingsAuthenticationVerificationRequested(),
+                        );
+                    onApiKeyChanged?.call();
+                  },
                   child: Text(l10n.settingsSaveButtonText),
                 ),
               ),

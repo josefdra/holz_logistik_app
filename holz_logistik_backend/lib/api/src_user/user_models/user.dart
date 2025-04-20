@@ -70,15 +70,7 @@ extension RoleX on Role {
 @JsonSerializable()
 class User extends Equatable with UserSortGettable {
   /// {@macro user_item}
-  const User({
-    required this.id,
-    required this.role,
-    required this.lastEdit,
-    required this.name,
-  });
-
-  /// {@macro user_item}
-  User.empty({
+  User({
     String? id,
     this.role = Role.basic,
     DateTime? lastEdit,

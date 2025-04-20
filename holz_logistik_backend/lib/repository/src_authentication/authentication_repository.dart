@@ -27,6 +27,9 @@ class AuthenticationRepository {
   /// Provides the authenticated user.
   Future<User> get currentUser => _authenticationApi.currentUser;
 
+  /// Provides the api key.
+  Future<String> get apiKey => _authenticationApi.apiKey;
+
   /// Handle updates from Server
   void _handleAuthenticationUpdates(Map<String, dynamic> data) {
     if (data['authenticated'] == true || data['authenticated'] == 1) {
@@ -36,9 +39,16 @@ class AuthenticationRepository {
     }
   }
 
-  /// Requests user authentication with a [apiKey].
-  Future<void> requestAuthentication(String apiKey) {
-    return _authenticationSyncService.sendAuthenticationRequest(apiKey);
+  /// Requests user authentication.
+  Future<void> connect() async {
+    final apiKey = await _authenticationApi.apiKey;
+
+    return _authenticationSyncService.connect(apiKey);
+  }
+
+  /// Updates the apiKey and requests authentication
+  Future<void> updateApiKey(String apiKey) {
+    return _authenticationApi.setApiKey(apiKey);
   }
 
   /// Disposes any resources managed by the repository.

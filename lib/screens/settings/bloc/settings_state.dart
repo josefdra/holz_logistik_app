@@ -14,7 +14,7 @@ final class SettingsState extends Equatable {
     this.status = SettingsStatus.initial,
     User? authenticatedUser,
     this.apiKey = '',
-  }) : authenticatedUser = authenticatedUser ?? User.empty();
+  }) : authenticatedUser = authenticatedUser ?? User();
 
   final SettingsStatus status;
   final User authenticatedUser;

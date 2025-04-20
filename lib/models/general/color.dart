@@ -16,16 +16,17 @@ Color colorFromString(String input) {
   // Use a portion of the hash to create a hue (0-360)
   final hue = int.parse(hexString.substring(0, 3), radix: 16) % 360;
 
-  // Determine whether to use a "light" or "dark" variant based on another portion of the hash
+  // Determine whether to use a "light" or "dark" variant based on another 
+  // portion of the hash
   // This creates more variety in the colors while maintaining visibility
   final useLightVariant =
-      int.parse(hexString.substring(6, 8), radix: 16) % 2 == 0;
+      int.parse(hexString.substring(6, 8), radix: 16).isEven;
 
   // For map visibility, we want:
   // - High saturation (makes colors pop against gray/neutral map backgrounds)
   // - Brightness that contrasts with typical map elements
-  double saturation = 1.0;
-  double brightness = useLightVariant ? 1.0 : 0.7;
+  var saturation = 1.0;
+  var brightness = useLightVariant ? 1.0 : 0.7;
 
   // Maps often have greens, blues, and beiges/tans
   // Adjust saturation and brightness based on the hue to improve visibility

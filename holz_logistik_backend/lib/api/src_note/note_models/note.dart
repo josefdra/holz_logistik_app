@@ -37,15 +37,7 @@ mixin NoteSortGettable implements Gettable {
 @JsonSerializable()
 class Note extends Equatable with NoteSortGettable {
   /// {@macro note_item}
-  const Note({
-    required this.id,
-    required this.lastEdit,
-    required this.text,
-    required this.userId,
-  });
-
-  /// {@macro note_item}
-  Note.empty({
+  Note({
     String? id,
     DateTime? lastEdit,
     this.text = '',

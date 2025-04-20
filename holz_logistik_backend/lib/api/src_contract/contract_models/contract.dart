@@ -38,21 +38,7 @@ mixin ContractSortGettable implements Gettable {
 @JsonSerializable()
 class Contract extends Equatable with ContractSortGettable {
   /// {@macro contract_item}
-  const Contract({
-    required this.id,
-    required this.done,
-    required this.lastEdit,
-    required this.title,
-    required this.additionalInfo,
-    required this.startDate,
-    required this.endDate,
-    required this.availableQuantity,
-    required this.bookedQuantity,
-    required this.shippedQuantity,
-  });
-
-  /// {@macro contract_item}
-  Contract.empty({
+  Contract({
     String? id,
     this.done = false,
     DateTime? lastEdit,
