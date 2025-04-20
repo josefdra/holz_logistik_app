@@ -1,0 +1,1 @@
+/Users/josefdra/dev/projects/holz_logistik/holz_logistik_release/build/app/intermediates/cxx/Debug/5cn3v3h6/obj/arm64-v8a

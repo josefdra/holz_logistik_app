@@ -1,0 +1,2 @@
+/Users/josefdra/dev/projects/holz_logistik/app/android/app/.cxx/Debug/2f2l601n/x86/CMakeFiles/edit_cache.dir
+/Users/josefdra/dev/projects/holz_logistik/app/android/app/.cxx/Debug/2f2l601n/x86/CMakeFiles/rebuild_cache.dir

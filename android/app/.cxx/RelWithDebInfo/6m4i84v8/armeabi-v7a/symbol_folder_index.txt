@@ -1,0 +1,1 @@
+/Users/josefdra/dev/projects/holz_logistik/app/build/app/intermediates/cxx/RelWithDebInfo/6m4i84v8/obj/armeabi-v7a

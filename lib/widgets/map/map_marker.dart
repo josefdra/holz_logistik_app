@@ -17,23 +17,26 @@ class MapMarker {
   final VoidCallback onTap;
   final bool infoMode;
 
-  Marker buildMarker() {
+  List<Marker> build() {
+    final markerPoint = LatLng(location.latitude, location.longitude);
     final markerIcon = Icon(
       !location.started ? Icons.location_pin : Icons.location_off,
       color: colorFromString(location.contractId),
       size: 50,
     );
 
+    final baseMarker = Marker(
+      width: 50,
+      height: 50,
+      point: markerPoint,
+      child: GestureDetector(
+        onTap: onTap,
+        child: markerIcon,
+      ),
+    );
+
     if (!infoMode) {
-      return Marker(
-        width: 50,
-        height: 50,
-        point: LatLng(location.latitude, location.longitude),
-        child: GestureDetector(
-          onTap: onTap,
-          child: markerIcon,
-        ),
-      );
+      return [baseMarker];
     } else {
       final sawmillNames = location.sawmillIds != null
           ? location.sawmillIds!
@@ -52,84 +55,79 @@ class MapMarker {
 
       const infoBoxWidth = 300.0;
 
-      return Marker(
+      final infoBoxMarker = Marker(
+        alignment: const Alignment(0, -2.2),
         width: infoBoxWidth,
-        height: 200,
-        point: LatLng(location.latitude, location.longitude),
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              bottom: 0,
-              child: GestureDetector(
-                onTap: onTap,
-                child: markerIcon,
+        height: showRegularSawmills
+            ? showOversizeSawmills
+                ? 75
+                : 58
+            : 40,
+        point: markerPoint,
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+          child: IntrinsicWidth(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: colorFromString(location.contractId),
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(4),
               ),
-            ),
-            Positioned(
-              bottom: 50,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.white,
-                child: IntrinsicWidth(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: colorFromString(location.contractId),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    constraints: const BoxConstraints(
-                      maxWidth: infoBoxWidth,
-                      minWidth: 120,
-                    ),
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Menge: ${location.currentQuantity} fm, davon ÜS: '
-                          '${location.currentOversizeQuantity} fm',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          softWrap: true,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 2,
-                        ),
-                        if (showRegularSawmills)
-                          Tooltip(
-                            message: 'Sägewerke: $sawmillNames',
-                            child: Text(
-                              '\nSägewerke: $sawmillNames',
-                              style: const TextStyle(fontSize: 12),
-                              softWrap: true,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 10,
-                            ),
-                          ),
-                        if (showOversizeSawmills)
-                          Tooltip(
-                            message: 'ÜS Sägewerke: $oversizeSawmillNames',
-                            child: Text(
-                              '\nÜS Sägewerke: $oversizeSawmillNames',
-                              style: const TextStyle(fontSize: 12),
-                              softWrap: true,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 10,
-                            ),
-                          ),
-                      ],
+              constraints: const BoxConstraints(
+                maxWidth: infoBoxWidth,
+                minWidth: 120,
+              ),
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Text(
+                      'Menge: ${location.currentQuantity} fm, davon ÜS: '
+                      '${location.currentOversizeQuantity} fm',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                     ),
                   ),
-                ),
+                  if (showRegularSawmills)
+                    Tooltip(
+                      message: 'Sägewerke: $sawmillNames',
+                      child: Center(
+                        child: Text(
+                          'Sägewerke: $sawmillNames',
+                          style: const TextStyle(fontSize: 12),
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  if (showOversizeSawmills)
+                    Tooltip(
+                      message: 'ÜS Sägewerke: $oversizeSawmillNames',
+                      child: Center(
+                        child: Text(
+                          'ÜS Sägewerke: $oversizeSawmillNames',
+                          style: const TextStyle(fontSize: 12),
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       );
+
+      return [baseMarker, infoBoxMarker];
     }
   }
 }

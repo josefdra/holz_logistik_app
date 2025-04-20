@@ -7,30 +7,41 @@ part of 'location.dart';
 // **************************************************************************
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
-      id: json['id'] as String,
-      done: TypeConverters.boolFromInt((json['done'] as num).toInt()),
-      started: TypeConverters.boolFromInt((json['started'] as num).toInt()),
-      lastEdit: DateTime.parse(json['lastEdit'] as String),
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      partieNr: json['partieNr'] as String,
-      date: DateTime.parse(json['date'] as String),
-      additionalInfo: json['additionalInfo'] as String,
-      initialQuantity: (json['initialQuantity'] as num).toDouble(),
+      id: json['id'] as String?,
+      // ignore: avoid_bool_literals_in_conditional_expressions
+      done: json['done'] == null
+          ? false
+          : TypeConverters.boolFromInt((json['done'] as num).toInt()),
+      // ignore: avoid_bool_literals_in_conditional_expressions
+      started: json['started'] == null
+          ? false
+          : TypeConverters.boolFromInt((json['started'] as num).toInt()),
+      lastEdit: json['lastEdit'] == null
+          ? null
+          : DateTime.parse(json['lastEdit'] as String),
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
+      partieNr: json['partieNr'] as String? ?? '',
+      date:
+          json['date'] == null ? null : DateTime.parse(json['date'] as String),
+      additionalInfo: json['additionalInfo'] as String? ?? '',
+      initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? 0,
       initialOversizeQuantity:
-          (json['initialOversizeQuantity'] as num).toDouble(),
-      initialPieceCount: (json['initialPieceCount'] as num).toInt(),
-      currentQuantity: (json['currentQuantity'] as num).toDouble(),
+          (json['initialOversizeQuantity'] as num?)?.toDouble() ?? 0,
+      initialPieceCount: (json['initialPieceCount'] as num?)?.toInt() ?? 0,
+      currentQuantity: (json['currentQuantity'] as num?)?.toDouble() ?? 0,
       currentOversizeQuantity:
-          (json['currentOversizeQuantity'] as num).toDouble(),
-      currentPieceCount: (json['currentPieceCount'] as num).toInt(),
-      contractId: json['contractId'] as String,
+          (json['currentOversizeQuantity'] as num?)?.toDouble() ?? 0,
+      currentPieceCount: (json['currentPieceCount'] as num?)?.toInt() ?? 0,
+      contractId: json['contractId'] as String? ?? '',
       sawmillIds: (json['sawmillIds'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       oversizeSawmillIds: (json['oversizeSawmillIds'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{

@@ -7,10 +7,12 @@ part of 'note.dart';
 // **************************************************************************
 
 Note _$NoteFromJson(Map<String, dynamic> json) => Note(
-      id: json['id'] as String,
-      lastEdit: DateTime.parse(json['lastEdit'] as String),
-      text: json['text'] as String,
-      userId: json['userId'] as String,
+      id: json['id'] as String?,
+      lastEdit: json['lastEdit'] == null
+          ? null
+          : DateTime.parse(json['lastEdit'] as String),
+      text: json['text'] as String? ?? '',
+      userId: json['userId'] as String? ?? '',
     );
 
 Map<String, dynamic> _$NoteToJson(Note instance) => <String, dynamic>{

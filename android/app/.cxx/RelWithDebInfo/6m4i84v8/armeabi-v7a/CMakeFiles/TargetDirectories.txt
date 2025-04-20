@@ -1,0 +1,2 @@
+/Users/josefdra/dev/projects/holz_logistik/app/android/app/.cxx/RelWithDebInfo/6m4i84v8/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/josefdra/dev/projects/holz_logistik/app/android/app/.cxx/RelWithDebInfo/6m4i84v8/armeabi-v7a/CMakeFiles/rebuild_cache.dir

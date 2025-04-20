@@ -119,12 +119,13 @@ class MapView extends StatelessWidget {
 
   Widget _buildMarkerLayer(BuildContext context, MapState state) {
     return MarkerLayer(
+      alignment: const Alignment(0, -0.9),
       markers: [
         if (state.userLocation != null)
           _buildUserLocationMarker(state.userLocation!),
         if (state.addMarkerMode == true && state.newMarkerPosition != null)
           _buildNewPositionMarker(state.newMarkerPosition!),
-        ...state.locations.map(
+        ...state.locations.expand(
           (location) => _buildLocationMarker(context, location),
         ),
       ],
@@ -133,6 +134,7 @@ class MapView extends StatelessWidget {
 
   Marker _buildUserLocationMarker(LatLng position) {
     return Marker(
+      alignment: Alignment.center,
       width: 25,
       height: 25,
       point: position,
@@ -157,6 +159,7 @@ class MapView extends StatelessWidget {
 
   Marker _buildNewPositionMarker(LatLng position) {
     return Marker(
+      alignment: const Alignment(0, -0.5),
       width: 50,
       height: 50,
       point: position,
@@ -164,7 +167,7 @@ class MapView extends StatelessWidget {
     );
   }
 
-  Marker _buildLocationMarker(
+  List<Marker> _buildLocationMarker(
     BuildContext context,
     Location location,
   ) {
@@ -186,7 +189,7 @@ class MapView extends StatelessWidget {
       infoMode: context.read<MapBloc>().state.showInfoMode,
     );
 
-    return mapMarker.buildMarker();
+    return mapMarker.build();
   }
 
   Widget _buildRightActionButtons(BuildContext context, MapState state) {

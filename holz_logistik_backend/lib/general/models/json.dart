@@ -18,18 +18,27 @@ class TypeConverters {
 }
 
 /// Converts byte list to json
-class Uint8ListConverter implements JsonConverter<Uint8List, List<dynamic>> {
+class Uint8ListConverter implements JsonConverter<Uint8List, dynamic> {
   /// Converts byte list to json
   const Uint8ListConverter();
 
   @override
-  Uint8List fromJson(List<dynamic> json) {
-    // Convert the List<dynamic> to List<int> before creating Uint8List
-    return Uint8List.fromList(json.cast<int>());
+  Uint8List fromJson(dynamic json) {
+    if (json == null) return Uint8List(0);
+
+    if (json is List) {
+      return Uint8List.fromList(json.cast<int>());
+    } else if (json is Uint8List) {
+      return json;
+    }
+
+    // Handle database BLOB case
+    return json as Uint8List;
   }
 
   @override
-  List<int> toJson(Uint8List object) {
-    return object.toList();
+  dynamic toJson(Uint8List object) {
+    // For SQLite, return Uint8List directly
+    return object;
   }
 }

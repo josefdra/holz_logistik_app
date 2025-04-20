@@ -7,15 +7,17 @@ part of 'shipment.dart';
 // **************************************************************************
 
 Shipment _$ShipmentFromJson(Map<String, dynamic> json) => Shipment(
-      id: json['id'] as String,
-      lastEdit: DateTime.parse(json['lastEdit'] as String),
-      quantity: (json['quantity'] as num).toDouble(),
-      oversizeQuantity: (json['oversizeQuantity'] as num).toDouble(),
-      pieceCount: (json['pieceCount'] as num).toInt(),
-      userId: json['userId'] as String,
-      contractId: json['contractId'] as String,
-      sawmillId: json['sawmillId'] as String,
-      locationId: json['locationId'] as String,
+      id: json['id'] as String?,
+      lastEdit: json['lastEdit'] == null
+          ? null
+          : DateTime.parse(json['lastEdit'] as String),
+      quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
+      oversizeQuantity: (json['oversizeQuantity'] as num?)?.toDouble() ?? 0.0,
+      pieceCount: (json['pieceCount'] as num?)?.toInt() ?? 0,
+      userId: json['userId'] as String? ?? '',
+      contractId: json['contractId'] as String? ?? '',
+      sawmillId: json['sawmillId'] as String? ?? '',
+      locationId: json['locationId'] as String? ?? '',
     );
 
 Map<String, dynamic> _$ShipmentToJson(Shipment instance) => <String, dynamic>{
