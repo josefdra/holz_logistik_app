@@ -13,6 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.0
+  flutter_image_compress: ^2.4.0
   flutter_image_slideshow: ^0.1.6
   flutter_localizations:
     sdk: flutter

@@ -14,6 +14,7 @@ class UserRepository {
   })  : _userApi = userApi,
         _userSyncService = userSyncService {
     _userSyncService.userUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final UserApi _userApi;
@@ -22,12 +23,22 @@ class UserRepository {
   /// Provides a [Stream] of all users.
   Stream<Map<String, User>> get users => _userApi.users;
 
+  void _init() {
+    _userSyncService
+      ..registerDateGetter(_userApi.getLastSyncDate)
+      ..registerDateSetter(_userApi.setLastSyncDate)
+      ..registerDataGetter(_userApi.getUpdates);
+  }
+
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _userApi.deleteUser(data['id'] as String);
     } else {
-      _userApi.saveUser(User.fromJson(data));
+      final user = User.fromJson(data);
+      _userApi
+        ..saveUser(user)
+        ..setLastSyncDate('fromServer', user.lastEdit);
     }
   }
 

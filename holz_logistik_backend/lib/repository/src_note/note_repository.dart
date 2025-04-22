@@ -14,6 +14,7 @@ class NoteRepository {
   })  : _noteApi = noteApi,
         _noteSyncService = noteSyncService {
     _noteSyncService.noteUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final NoteApi _noteApi;
@@ -22,12 +23,22 @@ class NoteRepository {
   /// Provides a [Stream] of all notes.
   Stream<List<Note>> get notes => _noteApi.notes;
 
+  void _init() {
+    _noteSyncService
+      ..registerDateGetter(_noteApi.getLastSyncDate)
+      ..registerDateSetter(_noteApi.setLastSyncDate)
+      ..registerDataGetter(_noteApi.getUpdates);
+  }
+
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _noteApi.deleteNote(data['id'] as String);
     } else {
-      _noteApi.saveNote(Note.fromJson(data));
+      final note = Note.fromJson(data);
+      _noteApi
+        ..saveNote(note)
+        ..setLastSyncDate('fromServer', note.lastEdit);
     }
   }
 

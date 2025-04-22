@@ -8,16 +8,21 @@ part of 'photo.dart';
 
 Photo _$PhotoFromJson(Map<String, dynamic> json) => Photo(
       id: json['id'] as String?,
-      lastEdit: json['lastEdit'] == null
-          ? null
-          : DateTime.parse(json['lastEdit'] as String),
+      lastEdit: _$JsonConverterFromJson<String, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson,),
       photoFile: const Uint8ListConverter().fromJson(json['photoFile']),
       locationId: json['locationId'] as String? ?? '',
     );
 
 Map<String, dynamic> _$PhotoToJson(Photo instance) => <String, dynamic>{
       'id': instance.id,
-      'lastEdit': instance.lastEdit.toIso8601String(),
+      'lastEdit': const DateTimeConverter().toJson(instance.lastEdit),
       'photoFile': const Uint8ListConverter().toJson(instance.photoFile),
       'locationId': instance.locationId,
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) =>
+    json == null ? null : fromJson(json as Json);

@@ -14,6 +14,7 @@ class SawmillRepository {
   })  : _sawmillApi = sawmillApi,
         _sawmillSyncService = sawmillSyncService {
     _sawmillSyncService.sawmillUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final SawmillApi _sawmillApi;
@@ -22,12 +23,22 @@ class SawmillRepository {
   /// Provides a [Stream] of all sawmills.
   Stream<Map<String, Sawmill>> get sawmills => _sawmillApi.sawmills;
 
+  void _init() {
+    _sawmillSyncService
+      ..registerDateGetter(_sawmillApi.getLastSyncDate)
+      ..registerDateSetter(_sawmillApi.setLastSyncDate)
+      ..registerDataGetter(_sawmillApi.getUpdates);
+  }
+
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _sawmillApi.deleteSawmill(data['id'] as String);
     } else {
-      _sawmillApi.saveSawmill(Sawmill.fromJson(data));
+      final sawmill = Sawmill.fromJson(data);
+      _sawmillApi
+        ..saveSawmill(sawmill)
+        ..setLastSyncDate('fromServer', sawmill.lastEdit);
     }
   }
 

@@ -29,6 +29,9 @@ class SawmillLocalStorage extends SawmillApi {
   late final Stream<Map<String, Sawmill>> _sawmills =
       _sawmillStreamController.stream;
 
+  static const _syncToServerKey = '__sawmill_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__sawmill_sync_from_server_date_key__';
+
   /// Migration function for sawmill table
   Future<void> _migrateSawmillTable(
     Database db,
@@ -53,6 +56,47 @@ class SawmillLocalStorage extends SawmillApi {
 
   @override
   Stream<Map<String, Sawmill>> get sawmills => _sawmills;
+
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets sawmill updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      SawmillTable.tableName,
+      where: '${SawmillTable.columnLastEdit} >= ? ORDER BY '
+          '${SawmillTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    return result;
+  }
 
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
   Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {

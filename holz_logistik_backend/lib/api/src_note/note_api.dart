@@ -10,6 +10,15 @@ abstract class NoteApi {
   /// Provides a [Stream] of all notes.
   Stream<List<Note>> get notes;
 
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String type);
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String type, DateTime date);
+
+  /// Gets updates
+  Future<List<Map<String, dynamic>>> getUpdates();
+
   /// Saves or updates a [note].
   ///
   /// If a [note] with the same id already exists, it will be updated.

@@ -57,6 +57,7 @@ class Photo extends Equatable with PhotoSortGettable {
   ///
   /// Cannot be empty.
   @override
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The photo file.

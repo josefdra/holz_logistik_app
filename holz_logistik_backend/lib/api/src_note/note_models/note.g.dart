@@ -8,16 +8,21 @@ part of 'note.dart';
 
 Note _$NoteFromJson(Map<String, dynamic> json) => Note(
       id: json['id'] as String?,
-      lastEdit: json['lastEdit'] == null
-          ? null
-          : DateTime.parse(json['lastEdit'] as String),
+      lastEdit: _$JsonConverterFromJson<String, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson,),
       text: json['text'] as String? ?? '',
       userId: json['userId'] as String? ?? '',
     );
 
 Map<String, dynamic> _$NoteToJson(Note instance) => <String, dynamic>{
       'id': instance.id,
-      'lastEdit': instance.lastEdit.toIso8601String(),
+      'lastEdit': const DateTimeConverter().toJson(instance.lastEdit),
       'text': instance.text,
       'userId': instance.userId,
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) =>
+    json == null ? null : fromJson(json as Json);

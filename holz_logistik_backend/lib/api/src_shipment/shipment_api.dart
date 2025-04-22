@@ -10,6 +10,15 @@ abstract class ShipmentApi {
   /// Provides updates on shipments.
   Stream<Shipment> get shipmentUpdates;
 
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String type);
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String type, DateTime date);
+
+  /// Gets updates
+  Future<List<Map<String, dynamic>>> getUpdates();
+
   /// Provides shipments by location.
   Future<List<Shipment>> getShipmentsByLocation(String locationId);
 

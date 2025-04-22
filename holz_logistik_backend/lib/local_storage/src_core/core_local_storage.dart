@@ -115,7 +115,7 @@ class CoreLocalStorage {
     String id,
   ) async {
     final db = await database;
-    
+
     return db.query(
       tableName,
       where: '$columnName = ?',
@@ -129,6 +129,7 @@ class CoreLocalStorage {
     return db.insert(
       tableName,
       data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
@@ -140,6 +141,7 @@ class CoreLocalStorage {
       data,
       where: 'id = ?',
       whereArgs: [data['id']],
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
@@ -170,7 +172,7 @@ class CoreLocalStorage {
     String id,
   ) async {
     final db = await database;
-    
+
     return db.delete(
       tableName,
       where: '$columnName = ?',

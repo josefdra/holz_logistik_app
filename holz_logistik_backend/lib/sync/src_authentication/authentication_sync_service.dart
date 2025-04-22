@@ -11,9 +11,9 @@ class AuthenticationSyncService {
   AuthenticationSyncService({
     required CoreSyncService coreSyncService,
   }) : _coreSyncService = coreSyncService {
-    _coreSyncService.registerHandler(
-      'authentication_response',
-      _handleAuthenticationUpdate,
+    _coreSyncService.registerMessageHandler(
+      messageType: 'authentication_response',
+      messageHandler: _handleAuthenticationUpdate,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:holz_logistik_backend/sync/core_sync_service.dart';
 
 /// {@template contract_sync_service}
@@ -11,7 +12,10 @@ class ContractSyncService {
   ContractSyncService({
     required CoreSyncService coreSyncService,
   }) : _coreSyncService = coreSyncService {
-    _coreSyncService.registerHandler('contract_update', _handleContractUpdate);
+    _coreSyncService.registerMessageHandler(
+      messageType: 'contract_update',
+      messageHandler: _handleContractUpdate,
+    );
   }
 
   final CoreSyncService _coreSyncService;
@@ -27,6 +31,42 @@ class ContractSyncService {
   void _handleContractUpdate(dynamic data) {
     try {
       _contractUpdateController.add(data as Map<String, dynamic>);
+    } catch (e) {
+      // Handle parsing errors
+    }
+  }
+
+  /// Register a date getter
+  void registerDateGetter(DateGetter dateGetter) {
+    try {
+      _coreSyncService.registerDateGetter(
+        type: 'contract_update',
+        dateGetter: dateGetter,
+      );
+    } catch (e) {
+      // Handle parsing errors
+    }
+  }
+
+  /// Register a date setter
+  void registerDateSetter(DateSetter dateSetter) {
+    try {
+      _coreSyncService.registerDateSetter(
+        type: 'contract_update',
+        dateSetter: dateSetter,
+      );
+    } catch (e) {
+      // Handle parsing errors
+    }
+  }
+
+  /// Register a date setter
+  void registerDataGetter(DataGetter dataGetter) {
+    try {
+      _coreSyncService.registerDataGetter(
+        type: 'contract_update',
+        dataGetter: dataGetter,
+      );
     } catch (e) {
       // Handle parsing errors
     }

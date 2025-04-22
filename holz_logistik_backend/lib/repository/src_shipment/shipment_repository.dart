@@ -14,6 +14,7 @@ class ShipmentRepository {
   })  : _shipmentApi = shipmentApi,
         _shipmentSyncService = shipmentSyncService {
     _shipmentSyncService.shipmentUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final ShipmentApi _shipmentApi;
@@ -21,6 +22,13 @@ class ShipmentRepository {
 
   /// Provides a [Stream] of shipment updates.
   Stream<Shipment> get shipmentUpdates => _shipmentApi.shipmentUpdates;
+
+  void _init() {
+    _shipmentSyncService
+      ..registerDateGetter(_shipmentApi.getLastSyncDate)
+      ..registerDateSetter(_shipmentApi.setLastSyncDate)
+      ..registerDataGetter(_shipmentApi.getUpdates);
+  }
 
   /// Provides shipments by location.
   Future<List<Shipment>> getShipmentsByLocation(String locationId) =>
@@ -38,7 +46,10 @@ class ShipmentRepository {
         locationId: data['locationId'] as String,
       );
     } else {
-      _shipmentApi.saveShipment(Shipment.fromJson(data));
+      final shipment = Shipment.fromJson(data);
+      _shipmentApi
+        ..saveShipment(shipment)
+        ..setLastSyncDate('fromServer', shipment.lastEdit);
     }
   }
 

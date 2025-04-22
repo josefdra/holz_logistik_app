@@ -37,6 +37,9 @@ class LocationLocalStorage extends LocationApi {
   late final Stream<Location> _locationUpdates =
       _locationUpdatesStreamController.stream;
 
+  static const _syncToServerKey = '__location_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__location_sync_from_server_date_key__';
+
   /// Migration function for location table
   Future<void> _migrateLocationSawmillTable(
     Database db,
@@ -126,6 +129,49 @@ class LocationLocalStorage extends LocationApi {
 
   @override
   Stream<Location> get locationUpdates => _locationUpdates;
+
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets location updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      LocationTable.tableName,
+      where: '${LocationTable.columnLastEdit} >= ? ORDER BY '
+          '${LocationTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    final locations = await _addSawmillsToLocations(result);
+
+    return locations.map((location) => location.toJson()).toList();
+  }
 
   @override
   Future<List<Location>> getFinishedLocationsByDate(

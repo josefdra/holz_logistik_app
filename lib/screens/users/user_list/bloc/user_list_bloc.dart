@@ -33,7 +33,7 @@ class UserListBloc extends Bloc<UserListEvent, UserListState> {
       _userRepository.users,
       onData: (users) => state.copyWith(
         status: UserListStatus.success,
-        users: users.values as List<User>?,
+        users: users.values.toList(),
       ),
       onError: (_, __) => state.copyWith(
         status: UserListStatus.failure,

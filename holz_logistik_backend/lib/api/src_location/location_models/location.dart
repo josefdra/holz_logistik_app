@@ -107,6 +107,7 @@ class Location extends Equatable with LocationSortGettable {
   final bool started;
 
   /// The time the `location` was last modified.
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The latitude of the `location`.
@@ -127,6 +128,7 @@ class Location extends Equatable with LocationSortGettable {
 
   /// The date of the `location`.
   @override
+  @DateTimeConverter()
   final DateTime date;
 
   /// The additional information of the `location`.

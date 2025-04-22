@@ -27,6 +27,9 @@ class UserLocalStorage extends UserApi {
 
   late final Stream<Map<String, User>> _users = _userStreamController.stream;
 
+  static const _syncToServerKey = '__user_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__user_sync_from_server_date_key__';
+
   /// Migration function for user table
   Future<void> _migrateUserTable(
     Database db,
@@ -53,6 +56,47 @@ class UserLocalStorage extends UserApi {
   @override
   Stream<Map<String, User>> get users => _users;
 
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets user updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      UserTable.tableName,
+      where: '${UserTable.columnLastEdit} >= ? ORDER BY '
+          '${UserTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    return result;
+  }
+
   /// Insert or Update a `user` to the database based on [userData]
   Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
     return _coreLocalStorage.insertOrUpdate(UserTable.tableName, userData);
@@ -61,6 +105,8 @@ class UserLocalStorage extends UserApi {
   /// Insert or Update a [user]
   @override
   Future<int> saveUser(User user) async {
+    if(user.name == '') return 0;
+
     final result = await _insertOrUpdateUser(user.toJson());
     final users = Map<String, User>.from(_userStreamController.value);
 

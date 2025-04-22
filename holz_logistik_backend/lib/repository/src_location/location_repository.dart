@@ -14,6 +14,7 @@ class LocationRepository {
   })  : _locationApi = locationApi,
         _locationSyncService = locationSyncService {
     _locationSyncService.locationUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final LocationApi _locationApi;
@@ -23,8 +24,14 @@ class LocationRepository {
   Stream<List<Location>> get activeLocations => _locationApi.activeLocations;
 
   /// Provides updates on finished locations.
-  Stream<Location> get locationUpdates =>
-      _locationApi.locationUpdates;
+  Stream<Location> get locationUpdates => _locationApi.locationUpdates;
+
+  void _init() {
+    _locationSyncService
+      ..registerDateGetter(_locationApi.getLastSyncDate)
+      ..registerDateSetter(_locationApi.setLastSyncDate)
+      ..registerDataGetter(_locationApi.getUpdates);
+  }
 
   /// Provides finished locations.
   Future<List<Location>> getFinishedLocationsByDate(
@@ -45,7 +52,10 @@ class LocationRepository {
         done: data['done'] as bool,
       );
     } else {
-      _locationApi.saveLocation(Location.fromJson(data));
+      final location = Location.fromJson(data);
+      _locationApi
+        ..saveLocation(location)
+        ..setLastSyncDate('fromServer', location.lastEdit);
     }
   }
 

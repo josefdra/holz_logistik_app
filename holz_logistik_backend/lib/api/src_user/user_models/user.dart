@@ -92,6 +92,7 @@ class User extends Equatable with UserSortGettable {
   ///
   /// Cannot be empty.
   @override
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The name of the `user`.

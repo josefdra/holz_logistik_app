@@ -25,8 +25,10 @@ class NoteLocalStorage extends NoteApi {
     const [],
   );
 
-  late final Stream<List<Note>> _notes =
-      _noteStreamController.stream;
+  late final Stream<List<Note>> _notes = _noteStreamController.stream;
+
+  static const _syncToServerKey = '__note_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__note_sync_from_server_date_key__';
 
   /// Migration function for note table
   Future<void> _migrateNoteTable(
@@ -48,6 +50,47 @@ class NoteLocalStorage extends NoteApi {
 
   @override
   Stream<List<Note>> get notes => _notes;
+
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets note updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      NoteTable.tableName,
+      where: '${NoteTable.columnLastEdit} >= ? ORDER BY '
+          '${NoteTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    return result;
+  }
 
   /// Insert or Update a `note` to the database based on [noteData]
   Future<int> _insertOrUpdateNote(Map<String, dynamic> noteData) async {
@@ -80,10 +123,9 @@ class NoteLocalStorage extends NoteApi {
   @override
   Future<int> deleteNote(String id) async {
     final result = await _deleteNote(id);
-    final notes = [..._noteStreamController.value];
-    final noteIndex = notes.indexWhere((n) => n.id == id);
+    final notes = [..._noteStreamController.value]
+      ..removeWhere((n) => n.id == id);
 
-    notes.removeAt(noteIndex);
     _noteStreamController.add(notes);
 
     return result;

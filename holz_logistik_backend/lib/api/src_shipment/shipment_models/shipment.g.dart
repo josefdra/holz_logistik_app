@@ -8,9 +8,8 @@ part of 'shipment.dart';
 
 Shipment _$ShipmentFromJson(Map<String, dynamic> json) => Shipment(
       id: json['id'] as String?,
-      lastEdit: json['lastEdit'] == null
-          ? null
-          : DateTime.parse(json['lastEdit'] as String),
+      lastEdit: _$JsonConverterFromJson<String, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson,),
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
       oversizeQuantity: (json['oversizeQuantity'] as num?)?.toDouble() ?? 0.0,
       pieceCount: (json['pieceCount'] as num?)?.toInt() ?? 0,
@@ -22,7 +21,7 @@ Shipment _$ShipmentFromJson(Map<String, dynamic> json) => Shipment(
 
 Map<String, dynamic> _$ShipmentToJson(Shipment instance) => <String, dynamic>{
       'id': instance.id,
-      'lastEdit': instance.lastEdit.toIso8601String(),
+      'lastEdit': const DateTimeConverter().toJson(instance.lastEdit),
       'quantity': instance.quantity,
       'oversizeQuantity': instance.oversizeQuantity,
       'pieceCount': instance.pieceCount,
@@ -31,3 +30,9 @@ Map<String, dynamic> _$ShipmentToJson(Shipment instance) => <String, dynamic>{
       'sawmillId': instance.sawmillId,
       'locationId': instance.locationId,
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) =>
+    json == null ? null : fromJson(json as Json);

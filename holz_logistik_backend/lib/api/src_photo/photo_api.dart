@@ -10,6 +10,15 @@ abstract class PhotoApi {
   /// Provides updates on finished photos
   Stream<String> get photoUpdates;
 
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String type);
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String type, DateTime date);
+
+  /// Gets updates
+  Future<List<Map<String, dynamic>>> getUpdates();
+
   /// Tests if a photo already exists
   Future<bool> checkIfPhotoExists(String photoId);
 

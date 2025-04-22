@@ -72,6 +72,7 @@ class Contract extends Equatable with ContractSortGettable {
   ///
   /// Cannot be empty.
   @override
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The title of the `contract`.
@@ -88,11 +89,13 @@ class Contract extends Equatable with ContractSortGettable {
   /// Start date of the `contract`.
   ///
   /// Cannot be empty.
+  @DateTimeConverter()
   final DateTime startDate;
 
   /// End date of the `contract`.
   ///
   /// Cannot be empty.
+  @DateTimeConverter()
   final DateTime endDate;
 
   /// The available quantity of the `contract`.

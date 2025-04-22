@@ -26,6 +26,9 @@ class PhotoLocalStorage extends PhotoApi {
   late final Stream<String> _photoUpdates =
       _photoUpdatesStreamController.stream;
 
+  static const _syncToServerKey = '__photo_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__photo_sync_from_server_date_key__';
+
   /// Migration function for photo table
   Future<void> _migratePhotoTable(
     Database db,
@@ -37,6 +40,47 @@ class PhotoLocalStorage extends PhotoApi {
 
   @override
   Stream<String> get photoUpdates => _photoUpdates;
+
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets photo updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      PhotoTable.tableName,
+      where: '${PhotoTable.columnLastEdit} >= ? ORDER BY '
+          '${PhotoTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    return result;
+  }
 
   @override
   Future<bool> checkIfPhotoExists(String photoId) async {

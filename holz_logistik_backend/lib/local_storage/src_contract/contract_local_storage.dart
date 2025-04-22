@@ -35,6 +35,9 @@ class ContractLocalStorage extends ContractApi {
   late final Stream<Contract> _contractUpdates =
       _contractUpdatesStreamController.stream;
 
+  static const _syncToServerKey = '__contract_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__contract_sync_from_server_date_key__';
+
   /// Migration function for contract table
   Future<void> _migrateContractTable(
     Database db,
@@ -74,6 +77,47 @@ class ContractLocalStorage extends ContractApi {
 
   @override
   Stream<Contract> get contractUpdates => _contractUpdates;
+
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets contract updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      ContractTable.tableName,
+      where: '${ContractTable.columnLastEdit} >= ? ORDER BY '
+          '${ContractTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    return result;
+  }
 
   @override
   Future<List<Contract>> getFinishedContractsByDate(

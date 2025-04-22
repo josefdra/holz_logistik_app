@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:holz_logistik_backend/sync/core_sync_service.dart';
 import 'package:rxdart/subjects.dart';
 import 'package:web_socket_channel/status.dart' as status;
@@ -26,6 +27,15 @@ class CoreSyncService {
   // Map to store message type to handler mappings
   final Map<String, MessageHandler> _messageHandlers = {};
 
+  // Map to store date getters
+  final Map<String, DateGetter> _dateGetters = {};
+
+  // Map to store date setters
+  final Map<String, DateSetter> _dateSetters = {};
+
+  // Map to store data getters
+  final Map<String, DataGetter> _dataGetters = {};
+
   // StreamController to broadcast updates on connection
   final _connectionStreamController =
       BehaviorSubject<ConnectionStatus>.seeded(ConnectionStatus.disconnected);
@@ -45,6 +55,18 @@ class CoreSyncService {
   Timer? _reconnectTimer;
   static const int _maxReconnectAttempts = 5;
   static const Duration _initialReconnectDelay = Duration(seconds: 2);
+  Timer? _connectionStatusDebounceTimer;
+  final _debounceTime = const Duration(seconds: 2);
+
+  void _setConnectionStatus(ConnectionStatus status) {
+    _connectionStatusDebounceTimer?.cancel();
+    _connectionStatusDebounceTimer = Timer(_debounceTime, () {
+      if (!_connectionStreamController.isClosed &&
+          _connectionStreamController.value != status) {
+        _connectionStreamController.add(status);
+      }
+    });
+  }
 
   void _scheduleReconnect() {
     if (_reconnectAttempts >= _maxReconnectAttempts) {
@@ -65,13 +87,46 @@ class CoreSyncService {
   }
 
   /// Register a handler for a specific message type
-  void registerHandler(String messageType, MessageHandler handler) {
-    _messageHandlers[messageType] = handler;
+  void registerMessageHandler({
+    required String messageType,
+    required MessageHandler messageHandler,
+  }) {
+    _messageHandlers[messageType] = messageHandler;
+  }
+
+  /// Register a handler for a specific type
+  void registerDateGetter({
+    required String type,
+    required DateGetter dateGetter,
+  }) {
+    _dateGetters[type] = dateGetter;
+  }
+
+  /// Register a handler for a specific type
+  void registerDateSetter({
+    required String type,
+    required DateSetter dateSetter,
+  }) {
+    _dateSetters[type] = dateSetter;
+  }
+
+  /// Register a handler for a specific type
+  void registerDataGetter({
+    required String type,
+    required DataGetter dataGetter,
+  }) {
+    _dataGetters[type] = dataGetter;
   }
 
   /// Connect to the WebSocket server
   Future<void> _connect() async {
-    _connectionStreamController.add(ConnectionStatus.connecting);
+    final status = _connectionStreamController.value;
+    final connected = !(status == ConnectionStatus.error ||
+        status == ConnectionStatus.disconnected);
+
+    if (connected) return Future<void>.value();
+
+    _setConnectionStatus(ConnectionStatus.connecting);
 
     try {
       final uri = Uri.parse(_url);
@@ -89,11 +144,11 @@ class CoreSyncService {
         _startPingTimer();
 
         // Connection successful
-        _connectionStreamController.add(ConnectionStatus.connected);
+        _setConnectionStatus(ConnectionStatus.connected);
       }
     } catch (e) {
       debugPrint('WebSocket connection error: $e');
-      _connectionStreamController.add(ConnectionStatus.error);
+      _setConnectionStatus(ConnectionStatus.error);
 
       // Implement automatic reconnection with backoff
       _scheduleReconnect();
@@ -121,7 +176,7 @@ class CoreSyncService {
     if (_missedPongs >= _maxMissedPongs) {
       debugPrint('WebSocket connection lost: too many missed pongs');
       _cleanup();
-      _connectionStreamController.add(ConnectionStatus.disconnected);
+      _setConnectionStatus(ConnectionStatus.disconnected);
     }
   }
 
@@ -139,6 +194,8 @@ class CoreSyncService {
       final message = rawMessage is String
           ? jsonDecode(rawMessage) as Map<String, dynamic>
           : rawMessage as Map<String, dynamic>;
+
+      print(message);
 
       // Process with registered handlers
       final type = message['type'] as String;
@@ -161,14 +218,14 @@ class CoreSyncService {
   /// Handle WebSocket errors
   void _handleError(dynamic error) {
     debugPrint('WebSocket error: $error');
-    _connectionStreamController.add(ConnectionStatus.error);
+    _setConnectionStatus(ConnectionStatus.error);
     _cleanup();
   }
 
   /// Handle WebSocket connection closure
   void _handleDone() {
     debugPrint('WebSocket connection closed');
-    _connectionStreamController.add(ConnectionStatus.disconnected);
+    _setConnectionStatus(ConnectionStatus.disconnected);
     _cleanup();
   }
 
@@ -178,6 +235,7 @@ class CoreSyncService {
     _pongTimeoutTimer?.cancel();
     _channelSubscription?.cancel();
     _channelSubscription = null;
+    _setConnectionStatus(ConnectionStatus.disconnected);
 
     try {
       _channel?.sink.close(status.normalClosure);
@@ -202,11 +260,44 @@ class CoreSyncService {
         return Future<void>.value();
       } catch (e) {
         debugPrint('Error sending WebSocket message: $e');
-        _connectionStreamController.add(ConnectionStatus.error);
+        _setConnectionStatus(ConnectionStatus.error);
       }
     }
 
     return Future<void>.value();
+  }
+
+  /// Sends data for all registered types
+  Future<void> sendSyncData() async {
+    for (final key in _dataGetters.keys) {
+      final dataList = await _dataGetters[key]!.call();
+
+      for (final data in dataList) {
+        await sendMessage(key, data);
+        await _dateSetters[key]!
+            .call('toServer', DateTime.parse(data['lastEdit'] as String));
+      }
+    }
+
+    return sendMessage('sync_complete', null);
+  }
+
+  /// Request a sync for all registered types
+  Future<void> sendSyncRequest() async {
+    final data = <String, String>{};
+
+    for (final key in _dateGetters.keys) {
+      final date = await _dateGetters[key]!.call('fromServer');
+      data[key] = date.toIso8601String();
+    }
+
+    return sendMessage('sync_request', data);
+  }
+
+  /// Syncs everything
+  Future<void> sync() async {
+    await sendSyncData();
+    await sendSyncRequest();
   }
 
   /// Reconnect to the WebSocket server

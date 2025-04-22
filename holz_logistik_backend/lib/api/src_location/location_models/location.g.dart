@@ -8,22 +8,19 @@ part of 'location.dart';
 
 Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       id: json['id'] as String?,
-      // ignore: avoid_bool_literals_in_conditional_expressions
       done: json['done'] == null
           ? false
           : TypeConverters.boolFromInt((json['done'] as num).toInt()),
-      // ignore: avoid_bool_literals_in_conditional_expressions
       started: json['started'] == null
           ? false
           : TypeConverters.boolFromInt((json['started'] as num).toInt()),
-      lastEdit: json['lastEdit'] == null
-          ? null
-          : DateTime.parse(json['lastEdit'] as String),
+      lastEdit: _$JsonConverterFromJson<String, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson,),
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       partieNr: json['partieNr'] as String? ?? '',
-      date:
-          json['date'] == null ? null : DateTime.parse(json['date'] as String),
+      date: _$JsonConverterFromJson<String, DateTime>(
+          json['date'], const DateTimeConverter().fromJson,),
       additionalInfo: json['additionalInfo'] as String? ?? '',
       initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? 0,
       initialOversizeQuantity:
@@ -48,11 +45,11 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'id': instance.id,
       'done': TypeConverters.boolToInt(instance.done),
       'started': TypeConverters.boolToInt(instance.started),
-      'lastEdit': instance.lastEdit.toIso8601String(),
+      'lastEdit': const DateTimeConverter().toJson(instance.lastEdit),
       'latitude': instance.latitude,
       'longitude': instance.longitude,
       'partieNr': instance.partieNr,
-      'date': instance.date.toIso8601String(),
+      'date': const DateTimeConverter().toJson(instance.date),
       'additionalInfo': instance.additionalInfo,
       'initialQuantity': instance.initialQuantity,
       'initialOversizeQuantity': instance.initialOversizeQuantity,
@@ -64,3 +61,9 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'sawmillIds': instance.sawmillIds,
       'oversizeSawmillIds': instance.oversizeSawmillIds,
     };
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) =>
+    json == null ? null : fromJson(json as Json);

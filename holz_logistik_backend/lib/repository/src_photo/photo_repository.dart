@@ -14,6 +14,7 @@ class PhotoRepository {
   })  : _photoApi = photoApi,
         _photoSyncService = photoSyncService {
     _photoSyncService.photoUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final PhotoApi _photoApi;
@@ -21,6 +22,13 @@ class PhotoRepository {
 
   /// Provides a [Stream] of photoUpdates.
   Stream<String> get photoUpdates => _photoApi.photoUpdates;
+
+  void _init() {
+    _photoSyncService
+      ..registerDateGetter(_photoApi.getLastSyncDate)
+      ..registerDateSetter(_photoApi.setLastSyncDate)
+      ..registerDataGetter(_photoApi.getUpdates);
+  }
 
   /// Provides photos.
   Future<List<Photo>> getPhotosByLocation(String locationId) =>
@@ -34,7 +42,10 @@ class PhotoRepository {
         locationId: data['locationId'] as String,
       );
     } else {
-      _photoApi.savePhoto(Photo.fromJson(data));
+      final photo = Photo.fromJson(data);
+      _photoApi
+        ..savePhoto(photo)
+        ..setLastSyncDate('fromServer', photo.lastEdit);
     }
   }
 
@@ -54,14 +65,14 @@ class PhotoRepository {
     for (final photo in photos) {
       final photoExists = await _photoApi.checkIfPhotoExists(photo.id);
       if (!photoExists) {
-        unawaited(savePhoto(photo.copyWith(locationId: locationId)));
+        await savePhoto(photo.copyWith(locationId: locationId));
       }
       newPhotoIds.add(photo.id);
     }
 
     for (final oldId in oldPhotoIds) {
       if (!newPhotoIds.any((id) => id == oldId)) {
-        unawaited(deletePhoto(id: oldId, locationId: locationId));
+        await deletePhoto(id: oldId, locationId: locationId);
       }
     }
 

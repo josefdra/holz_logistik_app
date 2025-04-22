@@ -26,6 +26,9 @@ class ShipmentLocalStorage extends ShipmentApi {
   late final Stream<Shipment> _shipmentUpdates =
       _shipmentUpdatesStreamController.stream;
 
+  static const _syncToServerKey = '__shipment_sync_to_server_date_key__';
+  static const _syncFromServerKey = '__shipment_sync_from_server_date_key__';
+
   /// Migration function for shipment table
   Future<void> _migrateShipmentTable(
     Database db,
@@ -37,6 +40,47 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   @override
   Stream<Shipment> get shipmentUpdates => _shipmentUpdates;
+
+  /// Provides the last sync date
+  @override
+  Future<DateTime> getLastSyncDate(String type) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    final dateString = prefs.getString(key);
+    final date = dateString != null
+        ? DateTime.parse(dateString)
+        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  @override
+  Future<void> setLastSyncDate(String type, DateTime date) async {
+    final prefs = await _coreLocalStorage.sharedPreferences;
+    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+
+    await prefs.setString(key, date.toUtc().toIso8601String());
+  }
+
+  /// Gets shipment updates
+  @override
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+    final date = await getLastSyncDate('toServer');
+
+    final result = await db.query(
+      ShipmentTable.tableName,
+      where: '${ShipmentTable.columnLastEdit} >= ? ORDER BY '
+          '${ShipmentTable.columnLastEdit} ASC',
+      whereArgs: [
+        date.toIso8601String(),
+      ],
+    );
+
+    return result;
+  }
 
   @override
   Future<List<Shipment>> getShipmentsByLocation(String locationId) async {

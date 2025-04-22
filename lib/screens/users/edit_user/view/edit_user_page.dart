@@ -65,12 +65,16 @@ class EditUserView extends StatelessWidget {
             ? const CircularProgressIndicator()
             : const Icon(Icons.check),
       ),
-      body: const Scrollbar(
+      body: Scrollbar(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
-              children: [_RoleField(), _NameField()],
+              children: [
+                const _RoleField(),
+                const _NameField(),
+                if (!isNewUser) const _IdField(),
+              ],
             ),
           ),
         ),
@@ -120,6 +124,39 @@ class _NameField extends StatelessWidget {
       onChanged: (value) {
         context.read<EditUserBloc>().add(EditUserNameChanged(value));
       },
+    );
+  }
+}
+
+class _IdField extends StatelessWidget {
+  const _IdField();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<EditUserBloc>().state;
+    final userId = state.initialUser!.id;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Id: $userId'),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.copy, size: 18),
+          constraints: const BoxConstraints(),
+          padding: const EdgeInsets.all(4),
+          tooltip: 'Copy ID',
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: userId));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('ID kopiert'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

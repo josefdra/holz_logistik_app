@@ -34,41 +34,15 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   late final StreamSubscription<List<ConnectivityResult>>?
       _connectivitySubscription;
 
-  Timer? _reconnectTimer;
-  bool _isConnecting = false;
-  int _reconnectAttempts = 0;
-  final int _maxReconnectAttempts = 5;
-  final Duration _reconnectInterval = const Duration(seconds: 3);
-
   void _attemptReconnect() {
-    if (_isConnecting || _reconnectAttempts >= _maxReconnectAttempts) {
-      return;
-    }
-
-    _isConnecting = true;
-    _reconnectAttempts++;
-
-    add(
-      const MainConnectionChanged(
-        ConnectionStatus.reconnecting,
-      ),
-    );
-
-    _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(_reconnectInterval, () {
-      _authenticationRepository.connect();
-      _userRepository.saveFutureUser(_authenticationRepository.currentUser);
-      _isConnecting = false;
-    });
+    _authenticationRepository.connect();
+    _userRepository.saveFutureUser(_authenticationRepository.currentUser);
   }
 
   Future<void> _authenticate() async {
-    await _authenticationRepository.connect();
-    await _userRepository.saveFutureUser(_authenticationRepository.currentUser);
-
     add(
       const MainConnectionChanged(
-        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
       ),
     );
   }
@@ -84,10 +58,11 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(MainConnectionChanged(status));
     });
 
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
-          (connectivity) =>
-              add(MainConnectivityChanged(connectivity: connectivity)),
-        );
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.skip(1).listen(
+              (connectivity) =>
+                  add(MainConnectivityChanged(connectivity: connectivity)),
+            );
 
     add(const MainApiKeyChanged());
 
@@ -123,14 +98,19 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     MainConnectionChanged event,
     Emitter<MainState> emit,
   ) async {
-    if (event.connectionStatus == ConnectionStatus.connected) {
-      _reconnectAttempts = 0;
-    } else if (event.connectionStatus == ConnectionStatus.disconnected ||
-        event.connectionStatus == ConnectionStatus.error) {
-      _attemptReconnect();
-    }
-
     emit(state.copyWith(connectionStatus: event.connectionStatus));
+
+    if (event.connectionStatus == ConnectionStatus.connected) {
+      await _coreSyncService.sync();
+    } else if ((event.connectionStatus == ConnectionStatus.disconnected ||
+            event.connectionStatus == ConnectionStatus.error) &&
+        !state.isReconnecting) {
+      emit(state.copyWith(isReconnecting: true));
+
+      _attemptReconnect();
+
+      emit(state.copyWith(isReconnecting: false));
+    }
   }
 
   Future<void> _onConnectivityChanged(
@@ -151,7 +131,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   Future<void> close() async {
     await _connectionUpdatesSubscription?.cancel();
     await _connectivitySubscription?.cancel();
-    _reconnectTimer?.cancel();
     return super.close();
   }
 }

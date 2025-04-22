@@ -54,6 +54,7 @@ class Note extends Equatable with NoteSortGettable {
   ///
   /// Cannot be empty.
   @override
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The text of the `note`.

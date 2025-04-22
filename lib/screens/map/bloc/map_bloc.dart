@@ -74,7 +74,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     );
 
     _connectivitySubscription =
-        Connectivity().onConnectivityChanged.skip(1).listen(
+        Connectivity().onConnectivityChanged.listen(
               (connectivity) =>
                   add(MapConnectivityChanged(connectivity: connectivity)),
             );
@@ -120,7 +120,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     mapController.rotate(0);
 
     if (state.trackingMode && state.userLocation != null) {
-      mapController.move(state.userLocation!, 15);
+      mapController.move(state.userLocation!, 14);
     }
   }
 

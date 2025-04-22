@@ -60,6 +60,7 @@ class Shipment extends Equatable with ShipmentSortGettable {
   ///
   /// Cannot be empty.
   @override
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The quantity of the `shipment`.

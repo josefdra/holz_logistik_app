@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
@@ -553,9 +556,29 @@ class _PhotoField extends StatelessWidget {
     final photoObjects = <Photo>[];
 
     if (photo != null) {
-      final bytePhoto = await photo.readAsBytes();
-      final photoObject = Photo(photoFile: bytePhoto);
-      photoObjects.add(photoObject);
+      final photoFile = File(photo.path);
+      final fileSize = await photoFile.length();
+
+      if (fileSize < 2 * 1024 * 1024) {
+        final bytePhoto = await photo.readAsBytes();
+        final photoObject = Photo(photoFile: bytePhoto);
+        photoObjects.add(photoObject);
+      } else {
+        const maxSize = 2 * 1024 * 1024;
+        var quality = (maxSize / fileSize * 100).round();
+
+        quality = quality.clamp(50, 90);
+
+        final compressedData = await FlutterImageCompress.compressWithFile(
+          photo.path,
+          quality: quality,
+        );
+
+        if (compressedData != null) {
+          final photoObject = Photo(photoFile: compressedData);
+          photoObjects.add(photoObject);
+        }
+      }
     }
 
     return photoObjects;
@@ -568,9 +591,29 @@ class _PhotoField extends StatelessWidget {
 
     if (photos.isNotEmpty) {
       for (final photo in photos) {
-        final bytePhoto = await photo.readAsBytes();
-        final photoObject = Photo(photoFile: bytePhoto);
-        photoObjects.add(photoObject);
+        final photoFile = File(photo.path);
+        final fileSize = await photoFile.length();
+
+        if (fileSize < 2 * 1024 * 1024) {
+          final bytePhoto = await photo.readAsBytes();
+          final photoObject = Photo(photoFile: bytePhoto);
+          photoObjects.add(photoObject);
+        } else {
+          const maxSize = 2 * 1024 * 1024;
+          var quality = (maxSize / fileSize * 100).round();
+
+          quality = quality.clamp(50, 90);
+
+          final compressedData = await FlutterImageCompress.compressWithFile(
+            photo.path,
+            quality: quality,
+          );
+
+          if (compressedData != null) {
+            final photoObject = Photo(photoFile: compressedData);
+            photoObjects.add(photoObject);
+          }
+        }
       }
     }
 

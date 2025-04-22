@@ -14,17 +14,24 @@ class ContractRepository {
   })  : _contractApi = contractApi,
         _contractSyncService = contractSyncService {
     _contractSyncService.contractUpdates.listen(_handleServerUpdate);
+    _init();
   }
 
   final ContractApi _contractApi;
   final ContractSyncService _contractSyncService;
 
   /// Provides a [Stream] of active contracts.
-  Stream<List<Contract>> get activeContracts =>
-      _contractApi.activeContracts;
+  Stream<List<Contract>> get activeContracts => _contractApi.activeContracts;
 
   /// Provides a [Stream] of updates on finished contracts.
   Stream<Contract> get contractUpdates => _contractApi.contractUpdates;
+
+  void _init() {
+    _contractSyncService
+      ..registerDateGetter(_contractApi.getLastSyncDate)
+      ..registerDateSetter(_contractApi.setLastSyncDate)
+      ..registerDataGetter(_contractApi.getUpdates);
+  }
 
   /// Provides finished contracts by date.
   Future<List<Contract>> getFinishedContractsByDate(
@@ -49,7 +56,10 @@ class ContractRepository {
         done: data['done'] as bool,
       );
     } else {
-      _contractApi.saveContract(Contract.fromJson(data));
+      final contract = Contract.fromJson(data);
+      _contractApi
+        ..saveContract(contract)
+        ..setLastSyncDate('fromServer', contract.lastEdit);
     }
   }
 

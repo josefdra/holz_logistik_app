@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:holz_logistik_backend/sync/core_sync_service.dart';
 
 /// {@template location_sync_service}
@@ -11,7 +12,10 @@ class LocationSyncService {
   LocationSyncService({
     required CoreSyncService coreSyncService,
   }) : _coreSyncService = coreSyncService {
-    _coreSyncService.registerHandler('location_update', _handleLocationUpdate);
+    _coreSyncService.registerMessageHandler(
+      messageType: 'location_update',
+      messageHandler: _handleLocationUpdate,
+    );
   }
 
   final CoreSyncService _coreSyncService;
@@ -27,6 +31,42 @@ class LocationSyncService {
   void _handleLocationUpdate(dynamic data) {
     try {
       _locationUpdateController.add(data as Map<String, dynamic>);
+    } catch (e) {
+      // Handle parsing errors
+    }
+  }
+
+  /// Register a date getter
+  void registerDateGetter(DateGetter dateGetter) {
+    try {
+      _coreSyncService.registerDateGetter(
+        type: 'location_update',
+        dateGetter: dateGetter,
+      );
+    } catch (e) {
+      // Handle parsing errors
+    }
+  }
+
+  /// Register a date setter
+  void registerDateSetter(DateSetter dateSetter) {
+    try {
+      _coreSyncService.registerDateSetter(
+        type: 'location_update',
+        dateSetter: dateSetter,
+      );
+    } catch (e) {
+      // Handle parsing errors
+    }
+  }
+
+  /// Register a date setter
+  void registerDataGetter(DataGetter dataGetter) {
+    try {
+      _coreSyncService.registerDataGetter(
+        type: 'location_update',
+        dataGetter: dataGetter,
+      );
     } catch (e) {
       // Handle parsing errors
     }

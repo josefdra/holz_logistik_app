@@ -10,6 +10,15 @@ abstract class UserApi {
   /// Provides a stream of users
   Stream<Map<String, User>> get users;
 
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String type);
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String type, DateTime date);
+
+  /// Gets updates
+  Future<List<Map<String, dynamic>>> getUpdates();
+
   /// Saves or updates a [user].
   ///
   /// If a [user] with the same id already exists, it will be updated.

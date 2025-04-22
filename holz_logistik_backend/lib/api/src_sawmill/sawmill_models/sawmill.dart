@@ -50,6 +50,7 @@ class Sawmill extends Equatable with SawmillSortGettable {
   ///
   /// Cannot be empty.
   @override
+  @DateTimeConverter()
   final DateTime lastEdit;
 
   /// The name of the `sawmill`.

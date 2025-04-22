@@ -13,6 +13,15 @@ abstract class ContractApi {
   /// Provides updates on finished contracts
   Stream<Contract> get contractUpdates;
 
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String type);
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String type, DateTime date);
+
+  /// Gets updates
+  Future<List<Map<String, dynamic>>> getUpdates();
+
   /// Provides finished contracts by date.
   Future<List<Contract>> getFinishedContractsByDate(
     DateTime start,

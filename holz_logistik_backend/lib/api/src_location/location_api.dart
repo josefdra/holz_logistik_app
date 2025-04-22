@@ -13,6 +13,15 @@ abstract class LocationApi {
   /// Provides updates on finished locations.
   Stream<Location> get locationUpdates;
 
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String type);
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String type, DateTime date);
+
+  /// Gets updates
+  Future<List<Map<String, dynamic>>> getUpdates();
+
   /// Provides finished locations.
   Future<List<Location>> getFinishedLocationsByDate(
       DateTime start, DateTime end,);
