@@ -72,7 +72,7 @@ class ShipmentLocalStorage extends ShipmentApi {
 
     final result = await db.query(
       ShipmentTable.tableName,
-      where: '${ShipmentTable.columnLastEdit} >= ? ORDER BY '
+      where: '${ShipmentTable.columnLastEdit} > ? ORDER BY '
           '${ShipmentTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),

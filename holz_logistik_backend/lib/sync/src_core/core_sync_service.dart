@@ -16,9 +16,7 @@ class CoreSyncService {
   /// {@macro core_sync_service}
   CoreSyncService({
     required String url,
-  }) : _url = url {
-    _connect();
-  }
+  }) : _url = url;
 
   final String _url;
   WebSocketChannel? _channel;
@@ -44,47 +42,18 @@ class CoreSyncService {
   Stream<ConnectionStatus> get connectionStatus =>
       _connectionStreamController.stream;
 
-  // Ping-pong keep-alive mechanism
-  Timer? _pingTimer;
-  Timer? _pongTimeoutTimer;
+  var _connection = false;
+  var _apiKey = '';
+  var _missedPongs = 0;
+  var _reconnectAttempts = 0;
+  static const int _maxMissedPongs = 3;
+  static const int _maxReconnectAttempts = 5;
   static const Duration _pingInterval = Duration(seconds: 5);
   static const Duration _pongTimeout = Duration(seconds: 30);
-  int _missedPongs = 0;
-  static const int _maxMissedPongs = 3;
-  int _reconnectAttempts = 0;
-  Timer? _reconnectTimer;
-  static const int _maxReconnectAttempts = 5;
   static const Duration _initialReconnectDelay = Duration(seconds: 2);
-  Timer? _connectionStatusDebounceTimer;
-  final _debounceTime = const Duration(seconds: 2);
-
-  void _setConnectionStatus(ConnectionStatus status) {
-    _connectionStatusDebounceTimer?.cancel();
-    _connectionStatusDebounceTimer = Timer(_debounceTime, () {
-      if (!_connectionStreamController.isClosed &&
-          _connectionStreamController.value != status) {
-        _connectionStreamController.add(status);
-      }
-    });
-  }
-
-  void _scheduleReconnect() {
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      debugPrint('Max reconnection attempts reached');
-      return;
-    }
-
-    _reconnectTimer?.cancel();
-
-    // Exponential backoff
-    final delay = _initialReconnectDelay * (1 << _reconnectAttempts);
-    debugPrint('Scheduling reconnect attempt in ${delay.inSeconds} seconds');
-
-    _reconnectTimer = Timer(delay, () {
-      _reconnectAttempts++;
-      reconnect();
-    });
-  }
+  Timer? _pingTimer;
+  Timer? _pongTimeoutTimer;
+  Timer? _reconnectTimer;
 
   /// Register a handler for a specific message type
   void registerMessageHandler({
@@ -118,68 +87,6 @@ class CoreSyncService {
     _dataGetters[type] = dataGetter;
   }
 
-  /// Connect to the WebSocket server
-  Future<void> _connect() async {
-    final status = _connectionStreamController.value;
-    final connected = !(status == ConnectionStatus.error ||
-        status == ConnectionStatus.disconnected);
-
-    if (connected) return Future<void>.value();
-
-    _setConnectionStatus(ConnectionStatus.connecting);
-
-    try {
-      final uri = Uri.parse(_url);
-      _channel = WebSocketChannel.connect(uri);
-      if (_channel != null) {
-        await _channel!.ready;
-
-        _channelSubscription = _channel!.stream.listen(
-          _handleMessage,
-          onError: _handleError,
-          onDone: _handleDone,
-        );
-
-        // Start ping-pong keep-alive
-        _startPingTimer();
-
-        // Connection successful
-        _setConnectionStatus(ConnectionStatus.connected);
-      }
-    } catch (e) {
-      debugPrint('WebSocket connection error: $e');
-      _setConnectionStatus(ConnectionStatus.error);
-
-      // Implement automatic reconnection with backoff
-      _scheduleReconnect();
-    }
-  }
-
-  /// Start the ping timer for keep-alive mechanism
-  void _startPingTimer() {
-    _pingTimer?.cancel();
-    _pingTimer = Timer.periodic(_pingInterval, (_) => _sendPing());
-  }
-
-  /// Send a ping message and start the pong timeout timer
-  void _sendPing() {
-    sendMessage('ping', const <String, dynamic>{});
-
-    _pongTimeoutTimer?.cancel();
-    _pongTimeoutTimer = Timer(_pongTimeout, _handlePongTimeout);
-  }
-
-  /// Handle pong timeout
-  void _handlePongTimeout() {
-    _missedPongs++;
-
-    if (_missedPongs >= _maxMissedPongs) {
-      debugPrint('WebSocket connection lost: too many missed pongs');
-      _cleanup();
-      _setConnectionStatus(ConnectionStatus.disconnected);
-    }
-  }
-
   /// Reset missed pongs when a pong is received
   void _resetPongTimeout() {
     _missedPongs = 0;
@@ -188,54 +95,39 @@ class CoreSyncService {
 
   /// Handle incoming messages
   void _handleMessage(dynamic rawMessage) {
+    print("RAW MESSAGE RECEIVED: $rawMessage");
+
     try {
       _reconnectAttempts = 0;
-      // Parse the message
       final message = rawMessage is String
           ? jsonDecode(rawMessage) as Map<String, dynamic>
           : rawMessage as Map<String, dynamic>;
 
-      print(message);
-
-      // Process with registered handlers
       final type = message['type'] as String;
       final dynamic data = message['data'];
 
-      // Reset pong timeout if we receive a pong message
       if (type == 'pong') {
         _resetPongTimeout();
+        return;
       }
 
-      final handler = _messageHandlers[type];
-      if (handler != null) {
-        handler(data);
+      final messageHandler = _messageHandlers[type];
+      if (messageHandler != null) {
+        messageHandler(data);
       }
     } catch (e) {
       debugPrint('Error handling WebSocket message: $e');
     }
   }
 
-  /// Handle WebSocket errors
-  void _handleError(dynamic error) {
-    debugPrint('WebSocket error: $error');
-    _setConnectionStatus(ConnectionStatus.error);
-    _cleanup();
-  }
-
-  /// Handle WebSocket connection closure
-  void _handleDone() {
-    debugPrint('WebSocket connection closed');
-    _setConnectionStatus(ConnectionStatus.disconnected);
-    _cleanup();
-  }
-
   /// Clean up resources
   void _cleanup() {
     _pingTimer?.cancel();
     _pongTimeoutTimer?.cancel();
+    _reconnectTimer?.cancel();
     _channelSubscription?.cancel();
     _channelSubscription = null;
-    _setConnectionStatus(ConnectionStatus.disconnected);
+    _connectionStreamController.add(ConnectionStatus.disconnected);
 
     try {
       _channel?.sink.close(status.normalClosure);
@@ -244,6 +136,22 @@ class CoreSyncService {
     }
 
     _channel = null;
+  }
+
+  /// Handle WebSocket errors
+  void _handleError(dynamic error) {
+    debugPrint('WebSocket error: $error');
+    _connectionStreamController.add(ConnectionStatus.error);
+    _connection = false;
+    _scheduleReconnect();
+  }
+
+  /// Handle WebSocket connection closure
+  void _handleDone() {
+    debugPrint('WebSocket connection closed');
+    _connectionStreamController.add(ConnectionStatus.disconnected);
+    _connection = false;
+    _scheduleReconnect();
   }
 
   /// Send a message through the WebSocket
@@ -260,11 +168,85 @@ class CoreSyncService {
         return Future<void>.value();
       } catch (e) {
         debugPrint('Error sending WebSocket message: $e');
-        _setConnectionStatus(ConnectionStatus.error);
+        _connectionStreamController.add(ConnectionStatus.error);
       }
     }
 
     return Future<void>.value();
+  }
+
+  /// Handle pong timeout
+  void _handlePongTimeout() {
+    _missedPongs++;
+
+    if (_missedPongs >= _maxMissedPongs) {
+      debugPrint('WebSocket connection lost: too many missed pongs');
+      _cleanup();
+      _connectionStreamController.add(ConnectionStatus.disconnected);
+    }
+  }
+
+  /// Send a ping message and start the pong timeout timer
+  void _sendPing() {
+    sendMessage('ping', const <String, dynamic>{});
+
+    _pongTimeoutTimer?.cancel();
+    _pongTimeoutTimer = Timer(_pongTimeout, _handlePongTimeout);
+  }
+
+  /// Start the ping timer for keep-alive mechanism
+  void _startPingTimer() {
+    _pingTimer?.cancel();
+    _pingTimer = Timer.periodic(_pingInterval, (_) => _sendPing());
+  }
+
+  void _scheduleReconnect() {
+    if (_reconnectAttempts >= _maxReconnectAttempts) {
+      debugPrint('Max reconnection attempts reached');
+      return;
+    }
+
+    _reconnectTimer?.cancel();
+
+    final delay = _initialReconnectDelay * (1 << _reconnectAttempts);
+    debugPrint('Scheduling reconnect attempt in ${delay.inSeconds} seconds');
+
+    _reconnectTimer = Timer(delay, () {
+      _reconnectAttempts++;
+      connect();
+    });
+  }
+
+  /// Connect to the WebSocket server
+  Future<void> _connect() async {
+    if (_connection) return Future<void>.value();
+
+    _connection = true;
+    _connectionStreamController.add(ConnectionStatus.connecting);
+
+    try {
+      final uri = Uri.parse(_url);
+      _channel = WebSocketChannel.connect(uri);
+      if (_channel != null) {
+        await _channel!.ready;
+
+        _channelSubscription = _channel!.stream.listen(
+          _handleMessage,
+          onError: _handleError,
+          onDone: _handleDone,
+        );
+
+        await sendMessage('authentication_request', {'apiKey': _apiKey});
+
+        _startPingTimer();
+        _connectionStreamController.add(ConnectionStatus.connected);
+      }
+    } catch (e) {
+      debugPrint('WebSocket connection error: $e');
+      _connectionStreamController.add(ConnectionStatus.error);
+      _scheduleReconnect();
+      _connection = false;
+    }
   }
 
   /// Sends data for all registered types
@@ -294,16 +276,14 @@ class CoreSyncService {
     return sendMessage('sync_request', data);
   }
 
-  /// Syncs everything
-  Future<void> sync() async {
+  /// Sets up connection
+  Future<void> connect({String? apiKey}) async {
+    if (apiKey != null) _apiKey = apiKey;
+
+    _cleanup();
+    await _connect();
     await sendSyncData();
     await sendSyncRequest();
-  }
-
-  /// Reconnect to the WebSocket server
-  void reconnect() {
-    _cleanup();
-    _connect();
   }
 
   /// Close the WebSocket connection and clean up resources

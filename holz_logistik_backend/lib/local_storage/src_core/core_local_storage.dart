@@ -159,6 +159,17 @@ class CoreLocalStorage {
     );
 
     if (existing.isNotEmpty) {
+      final oldDate = DateTime.parse(
+        existing[0]['lastEdit'] as String,
+      );
+      final newDate = DateTime.parse(
+        data['lastEdit'] as String,
+      );
+
+      if (oldDate.millisecondsSinceEpoch > newDate.millisecondsSinceEpoch) {
+        return 0;
+      }
+
       return update(tableName, data);
     }
 

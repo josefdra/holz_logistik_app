@@ -109,7 +109,7 @@ class ContractLocalStorage extends ContractApi {
 
     final result = await db.query(
       ContractTable.tableName,
-      where: '${ContractTable.columnLastEdit} >= ? ORDER BY '
+      where: '${ContractTable.columnLastEdit} > ? ORDER BY '
           '${ContractTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),

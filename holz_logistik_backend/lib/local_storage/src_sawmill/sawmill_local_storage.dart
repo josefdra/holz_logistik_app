@@ -88,7 +88,7 @@ class SawmillLocalStorage extends SawmillApi {
 
     final result = await db.query(
       SawmillTable.tableName,
-      where: '${SawmillTable.columnLastEdit} >= ? ORDER BY '
+      where: '${SawmillTable.columnLastEdit} > ? ORDER BY '
           '${SawmillTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),

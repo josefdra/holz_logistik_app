@@ -34,17 +34,10 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   late final StreamSubscription<List<ConnectivityResult>>?
       _connectivitySubscription;
 
-  void _attemptReconnect() {
-    _authenticationRepository.connect();
-    _userRepository.saveFutureUser(_authenticationRepository.currentUser);
-  }
-
-  Future<void> _authenticate() async {
-    add(
-      const MainConnectionChanged(
-        ConnectionStatus.disconnected,
-      ),
-    );
+  Future<void> _connect() async {
+    final apiKey = await _authenticationRepository.apiKey;
+    await _coreSyncService.connect(apiKey: apiKey);
+    await _userRepository.saveFutureUser(_authenticationRepository.currentUser);
   }
 
   Future<void> _onSubscriptionRequested(
@@ -58,13 +51,10 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       add(MainConnectionChanged(status));
     });
 
-    _connectivitySubscription =
-        Connectivity().onConnectivityChanged.skip(1).listen(
-              (connectivity) =>
-                  add(MainConnectivityChanged(connectivity: connectivity)),
-            );
-
-    add(const MainApiKeyChanged());
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+          (connectivity) =>
+              add(MainConnectivityChanged(connectivity: connectivity)),
+        );
 
     await emit.forEach<User>(
       _authenticationRepository.authenticatedUser,
@@ -84,7 +74,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     MainApiKeyChanged event,
     Emitter<MainState> emit,
   ) async {
-    await _authenticate();
+    await _connect();
   }
 
   Future<void> _onTabChanged(
@@ -97,21 +87,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   Future<void> _onConnectionChanged(
     MainConnectionChanged event,
     Emitter<MainState> emit,
-  ) async {
-    emit(state.copyWith(connectionStatus: event.connectionStatus));
-
-    if (event.connectionStatus == ConnectionStatus.connected) {
-      await _coreSyncService.sync();
-    } else if ((event.connectionStatus == ConnectionStatus.disconnected ||
-            event.connectionStatus == ConnectionStatus.error) &&
-        !state.isReconnecting) {
-      emit(state.copyWith(isReconnecting: true));
-
-      _attemptReconnect();
-
-      emit(state.copyWith(isReconnecting: false));
-    }
-  }
+  ) async {}
 
   Future<void> _onConnectivityChanged(
     MainConnectivityChanged event,
@@ -121,9 +97,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     if (result == ConnectivityResult.wifi ||
         result == ConnectivityResult.mobile ||
         result == ConnectivityResult.ethernet) {
-      await _authenticationRepository.connect();
-      await _userRepository
-          .saveFutureUser(_authenticationRepository.currentUser);
+      await _connect();
     }
   }
 

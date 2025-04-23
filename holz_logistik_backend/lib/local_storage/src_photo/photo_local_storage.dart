@@ -72,7 +72,7 @@ class PhotoLocalStorage extends PhotoApi {
 
     final result = await db.query(
       PhotoTable.tableName,
-      where: '${PhotoTable.columnLastEdit} >= ? ORDER BY '
+      where: '${PhotoTable.columnLastEdit} > ? ORDER BY '
           '${PhotoTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),

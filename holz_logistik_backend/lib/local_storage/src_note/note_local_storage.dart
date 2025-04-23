@@ -82,7 +82,7 @@ class NoteLocalStorage extends NoteApi {
 
     final result = await db.query(
       NoteTable.tableName,
-      where: '${NoteTable.columnLastEdit} >= ? ORDER BY '
+      where: '${NoteTable.columnLastEdit} > ? ORDER BY '
           '${NoteTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),

@@ -39,13 +39,6 @@ class AuthenticationRepository {
     }
   }
 
-  /// Requests user authentication.
-  Future<void> connect() async {
-    final apiKey = await _authenticationApi.apiKey;
-
-    return _authenticationSyncService.connect(apiKey);
-  }
-
   /// Updates the apiKey and requests authentication
   Future<void> updateApiKey(String apiKey) {
     return _authenticationApi.setApiKey(apiKey);

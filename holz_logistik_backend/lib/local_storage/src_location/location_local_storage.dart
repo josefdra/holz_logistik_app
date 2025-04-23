@@ -161,7 +161,7 @@ class LocationLocalStorage extends LocationApi {
 
     final result = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnLastEdit} >= ? ORDER BY '
+      where: '${LocationTable.columnLastEdit} > ? ORDER BY '
           '${LocationTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),
@@ -228,6 +228,23 @@ class LocationLocalStorage extends LocationApi {
   /// Insert or Update a `location` to the database based on [locationData]
   Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
     final locationId = locationData['id'] as String;
+
+    final oldLocation =
+        await _coreLocalStorage.getById(LocationTable.tableName, locationId);
+
+    if (oldLocation.isNotEmpty) {
+      final oldDate = DateTime.parse(
+        oldLocation[0][LocationTable.columnLastEdit] as String,
+      );
+      final newDate = DateTime.parse(
+        locationData[LocationTable.columnLastEdit] as String,
+      );
+
+      if (oldDate.millisecondsSinceEpoch > newDate.millisecondsSinceEpoch) {
+        return 0;
+      }
+    }
+
     final sawmillIds = locationData.containsKey('sawmillIds')
         ? locationData.remove('sawmillIds') as List<String>? ?? <String>[]
         : <String>[];

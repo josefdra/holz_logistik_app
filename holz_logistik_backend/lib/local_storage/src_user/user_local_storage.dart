@@ -74,9 +74,20 @@ class UserLocalStorage extends UserApi {
   @override
   Future<void> setLastSyncDate(String type, DateTime date) async {
     final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+    final dateString = date.toUtc().toIso8601String();
 
-    await prefs.setString(key, date.toUtc().toIso8601String());
+    if (type == 'fromServer') {
+      final lastDate = await getLastSyncDate(type);
+      if (date.millisecondsSinceEpoch > lastDate.millisecondsSinceEpoch) {
+        const key = _syncFromServerKey;
+
+        await prefs.setString(key, dateString);
+      }
+    }
+
+    const key = _syncToServerKey;
+
+    await prefs.setString(key, dateString);
   }
 
   /// Gets user updates
@@ -87,7 +98,7 @@ class UserLocalStorage extends UserApi {
 
     final result = await db.query(
       UserTable.tableName,
-      where: '${UserTable.columnLastEdit} >= ? ORDER BY '
+      where: '${UserTable.columnLastEdit} > ? ORDER BY '
           '${UserTable.columnLastEdit} ASC',
       whereArgs: [
         date.toIso8601String(),
@@ -105,7 +116,7 @@ class UserLocalStorage extends UserApi {
   /// Insert or Update a [user]
   @override
   Future<int> saveUser(User user) async {
-    if(user.name == '') return 0;
+    if (user.name == '') return 0;
 
     final result = await _insertOrUpdateUser(user.toJson());
     final users = Map<String, User>.from(_userStreamController.value);
