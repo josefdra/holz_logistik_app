@@ -144,10 +144,10 @@ class ContractLocalStorage extends ContractApi {
           '${ContractTable.columnEndDate} <= ?))',
       whereArgs: [
         1,
-        start.toIso8601String(),
-        end.toIso8601String(),
-        start.toIso8601String(),
-        end.toIso8601String(),
+        start.toUtc().millisecondsSinceEpoch,
+        end.toUtc().millisecondsSinceEpoch,
+        start.toUtc().millisecondsSinceEpoch,
+        end.toUtc().millisecondsSinceEpoch,
       ],
     );
 

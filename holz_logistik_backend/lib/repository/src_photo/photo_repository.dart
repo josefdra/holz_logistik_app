@@ -86,7 +86,7 @@ class PhotoRepository {
       'id': id,
       'deleted': true,
       'locationId': locationId,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 
     return _photoSyncService.sendPhotoUpdate(data);

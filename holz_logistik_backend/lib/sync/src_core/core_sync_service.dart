@@ -161,7 +161,7 @@ class CoreSyncService {
         final message = {
           'type': type,
           'data': data,
-          'timestamp': DateTime.now().toIso8601String(),
+          'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
         };
 
         _channel!.sink.add(jsonEncode(message));
@@ -266,11 +266,11 @@ class CoreSyncService {
 
   /// Request a sync for all registered types
   Future<void> sendSyncRequest() async {
-    final data = <String, String>{};
+    final data = <String, int>{};
 
     for (final key in _dateGetters.keys) {
       final date = await _dateGetters[key]!.call('fromServer');
-      data[key] = date.toIso8601String();
+      data[key] = date.toUtc().millisecondsSinceEpoch;
     }
 
     return sendMessage('sync_request', data);

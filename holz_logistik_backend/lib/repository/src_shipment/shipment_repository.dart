@@ -80,7 +80,7 @@ class ShipmentRepository {
       'id': id,
       'deleted': true,
       'locationId': locationId,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 
     return _shipmentSyncService.sendShipmentUpdate(data);

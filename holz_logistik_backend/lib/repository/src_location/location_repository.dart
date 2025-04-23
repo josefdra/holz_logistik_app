@@ -74,7 +74,7 @@ class LocationRepository {
       'id': id,
       'deleted': true,
       'done': done,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 
     return _locationSyncService.sendLocationUpdate(data);

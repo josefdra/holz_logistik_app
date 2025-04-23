@@ -62,7 +62,7 @@ class UserRepository {
     final data = {
       'id': id,
       'deleted': true,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 
     return _userSyncService.sendUserUpdate(data);

@@ -195,8 +195,8 @@ class LocationLocalStorage extends LocationApi {
           ' >= ? AND ${LocationTable.columnDate} <= ?)',
       whereArgs: [
         1,
-        start.toIso8601String(),
-        end.toIso8601String(),
+        start.toUtc().millisecondsSinceEpoch,
+        end.toUtc().millisecondsSinceEpoch,
       ],
     );
 
@@ -242,8 +242,7 @@ class LocationLocalStorage extends LocationApi {
         await _coreLocalStorage.getById(LocationTable.tableName, locationId);
 
     if (oldLocation.isNotEmpty) {
-      final oldDate = 
-        oldLocation[0][LocationTable.columnLastEdit] as int;
+      final oldDate = oldLocation[0][LocationTable.columnLastEdit] as int;
       final newDate = locationData[LocationTable.columnLastEdit] as int;
 
       if (oldDate > newDate) {
