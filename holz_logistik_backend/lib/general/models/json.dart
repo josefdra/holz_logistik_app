@@ -43,18 +43,18 @@ class Uint8ListConverter implements JsonConverter<Uint8List, dynamic> {
   }
 }
 
-/// Converts DateTime to and from ISO8601 strings ensuring UTC time
-class DateTimeConverter implements JsonConverter<DateTime, String> {
+/// Converts DateTime to and from integer timestamps ensuring UTC time
+class DateTimeConverter implements JsonConverter<DateTime, int> {
   /// Constructor
   const DateTimeConverter();
 
   @override
-  DateTime fromJson(String json) {
-    return DateTime.parse(json).toLocal();
+  DateTime fromJson(int json) {
+    return DateTime.fromMillisecondsSinceEpoch(json, isUtc: true).toLocal();
   }
 
   @override
-  String toJson(DateTime object) {
-    return object.toUtc().toIso8601String();
+  int toJson(DateTime object) {
+    return object.toUtc().millisecondsSinceEpoch;
   }
 }

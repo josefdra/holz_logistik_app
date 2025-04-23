@@ -8,8 +8,8 @@ part of 'sawmill.dart';
 
 Sawmill _$SawmillFromJson(Map<String, dynamic> json) => Sawmill(
       id: json['id'] as String?,
-      lastEdit: _$JsonConverterFromJson<String, DateTime>(
-          json['lastEdit'], const DateTimeConverter().fromJson,),
+      lastEdit: _$JsonConverterFromJson<int, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson),
       name: json['name'] as String? ?? '',
     );
 

@@ -37,7 +37,7 @@ class ShipmentTable {
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
-      $columnLastEdit TEXT NOT NULL,
+      $columnLastEdit INTEGER NOT NULL,
       $columnQuantity REAL NOT NULL,
       $columnOversizeQuantity REAL NOT NULL,
       $columnPieceCount INTEGER NOT NULL,

@@ -22,7 +22,7 @@ class PhotoTable {
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
-      $columnLastEdit TEXT NOT NULL,
+      $columnLastEdit INTEGER NOT NULL,
       $columnPhoto BLOB NOT NULL,
       $columnLocationId TEXT NOT NULL,
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId})

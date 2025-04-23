@@ -39,11 +39,11 @@ class ContractTable {
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
       $columnDone INTEGER NOT NULL,
-      $columnLastEdit TEXT NOT NULL,
+      $columnLastEdit INTEGER NOT NULL,
       $columnTitle TEXT NOT NULL,
       $columnAdditionalInfo TEXT NOT NULL,
-      $columnStartDate TEXT NOT NULL,
-      $columnEndDate TEXT NOT NULL,
+      $columnStartDate INTEGER NOT NULL,
+      $columnEndDate INTEGER NOT NULL,
       $columnAvailableQuantity REAL NOT NULL,
       $columnBookedQuantity REAL NOT NULL,
       $columnShippedQuantity REAL NOT NULL

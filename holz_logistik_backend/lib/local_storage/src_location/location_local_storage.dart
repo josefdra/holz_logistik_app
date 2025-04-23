@@ -136,10 +136,10 @@ class LocationLocalStorage extends LocationApi {
     final prefs = await _coreLocalStorage.sharedPreferences;
     final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
 
-    final dateString = prefs.getString(key);
-    final date = dateString != null
-        ? DateTime.parse(dateString)
-        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+    final dateMillis = prefs.getInt(key);
+    final date = dateMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
+        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
     return date;
   }
@@ -148,9 +148,20 @@ class LocationLocalStorage extends LocationApi {
   @override
   Future<void> setLastSyncDate(String type, DateTime date) async {
     final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+    final dateInt = date.toUtc().millisecondsSinceEpoch;
 
-    await prefs.setString(key, date.toUtc().toIso8601String());
+    if (type == 'fromServer') {
+      final lastDate = await getLastSyncDate(type);
+      if (dateInt > lastDate.millisecondsSinceEpoch) {
+        const key = _syncFromServerKey;
+
+        await prefs.setInt(key, dateInt);
+      }
+    }
+
+    const key = _syncToServerKey;
+
+    await prefs.setInt(key, dateInt);
   }
 
   /// Gets location updates
@@ -163,9 +174,7 @@ class LocationLocalStorage extends LocationApi {
       LocationTable.tableName,
       where: '${LocationTable.columnLastEdit} > ? ORDER BY '
           '${LocationTable.columnLastEdit} ASC',
-      whereArgs: [
-        date.toIso8601String(),
-      ],
+      whereArgs: [date.millisecondsSinceEpoch],
     );
 
     final locations = await _addSawmillsToLocations(result);
@@ -233,14 +242,11 @@ class LocationLocalStorage extends LocationApi {
         await _coreLocalStorage.getById(LocationTable.tableName, locationId);
 
     if (oldLocation.isNotEmpty) {
-      final oldDate = DateTime.parse(
-        oldLocation[0][LocationTable.columnLastEdit] as String,
-      );
-      final newDate = DateTime.parse(
-        locationData[LocationTable.columnLastEdit] as String,
-      );
+      final oldDate = 
+        oldLocation[0][LocationTable.columnLastEdit] as int;
+      final newDate = locationData[LocationTable.columnLastEdit] as int;
 
-      if (oldDate.millisecondsSinceEpoch > newDate.millisecondsSinceEpoch) {
+      if (oldDate > newDate) {
         return 0;
       }
     }

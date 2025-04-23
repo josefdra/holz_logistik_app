@@ -9,14 +9,14 @@ part of 'user.dart';
 User _$UserFromJson(Map<String, dynamic> json) => User(
       id: json['id'] as String?,
       role: $enumDecodeNullable(_$RoleEnumMap, json['role']) ?? Role.basic,
-      lastEdit: _$JsonConverterFromJson<String, DateTime>(
-          json['lastEdit'], const DateTimeConverter().fromJson,),
+      lastEdit: _$JsonConverterFromJson<int, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson),
       name: json['name'] as String? ?? '',
     );
 
 Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'id': instance.id,
-      'role': _$RoleEnumMap[instance.role],
+      'role': _$RoleEnumMap[instance.role]!,
       'lastEdit': const DateTimeConverter().toJson(instance.lastEdit),
       'name': instance.name,
     };

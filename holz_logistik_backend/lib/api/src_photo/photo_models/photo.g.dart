@@ -8,8 +8,8 @@ part of 'photo.dart';
 
 Photo _$PhotoFromJson(Map<String, dynamic> json) => Photo(
       id: json['id'] as String?,
-      lastEdit: _$JsonConverterFromJson<String, DateTime>(
-          json['lastEdit'], const DateTimeConverter().fromJson,),
+      lastEdit: _$JsonConverterFromJson<int, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson),
       photoFile: const Uint8ListConverter().fromJson(json['photoFile']),
       locationId: json['locationId'] as String? ?? '',
     );

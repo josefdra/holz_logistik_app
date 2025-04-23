@@ -65,7 +65,7 @@ class LocationTable {
       $columnLatitude REAL NOT NULL,
       $columnLongitude REAL NOT NULL,
       $columnPartieNr TEXT NOT NULL,
-      $columnDate TEXT NOT NULL,
+      $columnDate INTEGER NOT NULL,
       $columnAdditionalInfo TEXT NOT NULL,
       $columnInitialQuantity REAL NOT NULL,
       $columnInitialOversizeQuantity REAL NOT NULL,

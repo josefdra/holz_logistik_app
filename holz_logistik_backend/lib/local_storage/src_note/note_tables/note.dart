@@ -22,7 +22,7 @@ class NoteTable {
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
-      $columnLastEdit TEXT NOT NULL,
+      $columnLastEdit INTEGER NOT NULL,
       $columnText TEXT NOT NULL,
       $columnUserId TEXT NOT NULL,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId})

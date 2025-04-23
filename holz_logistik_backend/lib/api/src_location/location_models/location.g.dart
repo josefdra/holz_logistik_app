@@ -14,13 +14,13 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       started: json['started'] == null
           ? false
           : TypeConverters.boolFromInt((json['started'] as num).toInt()),
-      lastEdit: _$JsonConverterFromJson<String, DateTime>(
-          json['lastEdit'], const DateTimeConverter().fromJson,),
+      lastEdit: _$JsonConverterFromJson<int, DateTime>(
+          json['lastEdit'], const DateTimeConverter().fromJson),
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       partieNr: json['partieNr'] as String? ?? '',
-      date: _$JsonConverterFromJson<String, DateTime>(
-          json['date'], const DateTimeConverter().fromJson,),
+      date: _$JsonConverterFromJson<int, DateTime>(
+          json['date'], const DateTimeConverter().fromJson),
       additionalInfo: json['additionalInfo'] as String? ?? '',
       initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? 0,
       initialOversizeQuantity:

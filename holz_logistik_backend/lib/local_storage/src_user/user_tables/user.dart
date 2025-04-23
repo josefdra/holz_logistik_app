@@ -20,7 +20,7 @@ class UserTable {
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
-      $columnLastEdit TEXT NOT NULL,
+      $columnLastEdit INTEGER NOT NULL,
       $columnRole INTEGER NOT NULL,
       $columnName TEXT NOT NULL
     )

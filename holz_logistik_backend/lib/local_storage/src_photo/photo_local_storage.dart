@@ -47,10 +47,10 @@ class PhotoLocalStorage extends PhotoApi {
     final prefs = await _coreLocalStorage.sharedPreferences;
     final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
 
-    final dateString = prefs.getString(key);
-    final date = dateString != null
-        ? DateTime.parse(dateString)
-        : DateTime.fromMillisecondsSinceEpoch(0).toUtc();
+    final dateMillis = prefs.getInt(key);
+    final date = dateMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
+        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
 
     return date;
   }
@@ -59,9 +59,20 @@ class PhotoLocalStorage extends PhotoApi {
   @override
   Future<void> setLastSyncDate(String type, DateTime date) async {
     final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
+    final dateInt = date.toUtc().millisecondsSinceEpoch;
 
-    await prefs.setString(key, date.toUtc().toIso8601String());
+    if (type == 'fromServer') {
+      final lastDate = await getLastSyncDate(type);
+      if (dateInt > lastDate.millisecondsSinceEpoch) {
+        const key = _syncFromServerKey;
+
+        await prefs.setInt(key, dateInt);
+      }
+    }
+
+    const key = _syncToServerKey;
+
+    await prefs.setInt(key, dateInt);
   }
 
   /// Gets photo updates
@@ -74,9 +85,7 @@ class PhotoLocalStorage extends PhotoApi {
       PhotoTable.tableName,
       where: '${PhotoTable.columnLastEdit} > ? ORDER BY '
           '${PhotoTable.columnLastEdit} ASC',
-      whereArgs: [
-        date.toIso8601String(),
-      ],
+      whereArgs: [date.millisecondsSinceEpoch],
     );
 
     return result;
