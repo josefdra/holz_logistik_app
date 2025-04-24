@@ -125,20 +125,34 @@ class PhotoLocalStorage extends PhotoApi {
     required String id,
     required String locationId,
   }) async {
-    final photoJson = Map<String, dynamic>.from(
-      (await _coreLocalStorage.getById(PhotoTable.tableName, id)).first,
-    );
-    photoJson['deleted'] = 1;
-    await _insertOrUpdatePhoto(photoJson);
+    final resultList =
+        await _coreLocalStorage.getById(PhotoTable.tableName, id);
 
-    _photoUpdatesStreamController.add(locationId);
+    if (resultList.isEmpty) return Future<void>.value();
+
+    final photo = Photo.fromJson(resultList.first);
+    final json = Map<String, dynamic>.from(resultList.first);
+    json['deleted'] = 1;
+    await _insertOrUpdatePhoto(json);
+
+    _photoUpdatesStreamController.add(photo.locationId);
 
     return Future<void>.value();
   }
 
   /// Delete a Photo based on [id]
   @override
-  Future<int> deletePhoto({required String id}) => _deletePhoto(id);
+  Future<int> deletePhoto({required String id}) async {
+    final result = await _coreLocalStorage.getById(PhotoTable.tableName, id);
+
+    if (result.isEmpty) return 0;
+
+    final photo = Photo.fromJson(result.first);
+    _photoUpdatesStreamController.add(photo.locationId);
+
+    await _deletePhoto(id);
+    return 0;
+  }
 
   /// Delete Photos based on [locationId]
   @override

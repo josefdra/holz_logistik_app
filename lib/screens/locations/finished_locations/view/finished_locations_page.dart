@@ -140,6 +140,9 @@ class FinishedLocationsList extends StatelessWidget {
                 location: location,
               ),
             ),
+            onDelete: () => context
+                .read<FinishedLocationsBloc>()
+                .add(FinishedLocationsLocationDeleted(location)),
           );
         },
       ),

@@ -33,3 +33,12 @@ final class FinishedLocationsDateChanged extends FinishedLocationsEvent {
 final class FinishedLocationsAutomaticDate extends FinishedLocationsEvent {
   const FinishedLocationsAutomaticDate();
 }
+
+final class FinishedLocationsLocationDeleted extends FinishedLocationsEvent {
+  const FinishedLocationsLocationDeleted(this.location);
+
+  final Location location;
+
+  @override
+  List<Object> get props => [location];
+}

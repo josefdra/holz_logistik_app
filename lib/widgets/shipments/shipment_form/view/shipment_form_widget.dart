@@ -59,9 +59,16 @@ class ShipmentFormView extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Center(
-                  child: Text('Neue Abfuhr'),
+                Center(
+                  child: Text(
+                    'Neue Abfuhr',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                  ),
                 ),
+                const SizedBox(height: 10),
                 const _QuantityField(),
                 const _OversizeQuantityField(),
                 const _PieceCountField(),

@@ -81,7 +81,8 @@ class ShipmentLocalStorage extends ShipmentApi {
 
     final shipmentsJson = await db.query(
       ShipmentTable.tableName,
-      where: '${ShipmentTable.columnLastEdit} >= ? AND '
+      where: '${ShipmentTable.columnDeleted} = 0 AND '
+          '${ShipmentTable.columnLastEdit} >= ? AND '
           '${ShipmentTable.columnLastEdit} <= ?',
       whereArgs: [
         start.toUtc().millisecondsSinceEpoch,
@@ -141,10 +142,15 @@ class ShipmentLocalStorage extends ShipmentApi {
     required String id,
     required String locationId,
   }) async {
-    final shipment = await getShipmentById(id);
-    final shipmentJson = shipment.toJson();
-    shipmentJson['deleted'] = 1;
-    final result = await _insertOrUpdateShipment(shipmentJson);
+    final resultList =
+        await _coreLocalStorage.getById(ShipmentTable.tableName, id);
+
+    if (resultList.isEmpty) return 0;
+
+    final shipment = Shipment.fromJson(resultList.first);
+    final json = Map<String, dynamic>.from(resultList.first);
+    json['deleted'] = 1;
+    final result = await _insertOrUpdateShipment(json);
 
     _shipmentUpdatesStreamController.add(shipment);
     return result;
@@ -152,7 +158,16 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Delete a Shipment based on [id]
   @override
-  Future<void> deleteShipment({required String id}) => _deleteShipment(id);
+  Future<void> deleteShipment({required String id}) async {
+    final result = await _coreLocalStorage.getById(ShipmentTable.tableName, id);
+
+    if (result.isEmpty) return Future<void>.value();
+
+    final shipment = Shipment.fromJson(result.first);
+
+    await _deleteShipment(id);
+    _shipmentUpdatesStreamController.add(shipment);
+  }
 
   /// Sets synced
   @override

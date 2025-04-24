@@ -47,8 +47,8 @@ final class LocationDetailsState extends Equatable {
       contract: contract ?? this.contract,
       sawmills: sawmills ?? this.sawmills,
       oversizeSawmills: oversizeSawmills ?? this.oversizeSawmills,
-      shipments: shipments ?? this.shipments,
-      photos: photos ?? this.photos,
+      shipments: shipments != null ? sortByDate(shipments) : this.shipments,
+      photos: photos != null ? sortByDate(photos) : this.photos,
       user: user ?? this.user,
     );
   }

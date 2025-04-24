@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/models/models.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:multi_dropdown/multi_dropdown.dart';
@@ -312,6 +313,10 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
 
     if (state.initialQuantity == 0) {
       errors['initialQuantity'] = 'Menge darf nicht 0 sein';
+    }
+
+    if (state.contractId == '') {
+      errors['contract'] = 'Standort darf nicht ohne Vertrag erstellt werden';
     }
 
     if (state.initialOversizeQuantity > state.initialQuantity) {

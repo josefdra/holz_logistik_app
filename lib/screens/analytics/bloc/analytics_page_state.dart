@@ -44,7 +44,7 @@ final class AnalyticsPageState extends Equatable {
     return AnalyticsPageState(
       status: status ?? this.status,
       analyticsData: analyticsData ?? this.analyticsData,
-      contracts: contracts ?? this.contracts,
+      contracts: contracts != null ? sortByDate(contracts) : this.contracts,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
       customDate: customDate ?? this.customDate,

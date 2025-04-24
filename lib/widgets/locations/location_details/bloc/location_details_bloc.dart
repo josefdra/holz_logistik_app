@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/models/models.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 part 'location_details_event.dart';

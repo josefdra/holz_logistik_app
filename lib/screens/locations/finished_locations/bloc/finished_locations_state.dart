@@ -34,7 +34,7 @@ final class FinishedLocationsState extends Equatable {
   }) {
     return FinishedLocationsState(
       status: status ?? this.status,
-      locations: locations ?? this.locations,
+      locations: locations != null ? sortByDate(locations) : this.locations,
       contractNames: contractNames ?? this.contractNames,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,

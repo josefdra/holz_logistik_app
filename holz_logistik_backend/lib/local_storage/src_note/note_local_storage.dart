@@ -98,11 +98,13 @@ class NoteLocalStorage extends NoteApi {
   /// Marks a Note as deleted based on [id]
   @override
   Future<void> markNoteDeleted({required String id}) async {
-    final noteJson = Map<String, dynamic>.from(
-      (await _coreLocalStorage.getById(NoteTable.tableName, id)).first,
-    );
-    noteJson['deleted'] = 1;
-    await _insertOrUpdateNote(noteJson);
+    final resultList = await _coreLocalStorage.getById(NoteTable.tableName, id);
+
+    if (resultList.isEmpty) return Future<void>.value();
+
+    final json = Map<String, dynamic>.from(resultList.first);
+    json['deleted'] = 1;
+    await _insertOrUpdateNote(json);
 
     final notes = [..._noteStreamController.value]
       ..removeWhere((n) => n.id == id);
@@ -114,7 +116,20 @@ class NoteLocalStorage extends NoteApi {
 
   /// Delete a Note based on [id]
   @override
-  Future<void> deleteNote({required String id}) => _deleteNote(id);
+  Future<void> deleteNote({required String id}) async {
+    final result = await _coreLocalStorage.getById(NoteTable.tableName, id);
+
+    if (result.isEmpty) return Future<void>.value();
+
+    await _deleteNote(id);
+
+    final notes = [..._noteStreamController.value]
+      ..removeWhere((n) => n.id == id);
+
+    _noteStreamController.add(notes);
+
+    return Future<void>.value();
+  }
 
   /// Sets synced
   @override

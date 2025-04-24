@@ -47,7 +47,7 @@ final class MapState extends Equatable {
       status: status ?? this.status,
       addMarkerMode: addMarkerMode ?? this.addMarkerMode,
       showInfoMode: showInfoMode ?? this.showInfoMode,
-      locations: locations ?? this.locations,
+      locations: locations != null ? sortByDate(locations) : this.locations,
       sawmills: sawmills ?? this.sawmills,
       contractNames: contractNames ?? this.contractNames,
       userLocation: userLocation ?? this.userLocation,

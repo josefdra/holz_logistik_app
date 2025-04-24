@@ -388,6 +388,7 @@ class _ContractField extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
+    final error = state.validationErrors['contract'];
 
     final selectedId = state.contractId.isNotEmpty
         ? state.contractId
@@ -403,6 +404,7 @@ class _ContractField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: l10n.editLocationContractLabel,
         enabled: !state.status.isLoadingOrSuccess,
+        errorText: error,
         border: const OutlineInputBorder(),
       ),
       value: value,

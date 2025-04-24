@@ -96,14 +96,17 @@ class UserLocalStorage extends UserApi {
     return _coreLocalStorage.delete(UserTable.tableName, id);
   }
 
-  /// Marks a User as deleted based on [id]
+  /// Marks a User deleted based on [id]
   @override
   Future<void> markUserDeleted({required String id}) async {
-    final userJson = Map<String, dynamic>.from(
-      (await _coreLocalStorage.getById(UserTable.tableName, id)).first,
-    );
-    userJson['deleted'] = 1;
-    await _insertOrUpdateUser(userJson);
+    final resultList =
+        await _coreLocalStorage.getById(UserTable.tableName, id);
+
+    if (resultList.isEmpty) return Future<void>.value();
+
+    final json = Map<String, dynamic>.from(resultList.first);
+    json['deleted'] = 1;
+    await _insertOrUpdateUser(json);
 
     final users = Map<String, User>.from(_userStreamController.value)
       ..removeWhere((key, _) => key == id);
@@ -113,7 +116,20 @@ class UserLocalStorage extends UserApi {
 
   /// Delete a User based on [id]
   @override
-  Future<int> deleteUser({required String id}) => _deleteUser(id);
+  Future<int> deleteUser({required String id}) async {
+    final result = await _coreLocalStorage.getById(UserTable.tableName, id);
+
+    if (result.isEmpty) return 0;
+
+    await _deleteUser(id);
+
+    final users = Map<String, User>.from(_userStreamController.value)
+      ..removeWhere((key, _) => key == id);
+
+    _userStreamController.add(users);
+
+    return 0;
+  }
 
   /// Sets synced
   @override

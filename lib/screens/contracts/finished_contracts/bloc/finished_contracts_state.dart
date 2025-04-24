@@ -31,7 +31,7 @@ final class FinishedContractsState extends Equatable {
   }) {
     return FinishedContractsState(
       status: status ?? this.status,
-      contracts: contracts ?? this.contracts,
+      contracts: contracts != null ? sortByDate(contracts) : this.contracts,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
       customDate: customDate ?? this.customDate,

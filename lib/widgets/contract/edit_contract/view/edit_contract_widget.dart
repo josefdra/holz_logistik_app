@@ -53,8 +53,15 @@ class EditContractView extends StatelessWidget {
             child: Column(
               children: [
                 Center(
-                  child: Text(title),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                  ),
                 ),
+                const SizedBox(height: 10),
                 const _TitleField(),
                 const _DateField(),
                 const _QuantityField(),

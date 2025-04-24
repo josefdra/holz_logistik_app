@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/models/models.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 part 'finished_locations_event.dart';
@@ -21,6 +22,7 @@ class FinishedLocationsBloc
     on<FinishedLocationsRefreshRequested>(_onRefreshRequested);
     on<FinishedLocationsDateChanged>(_onDateChanged);
     on<FinishedLocationsAutomaticDate>(_onAutomaticDate);
+    on<FinishedLocationsLocationDeleted>(_onLocationDeleted);
 
     _dateCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _checkDateChange();
@@ -125,6 +127,18 @@ class FinishedLocationsBloc
     emit(state.copyWith(customDate: false));
 
     add(const FinishedLocationsRefreshRequested());
+  }
+
+  void _onLocationDeleted(
+    FinishedLocationsLocationDeleted event,
+    Emitter<FinishedLocationsState> emit,
+  ) {
+    _locationRepository.deleteLocation(
+      id: event.location.id,
+      done: event.location.done,
+    );
+
+    emit(state.copyWith(status: FinishedLocationsStatus.success));
   }
 
   @override

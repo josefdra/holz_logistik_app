@@ -291,10 +291,16 @@ class LocationLocalStorage extends LocationApi {
     required String id,
     required bool done,
   }) async {
-    final location = await getLocationById(id);
-    final locationJson = location.toJson();
-    locationJson['deleted'] = 1;
-    final result = await _insertOrUpdateLocation(locationJson);
+    final resultList =
+        await _coreLocalStorage.getById(LocationTable.tableName, id);
+
+    if (resultList.isEmpty) return 0;
+
+    final location = Location.fromJson(resultList.first);
+    final json = Map<String, dynamic>.from(resultList.first);
+    json['deleted'] = 1;
+
+    final result = await _insertOrUpdateLocation(json);
 
     if (done == false) {
       final locations =
@@ -311,7 +317,26 @@ class LocationLocalStorage extends LocationApi {
 
   /// Delete a Location based on [id]
   @override
-  Future<int> deleteLocation({required String id}) => _deleteLocation(id);
+  Future<int> deleteLocation({required String id}) async {
+    final result = await _coreLocalStorage.getById(LocationTable.tableName, id);
+
+    if (result.isEmpty) return 0;
+
+    await _deleteLocation(id);
+    final location = Location.fromJson(result.first);
+
+    if (location.done == false) {
+      final locations =
+          List<Location>.from(_activeLocationStreamController.value)
+            ..removeWhere((l) => l.id == id);
+
+      _activeLocationStreamController.add(locations);
+    }
+
+    _locationUpdatesStreamController.add(location);
+
+    return 0;
+  }
 
   /// Sets synced
   @override

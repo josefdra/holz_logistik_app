@@ -51,7 +51,8 @@ class ContractLocalStorage extends ContractApi {
 
     final contractsJson = await db.query(
       ContractTable.tableName,
-      where: '${ContractTable.columnDone} = 0 AND '
+      where: '${ContractTable.columnDeleted} = 0 AND '
+          '${ContractTable.columnDone} = 0 AND '
           '${ContractTable.columnDeleted} = 0',
     );
 
@@ -202,10 +203,16 @@ class ContractLocalStorage extends ContractApi {
     required String id,
     required bool done,
   }) async {
-    final contract = await getContractById(id);
-    final contractJson = contract.toJson();
-    contractJson['deleted'] = 1;
-    final result = await _insertOrUpdateContract(contractJson);
+    final resultList =
+        await _coreLocalStorage.getById(ContractTable.tableName, id);
+
+    if (resultList.isEmpty) return 0;
+
+    final contract = Contract.fromJson(resultList.first);
+    final json = Map<String, dynamic>.from(resultList.first);
+    json['deleted'] = 1;
+
+    final result = await _insertOrUpdateContract(json);
 
     if (done == false) {
       final contracts =
@@ -222,7 +229,26 @@ class ContractLocalStorage extends ContractApi {
 
   /// Delete a Contract based on [id]
   @override
-  Future<int> deleteContract({required String id}) => _deleteContract(id);
+  Future<int> deleteContract({required String id}) async {
+    final result = await _coreLocalStorage.getById(ContractTable.tableName, id);
+
+    if (result.isEmpty) return 0;
+
+    await _deleteContract(id);
+    final contract = Contract.fromJson(result.first);
+
+    if (contract.done == false) {
+      final contracts =
+          List<Contract>.from(_activeContractsStreamController.value)
+            ..removeWhere((l) => l.id == id);
+
+      _activeContractsStreamController.add(contracts);
+    }
+
+    _contractUpdatesStreamController.add(contract);
+
+    return 0;
+  }
 
   /// Sets synced
   @override

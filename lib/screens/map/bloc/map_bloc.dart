@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:holz_logistik/models/map/geo_location.dart';
+import 'package:holz_logistik/models/models.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:latlong2/latlong.dart';
 
