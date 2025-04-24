@@ -31,7 +31,7 @@ class LocationListPage extends StatelessWidget {
         locationRepository: context.read<LocationRepository>(),
         shipmentRepository: context.read<ShipmentRepository>(),
         photoRepository: context.read<PhotoRepository>(),
-          contractRepository: context.read<ContractRepository>(),
+        contractRepository: context.read<ContractRepository>(),
       )..add(const LocationListSubscriptionRequested()),
       child: Scaffold(
         body: Column(
@@ -130,7 +130,8 @@ class LocationList extends StatelessWidget {
                           state.searchQueryedLocations.elementAt(index);
                       return LocationListTile(
                         location: location,
-                        contractName: state.contractNames[location.contractId]!,
+                        contractName:
+                            state.contractNames[location.contractId] ?? '',
                         photo: state.photos[location.id],
                         onTap: () => showDialog<LocationDetailsWidget>(
                           context: context,

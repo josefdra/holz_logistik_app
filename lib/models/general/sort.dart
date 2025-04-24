@@ -8,6 +8,14 @@ List<T> sortByDate<T extends Gettable>(List<T> items) {
   return sortedList;
 }
 
+List<T> sortByDateInverse<T extends Gettable>(List<T> items) {
+  final sortedList = List<T>.from(items)
+    ..sort(
+      (a, b) => a.date.compareTo(b.date),
+    );
+  return sortedList;
+}
+
 List<T> sortByName<T extends Gettable>(List<T> items) {
   final sortedList = List<T>.from(items)
     ..sort(

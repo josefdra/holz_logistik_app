@@ -79,12 +79,12 @@ class LocationDetailsBloc
       _sawmillSubscription = _sawmillRepository.sawmills.map(
         (sawmills) {
           final sawmillIds = state.location.sawmillIds;
-          if (sawmillIds == null || sawmillIds.isEmpty) {
+          if (sawmillIds.isEmpty) {
             return <Sawmill>[];
           }
           return sawmills.values
               .where(
-                (sawmill) => state.location.sawmillIds!.contains(sawmill.id),
+                (sawmill) => state.location.sawmillIds.contains(sawmill.id),
               )
               .toList();
         },
@@ -96,13 +96,13 @@ class LocationDetailsBloc
       _oversizeSawmillSubscription = _sawmillRepository.sawmills.map(
         (sawmills) {
           final sawmillIds = state.location.sawmillIds;
-          if (sawmillIds == null || sawmillIds.isEmpty) {
+          if (sawmillIds.isEmpty) {
             return <Sawmill>[];
           }
           return sawmills.values
               .where(
                 (sawmill) =>
-                    state.location.oversizeSawmillIds!.contains(sawmill.id),
+                    state.location.oversizeSawmillIds.contains(sawmill.id),
               )
               .toList();
         },
@@ -155,7 +155,7 @@ class LocationDetailsBloc
 
   void _refreshSawmills() {
     final sawmillIds = state.location.sawmillIds;
-    if (sawmillIds == null || sawmillIds.isEmpty) {
+    if (sawmillIds.isEmpty) {
       add(const LocationDetailsSawmillUpdate(<Sawmill>[]));
       return;
     }
@@ -174,7 +174,7 @@ class LocationDetailsBloc
 
   void _refreshOversizeSawmills() {
     final oversizeSawmillIds = state.location.oversizeSawmillIds;
-    if (oversizeSawmillIds == null || oversizeSawmillIds.isEmpty) {
+    if (oversizeSawmillIds.isEmpty) {
       add(const LocationDetailsOversizeSawmillUpdate(<Sawmill>[]));
       return;
     }

@@ -133,7 +133,7 @@ class _IdField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<EditUserBloc>().state;
-    final userId = state.initialUser!.id;
+    final userId = state.initialUser?.id ?? '';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

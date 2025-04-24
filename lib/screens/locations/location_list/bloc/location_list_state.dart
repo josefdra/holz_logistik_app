@@ -36,7 +36,8 @@ final class LocationListState extends Equatable {
   }) {
     return LocationListState(
       status: status ?? this.status,
-      locations: locations != null ? sortByDate(locations) : this.locations,
+      locations:
+          locations != null ? sortByDateInverse(locations) : this.locations,
       photos: photos ?? this.photos,
       contractNames: contractNames ?? this.contractNames,
       searchQuery: searchQuery ?? this.searchQuery,

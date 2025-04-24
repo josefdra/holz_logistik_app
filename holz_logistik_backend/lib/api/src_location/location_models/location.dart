@@ -174,12 +174,12 @@ class Location extends Equatable with LocationSortGettable {
   /// The sawmillIds associated with the `location`.
   ///
   /// Cannot be empty.
-  final List<String>? sawmillIds;
+  final List<String> sawmillIds;
 
   /// The oversizeSawmillIds associated with the `location`.
   ///
   /// Cannot be empty.
-  final List<String>? oversizeSawmillIds;
+  final List<String> oversizeSawmillIds;
 
   /// Returns a copy of this `location` with the given values updated.
   ///
@@ -252,7 +252,7 @@ class Location extends Equatable with LocationSortGettable {
         currentOversizeQuantity,
         currentPieceCount,
         contractId,
-        sawmillIds!,
-        oversizeSawmillIds!,
+        sawmillIds,
+        oversizeSawmillIds,
       ];
 }

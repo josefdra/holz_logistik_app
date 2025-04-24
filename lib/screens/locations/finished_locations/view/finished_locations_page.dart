@@ -133,7 +133,7 @@ class FinishedLocationsList extends StatelessWidget {
           final location = state.locations.elementAt(index);
           return LocationListTile(
             location: location,
-            contractName: state.contractNames[location.contractId]!,
+            contractName: state.contractNames[location.contractId] ?? '',
             onTap: () => showDialog<LocationDetailsWidget>(
               context: context,
               builder: (context) => LocationDetailsWidget(

@@ -148,9 +148,9 @@ class ShipmentList extends StatelessWidget {
           final shipment = state.shipments.elementAt(index);
           return ShipmentListTile(
             shipment: shipment,
-            userName: state.users[shipment.userId]!.name,
+            userName: state.users[shipment.userId]?.name ?? '',
             sawmillName:
-                state.sawmills[shipment.sawmillId]!.name,
+                state.sawmills[shipment.sawmillId]?.name ?? '',
             contractRepository: context.read<ContractRepository>(),
             onDeleted: () {
               context.read<ShipmentsBloc>().add(

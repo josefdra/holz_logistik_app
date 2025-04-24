@@ -40,17 +40,13 @@ class MapMarker {
     if (!infoMode) {
       return [baseMarker];
     } else {
-      final sawmillNames = location.sawmillIds != null
-          ? location.sawmillIds!
+      final sawmillNames = location.sawmillIds
               .map((id) => sawmills[id]?.name ?? 'Unbekannt')
-              .join(', ')
-          : '';
+              .join(', ');
 
-      final oversizeSawmillNames = location.oversizeSawmillIds != null
-          ? location.oversizeSawmillIds!
+      final oversizeSawmillNames = location.oversizeSawmillIds
               .map((id) => sawmills[id]?.name ?? 'Unbekannt')
-              .join(', ')
-          : '';
+              .join(', ');
 
       final showRegularSawmills = sawmillNames.isNotEmpty;
       final showOversizeSawmills = oversizeSawmillNames.isNotEmpty;

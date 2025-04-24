@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/models/analytics/analytics.dart';
 import 'package:holz_logistik/models/models.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
@@ -110,7 +109,7 @@ class AnalyticsPageBloc extends Bloc<AnalyticsPageEvent, AnalyticsPageState> {
       } else {
         final sawmills = await _sawmillRepository.sawmills.first;
         analyticsData[shipment.sawmillId] = AnalyticsDataElement(
-          sawmillName: sawmills[shipment.sawmillId]!.name,
+          sawmillName: sawmills[shipment.sawmillId]?.name ?? '',
           quantity: shipment.quantity,
           oversizeQuantity: shipment.oversizeQuantity,
           pieceCount: shipment.pieceCount,

@@ -132,7 +132,7 @@ class MapView extends StatelessWidget {
           (location) => _buildLocationMarker(
             context,
             location,
-            state.contractNames[location.contractId]!,
+            state.contractNames[location.contractId] ?? '',
           ),
         ),
       ],

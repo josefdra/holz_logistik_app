@@ -244,7 +244,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     for (final sawmillId in event.allSawmills) {
       final sawmills = await _sawmillRepository.sawmills.first;
       final item = DropdownItem(
-        label: sawmills[sawmillId]!.name,
+        label: sawmills[sawmillId]?.name ?? '',
         value: sawmillId,
       );
       sawmillItems.add(item);
@@ -364,7 +364,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       await _contractRepository.saveContract(updatedInitialContract);
     }
 
-    if (state.contractId.isNotEmpty) {
+    if (state.contractId.isNotEmpty && state.initialLocation != null) {
       final currentContract = updatedInitialContract != null &&
               state.contractId == state.initialLocation!.contractId
           ? updatedInitialContract

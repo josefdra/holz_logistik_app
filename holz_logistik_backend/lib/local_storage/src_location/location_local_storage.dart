@@ -70,6 +70,8 @@ class LocationLocalStorage extends LocationApi {
       whereArgs: [id, if (isOversize) 1 else 0],
     );
 
+    if(idsJson.isEmpty) return const <String>[];
+
     return idsJson
         .map(
           (row) => row[LocationSawmillJunctionTable.columnSawmillId]! as String,
