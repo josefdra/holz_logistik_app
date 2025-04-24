@@ -28,9 +28,6 @@ class CoreSyncService {
   // Map to store date getters
   final Map<String, DateGetter> _dateGetters = {};
 
-  // Map to store date setters
-  final Map<String, DateSetter> _dateSetters = {};
-
   // Map to store data getters
   final Map<String, DataGetter> _dataGetters = {};
 
@@ -72,14 +69,6 @@ class CoreSyncService {
   }
 
   /// Register a handler for a specific type
-  void registerDateSetter({
-    required String type,
-    required DateSetter dateSetter,
-  }) {
-    _dateSetters[type] = dateSetter;
-  }
-
-  /// Register a handler for a specific type
   void registerDataGetter({
     required String type,
     required DataGetter dataGetter,
@@ -95,7 +84,7 @@ class CoreSyncService {
 
   /// Handle incoming messages
   void _handleMessage(dynamic rawMessage) {
-    print("RAW MESSAGE RECEIVED: $rawMessage");
+    print('RAW MESSAGE RECEIVED: $rawMessage');
 
     try {
       _reconnectAttempts = 0;
@@ -255,9 +244,8 @@ class CoreSyncService {
       final dataList = await _dataGetters[key]!.call();
 
       for (final data in dataList) {
+        data.remove('synced');
         await sendMessage(key, data);
-        await _dateSetters[key]!
-            .call('toServer', DateTime.parse(data['lastEdit'] as String));
       }
     }
 
@@ -269,7 +257,7 @@ class CoreSyncService {
     final data = <String, int>{};
 
     for (final key in _dateGetters.keys) {
-      final date = await _dateGetters[key]!.call('fromServer');
+      final date = await _dateGetters[key]!.call();
       data[key] = date.toUtc().millisecondsSinceEpoch;
     }
 

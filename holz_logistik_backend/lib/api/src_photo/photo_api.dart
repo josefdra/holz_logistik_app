@@ -11,10 +11,10 @@ abstract class PhotoApi {
   Stream<String> get photoUpdates;
 
   /// Provides the last sync date
-  Future<DateTime> getLastSyncDate(String type);
+  Future<DateTime> getLastSyncDate();
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(String type, DateTime date);
+  Future<void> setLastSyncDate(DateTime date);
 
   /// Gets updates
   Future<List<Map<String, dynamic>>> getUpdates();
@@ -31,13 +31,22 @@ abstract class PhotoApi {
   /// Saves or updates a [photo].
   ///
   /// If a [photo] with the same id already exists, it will be updated.
-  Future<void> savePhoto(Photo photo);
+  Future<void> savePhoto(Photo photo, {bool fromServer = false});
+
+  /// Marks a `photo` with the given [id] as deleted.
+  Future<void> markPhotoDeleted({
+    required String id,
+    required String locationId,
+  });
 
   /// Deletes the `photo` with the given [id].
-  Future<void> deletePhoto({required String id, required String locationId});
+  Future<void> deletePhoto({required String id});
 
-  /// Deletes the photos by location id
+  /// Deletes photos by location id
   Future<void> deletePhotosByLocationId({required String locationId});
+
+  /// Sets synced
+  Future<void> setSynced({required String id});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

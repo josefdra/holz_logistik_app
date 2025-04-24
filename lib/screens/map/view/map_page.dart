@@ -20,6 +20,7 @@ class MapPage extends StatelessWidget {
           locationRepository: context.read<LocationRepository>(),
           authenticationRepository: context.read<AuthenticationRepository>(),
           sawmillRepository: context.read<SawmillRepository>(),
+          contractRepository: context.read<ContractRepository>(),
         ),
         child: const MapPage(),
       ),
@@ -33,6 +34,7 @@ class MapPage extends StatelessWidget {
         locationRepository: context.read<LocationRepository>(),
         authenticationRepository: context.read<AuthenticationRepository>(),
         sawmillRepository: context.read<SawmillRepository>(),
+          contractRepository: context.read<ContractRepository>(),
       )..add(const MapSubscriptionRequested()),
       child: const Scaffold(
         body: MapView(),
@@ -86,6 +88,7 @@ class MapView extends StatelessWidget {
     return FlutterMap(
       mapController: context.read<MapBloc>().mapController,
       options: MapOptions(
+        onMapReady: () => context.read<MapBloc>().add(const MapMapReady()),
         initialCenter: const LatLng(47.9831, 11.9050),
         initialZoom: 15,
         interactionOptions: const InteractionOptions(
@@ -126,7 +129,11 @@ class MapView extends StatelessWidget {
         if (state.addMarkerMode == true && state.newMarkerPosition != null)
           _buildNewPositionMarker(state.newMarkerPosition!),
         ...state.locations.expand(
-          (location) => _buildLocationMarker(context, location),
+          (location) => _buildLocationMarker(
+            context,
+            location,
+            state.contractNames[location.contractId]!,
+          ),
         ),
       ],
     );
@@ -170,6 +177,7 @@ class MapView extends StatelessWidget {
   List<Marker> _buildLocationMarker(
     BuildContext context,
     Location location,
+    String contractName,
   ) {
     void onTap() {
       showDialog<void>(
@@ -185,6 +193,7 @@ class MapView extends StatelessWidget {
     final mapMarker = MapMarker(
       location: location,
       sawmills: sawmills,
+      contractName: contractName,
       onTap: onTap,
       infoMode: context.read<MapBloc>().state.showInfoMode,
     );

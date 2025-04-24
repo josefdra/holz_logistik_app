@@ -11,6 +11,15 @@ final class MapSubscriptionRequested extends MapEvent {
   const MapSubscriptionRequested();
 }
 
+class MapLocationsUpdate extends MapEvent {
+  const MapLocationsUpdate({required this.locations});
+
+  final List<Location> locations;
+
+  @override
+  List<Object> get props => [locations];
+}
+
 class MapSawmillsUpdate extends MapEvent {
   const MapSawmillsUpdate(this.sawmills);
 
@@ -78,4 +87,8 @@ final class MapConnectivityChanged extends MapEvent {
 
   @override
   List<Object> get props => [connectivity];
+}
+
+final class MapMapReady extends MapEvent {
+  const MapMapReady();
 }

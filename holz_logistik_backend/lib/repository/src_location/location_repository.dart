@@ -29,7 +29,6 @@ class LocationRepository {
   void _init() {
     _locationSyncService
       ..registerDateGetter(_locationApi.getLastSyncDate)
-      ..registerDateSetter(_locationApi.setLastSyncDate)
       ..registerDataGetter(_locationApi.getUpdates);
   }
 
@@ -49,13 +48,14 @@ class LocationRepository {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _locationApi.deleteLocation(
         id: data['id'] as String,
-        done: data['done'] as bool,
       );
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _locationApi.setSynced(id: data['id'] as String);
     } else {
       final location = Location.fromJson(data);
       _locationApi
-        ..saveLocation(location)
-        ..setLastSyncDate('fromServer', location.lastEdit);
+        ..saveLocation(location, fromServer: true)
+        ..setLastSyncDate(location.lastEdit);
     }
   }
 
@@ -63,16 +63,17 @@ class LocationRepository {
   ///
   /// If a [location] with the same id already exists, it will be replaced.
   Future<void> saveLocation(Location location) {
-    _locationApi.saveLocation(location);
-    return _locationSyncService.sendLocationUpdate(location.toJson());
+    final l = location.copyWith(lastEdit: DateTime.now());
+    _locationApi.saveLocation(l);
+    return _locationSyncService.sendLocationUpdate(l.toJson());
   }
 
   /// Deletes the `location` with the given id.
   Future<void> deleteLocation({required String id, required bool done}) {
-    _locationApi.deleteLocation(id: id, done: done);
+    _locationApi.markLocationDeleted(id: id, done: done);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'done': done,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };

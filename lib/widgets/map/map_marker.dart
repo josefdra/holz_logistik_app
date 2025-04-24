@@ -8,12 +8,14 @@ class MapMarker {
   const MapMarker({
     required this.location,
     required this.sawmills,
+    required this.contractName,
     required this.onTap,
     required this.infoMode,
   });
 
   final Location location;
   final Map<String, Sawmill> sawmills;
+  final String contractName;
   final VoidCallback onTap;
   final bool infoMode;
 
@@ -21,7 +23,7 @@ class MapMarker {
     final markerPoint = LatLng(location.latitude, location.longitude);
     final markerIcon = Icon(
       !location.started ? Icons.location_pin : Icons.location_off,
-      color: colorFromString(location.contractId),
+      color: colorFromString(contractName),
       size: 50,
     );
 
@@ -72,7 +74,7 @@ class MapMarker {
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: colorFromString(location.contractId),
+                  color: colorFromString(contractName),
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(4),

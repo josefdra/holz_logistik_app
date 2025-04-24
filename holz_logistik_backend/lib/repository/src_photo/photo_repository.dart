@@ -26,7 +26,6 @@ class PhotoRepository {
   void _init() {
     _photoSyncService
       ..registerDateGetter(_photoApi.getLastSyncDate)
-      ..registerDateSetter(_photoApi.setLastSyncDate)
       ..registerDataGetter(_photoApi.getUpdates);
   }
 
@@ -39,13 +38,14 @@ class PhotoRepository {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _photoApi.deletePhoto(
         id: data['id'] as String,
-        locationId: data['locationId'] as String,
       );
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _photoApi.setSynced(id: data['id'] as String);
     } else {
       final photo = Photo.fromJson(data);
       _photoApi
-        ..savePhoto(photo)
-        ..setLastSyncDate('fromServer', photo.lastEdit);
+        ..savePhoto(photo, fromServer: true)
+        ..setLastSyncDate(photo.lastEdit);
     }
   }
 
@@ -53,8 +53,9 @@ class PhotoRepository {
   ///
   /// If a [photo] with the same id already exists, it will be replaced.
   Future<void> savePhoto(Photo photo) {
-    _photoApi.savePhoto(photo);
-    return _photoSyncService.sendPhotoUpdate(photo.toJson());
+    final p = photo.copyWith(lastEdit: DateTime.now());
+    _photoApi.savePhoto(p);
+    return _photoSyncService.sendPhotoUpdate(p.toJson());
   }
 
   /// Saves multiple [photos].
@@ -81,10 +82,10 @@ class PhotoRepository {
 
   /// Deletes the `photo` with the given id.
   Future<void> deletePhoto({required String id, required String locationId}) {
-    _photoApi.deletePhoto(id: id, locationId: locationId);
+    _photoApi.markPhotoDeleted(id: id, locationId: locationId);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'locationId': locationId,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };

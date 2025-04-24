@@ -33,6 +33,12 @@ class ShipmentTable {
   /// The column name for storing the location id of the shipment.
   static const String columnLocationId = 'locationId';
 
+  /// The column name for storing the sync status.
+  static const String columnSynced = 'synced';
+
+  /// The column name for storing the deleted status.
+  static const String columnDeleted= 'deleted';
+
   /// SQL statement for creating the shipments table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -45,6 +51,8 @@ class ShipmentTable {
       $columnContractId TEXT NOT NULL,
       $columnSawmillId TEXT NOT NULL,
       $columnLocationId TEXT NOT NULL,
+      $columnSynced INTEGER DEFAULT 0,
+      $columnDeleted INTEGER DEFAULT 0,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId}),
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId}),
       FOREIGN KEY ($columnSawmillId) REFERENCES ${SawmillTable.tableName}(${LocationTable.columnId})

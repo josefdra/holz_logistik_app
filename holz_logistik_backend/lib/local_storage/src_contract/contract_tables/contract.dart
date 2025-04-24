@@ -34,6 +34,12 @@ class ContractTable {
   /// The column name for storing the shipped quantity of the contract.
   static const String columnShippedQuantity = 'shippedQuantity';
 
+  /// The column name for storing the sync status.
+  static const String columnSynced = 'synced';
+
+  /// The column name for storing the deleted status.
+  static const String columnDeleted = 'deleted';
+
   /// SQL statement for creating the contracts table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -46,7 +52,9 @@ class ContractTable {
       $columnEndDate INTEGER NOT NULL,
       $columnAvailableQuantity REAL NOT NULL,
       $columnBookedQuantity REAL NOT NULL,
-      $columnShippedQuantity REAL NOT NULL
+      $columnShippedQuantity REAL NOT NULL,
+      $columnSynced INTEGER DEFAULT 0,
+      $columnDeleted INTEGER DEFAULT 0
     )
   ''';
 }

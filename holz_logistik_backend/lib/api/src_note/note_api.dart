@@ -11,10 +11,10 @@ abstract class NoteApi {
   Stream<List<Note>> get notes;
 
   /// Provides the last sync date
-  Future<DateTime> getLastSyncDate(String type);
+  Future<DateTime> getLastSyncDate();
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(String type, DateTime date);
+  Future<void> setLastSyncDate(DateTime date);
 
   /// Gets updates
   Future<List<Map<String, dynamic>>> getUpdates();
@@ -22,10 +22,16 @@ abstract class NoteApi {
   /// Saves or updates a [note].
   ///
   /// If a [note] with the same id already exists, it will be updated.
-  Future<void> saveNote(Note note);
+  Future<void> saveNote(Note note, {bool fromServer = false});
+
+  /// Marks a `note` with the given [id] as deleted.
+  Future<void> markNoteDeleted({required String id});
 
   /// Deletes the `note` with the given [id].
-  Future<void> deleteNote(String id);
+  Future<void> deleteNote({required String id});
+
+  /// Sets synced
+  Future<void> setSynced({required String id});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

@@ -26,19 +26,20 @@ class NoteRepository {
   void _init() {
     _noteSyncService
       ..registerDateGetter(_noteApi.getLastSyncDate)
-      ..registerDateSetter(_noteApi.setLastSyncDate)
       ..registerDataGetter(_noteApi.getUpdates);
   }
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _noteApi.deleteNote(data['id'] as String);
+      _noteApi.deleteNote(id: data['id'] as String);
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _noteApi.setSynced(id: data['id'] as String);
     } else {
       final note = Note.fromJson(data);
       _noteApi
-        ..saveNote(note)
-        ..setLastSyncDate('fromServer', note.lastEdit);
+        ..saveNote(note, fromServer: true)
+        ..setLastSyncDate(note.lastEdit);
     }
   }
 
@@ -46,16 +47,17 @@ class NoteRepository {
   ///
   /// If a [note] with the same id already exists, it will be replaced.
   Future<void> saveNote(Note note) {
-    _noteApi.saveNote(note);
-    return _noteSyncService.sendNoteUpdate(note.toJson());
+    final n = note.copyWith(lastEdit: DateTime.now());
+    _noteApi.saveNote(n);
+    return _noteSyncService.sendNoteUpdate(n.toJson());
   }
 
   /// Deletes the `note` with the given id.
   Future<void> deleteNote(String id) {
-    _noteApi.deleteNote(id);
+    _noteApi.markNoteDeleted(id: id);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 

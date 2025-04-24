@@ -11,10 +11,10 @@ abstract class SawmillApi {
   Stream<Map<String, Sawmill>> get sawmills;
 
   /// Provides the last sync date
-  Future<DateTime> getLastSyncDate(String type);
+  Future<DateTime> getLastSyncDate();
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(String type, DateTime date);
+  Future<void> setLastSyncDate(DateTime date);
 
   /// Gets updates
   Future<List<Map<String, dynamic>>> getUpdates();
@@ -22,10 +22,16 @@ abstract class SawmillApi {
   /// Saves or updates a [sawmill].
   ///
   /// If a [sawmill] with the same id already exists, it will be updated.
-  Future<void> saveSawmill(Sawmill sawmill);
+  Future<void> saveSawmill(Sawmill sawmill, {bool fromServer = false});
+
+  /// Marks a `sawmill` with the given [id] as deleted.
+  Future<void> markSawmillDeleted({required String id});
 
   /// Deletes the `sawmill` with the given [id].
-  Future<void> deleteSawmill(String id);
+  Future<void> deleteSawmill({required String id});
+
+  /// Sets synced
+  Future<void> setSynced({required String id});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

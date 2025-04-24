@@ -49,18 +49,6 @@ class SawmillSyncService {
   }
 
   /// Register a date setter
-  void registerDateSetter(DateSetter dateSetter) {
-    try {
-      _coreSyncService.registerDateSetter(
-        type: 'sawmill_update',
-        dateSetter: dateSetter,
-      );
-    } catch (e) {
-      // Handle parsing errors
-    }
-  }
-
-  /// Register a date setter
   void registerDataGetter(DataGetter dataGetter) {
     try {
       _coreSyncService.registerDataGetter(

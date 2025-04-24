@@ -14,10 +14,10 @@ abstract class ContractApi {
   Stream<Contract> get contractUpdates;
 
   /// Provides the last sync date
-  Future<DateTime> getLastSyncDate(String type);
+  Future<DateTime> getLastSyncDate();
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(String type, DateTime date);
+  Future<void> setLastSyncDate(DateTime date);
 
   /// Gets updates
   Future<List<Map<String, dynamic>>> getUpdates();
@@ -37,10 +37,16 @@ abstract class ContractApi {
   /// Saves or updates a [contract].
   ///
   /// If a [contract] with the same id already exists, it will be updated.
-  Future<void> saveContract(Contract contract);
+  Future<void> saveContract(Contract contract, {bool fromServer = false});
 
-  /// Deletes the `contract` with the given [id] and [done] status.
-  Future<void> deleteContract({required String id, required bool done});
+  /// Marks a `contract` with the given [id] and [done] status as deleted.
+  Future<void> markContractDeleted({required String id, required bool done});
+
+  /// Deletes the `contract` with the given [id].
+  Future<void> deleteContract({required String id});
+
+  /// Sets synced
+  Future<void> setSynced({required String id});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

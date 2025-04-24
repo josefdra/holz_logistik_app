@@ -37,7 +37,6 @@ class LocationLocalStorage extends LocationApi {
   late final Stream<Location> _locationUpdates =
       _locationUpdatesStreamController.stream;
 
-  static const _syncToServerKey = '__location_sync_to_server_date_key__';
   static const _syncFromServerKey = '__location_sync_from_server_date_key__';
 
   /// Migration function for location table
@@ -110,7 +109,8 @@ class LocationLocalStorage extends LocationApi {
 
     final locationsJson = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnDone} = ?',
+      where: '${LocationTable.columnDeleted} = 0 AND '
+          '${LocationTable.columnDone} = ?',
       whereArgs: [if (isDone) 1 else 0],
     );
 
@@ -132,55 +132,18 @@ class LocationLocalStorage extends LocationApi {
 
   /// Provides the last sync date
   @override
-  Future<DateTime> getLastSyncDate(String type) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
-
-    final dateMillis = prefs.getInt(key);
-    final date = dateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
-        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-    return date;
-  }
+  Future<DateTime> getLastSyncDate() =>
+      _coreLocalStorage.getLastSyncDate(_syncFromServerKey);
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(String type, DateTime date) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final dateInt = date.toUtc().millisecondsSinceEpoch;
+  Future<void> setLastSyncDate(DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
 
-    if (type == 'fromServer') {
-      final lastDate = await getLastSyncDate(type);
-      if (dateInt > lastDate.millisecondsSinceEpoch) {
-        const key = _syncFromServerKey;
-
-        await prefs.setInt(key, dateInt);
-      }
-    }
-
-    const key = _syncToServerKey;
-
-    await prefs.setInt(key, dateInt);
-  }
-
-  /// Gets location updates
+  /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() async {
-    final db = await _coreLocalStorage.database;
-    final date = await getLastSyncDate('toServer');
-
-    final result = await db.query(
-      LocationTable.tableName,
-      where: '${LocationTable.columnLastEdit} > ? ORDER BY '
-          '${LocationTable.columnLastEdit} ASC',
-      whereArgs: [date.millisecondsSinceEpoch],
-    );
-
-    final locations = await _addSawmillsToLocations(result);
-
-    return locations.map((location) => location.toJson()).toList();
-  }
+  Future<List<Map<String, dynamic>>> getUpdates() =>
+      _coreLocalStorage.getUpdates(LocationTable.tableName);
 
   @override
   Future<List<Location>> getFinishedLocationsByDate(
@@ -191,10 +154,11 @@ class LocationLocalStorage extends LocationApi {
 
     final locationsJson = await db.query(
       LocationTable.tableName,
-      where: '${LocationTable.columnDone} = ? AND (${LocationTable.columnDate}'
+      where: '${LocationTable.columnDeleted} = 0 AND '
+          '${LocationTable.columnDone} = 1 AND '
+          '(${LocationTable.columnDate}'
           ' >= ? AND ${LocationTable.columnDate} <= ?)',
       whereArgs: [
-        1,
         start.toUtc().millisecondsSinceEpoch,
         end.toUtc().millisecondsSinceEpoch,
       ],
@@ -291,8 +255,11 @@ class LocationLocalStorage extends LocationApi {
 
   /// Insert or Update a [location]
   @override
-  Future<int> saveLocation(Location location) async {
-    final result = await _insertOrUpdateLocation(location.toJson());
+  Future<int> saveLocation(Location location, {bool fromServer = false}) async {
+    final json = location.toJson();
+    if (fromServer) json['synced'] = 1;
+
+    final result = await _insertOrUpdateLocation(json);
     final activeLocations =
         List<Location>.from(_activeLocationStreamController.value);
 
@@ -318,11 +285,16 @@ class LocationLocalStorage extends LocationApi {
     return _coreLocalStorage.delete(LocationTable.tableName, id);
   }
 
-  /// Delete a Location based on [id] and [done] status
+  /// Marks a Location as deleted based on [id] and [done] status
   @override
-  Future<int> deleteLocation({required String id, required bool done}) async {
+  Future<int> markLocationDeleted({
+    required String id,
+    required bool done,
+  }) async {
     final location = await getLocationById(id);
-    final result = await _deleteLocation(id);
+    final locationJson = location.toJson();
+    locationJson['deleted'] = 1;
+    final result = await _insertOrUpdateLocation(locationJson);
 
     if (done == false) {
       final locations =
@@ -336,6 +308,15 @@ class LocationLocalStorage extends LocationApi {
 
     return result;
   }
+
+  /// Delete a Location based on [id]
+  @override
+  Future<int> deleteLocation({required String id}) => _deleteLocation(id);
+
+  /// Sets synced
+  @override
+  Future<void> setSynced({required String id}) =>
+      _coreLocalStorage.setSynced(LocationTable.tableName, id);
 
   /// Close the both controllers
   @override

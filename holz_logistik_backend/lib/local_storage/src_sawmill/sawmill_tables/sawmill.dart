@@ -13,12 +13,20 @@ class SawmillTable {
   /// The column name for storing the sawmill's name.
   static const String columnName = 'name';
 
+  /// The column name for storing the sync status.
+  static const String columnSynced = 'synced';
+
+  /// The column name for storing the deleted status.
+  static const String columnDeleted = 'deleted';
+
   /// SQL statement for creating the sawmills table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
       $columnLastEdit INTEGER NOT NULL,
-      $columnName TEXT NOT NULL
+      $columnName TEXT NOT NULL,
+      $columnSynced INTEGER DEFAULT 0,
+      $columnDeleted INTEGER DEFAULT 0
     )
   ''';
 }

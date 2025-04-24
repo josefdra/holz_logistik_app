@@ -55,13 +55,19 @@ class LocationTable {
   /// The column name for storing the contract id of the location.
   static const String columnContractId = 'contractId';
 
+  /// The column name for storing the sync status.
+  static const String columnSynced = 'synced';
+
+  /// The column name for storing the deleted status.
+  static const String columnDeleted = 'deleted';
+
   /// SQL statement for creating the locations table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
       $columnId TEXT PRIMARY KEY NOT NULL,
       $columnDone INTEGER NOT NULL,
       $columnStarted INTEGER NOT NULL,
-      $columnLastEdit TEXT NOT NULL,
+      $columnLastEdit INTEGER NOT NULL,
       $columnLatitude REAL NOT NULL,
       $columnLongitude REAL NOT NULL,
       $columnPartieNr TEXT NOT NULL,
@@ -74,6 +80,8 @@ class LocationTable {
       $columnCurrentOversizeQuantity REAL NOT NULL,
       $columnCurrentPieceCount INTEGER NOT NULL,
       $columnContractId TEXT NOT NULL,
+      $columnSynced INTEGER DEFAULT 0,
+      $columnDeleted INTEGER DEFAULT 0,
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId})
     )
   ''';

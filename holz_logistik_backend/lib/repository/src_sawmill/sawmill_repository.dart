@@ -26,19 +26,20 @@ class SawmillRepository {
   void _init() {
     _sawmillSyncService
       ..registerDateGetter(_sawmillApi.getLastSyncDate)
-      ..registerDateSetter(_sawmillApi.setLastSyncDate)
       ..registerDataGetter(_sawmillApi.getUpdates);
   }
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _sawmillApi.deleteSawmill(data['id'] as String);
+      _sawmillApi.deleteSawmill(id: data['id'] as String);
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _sawmillApi.setSynced(id: data['id'] as String);
     } else {
       final sawmill = Sawmill.fromJson(data);
       _sawmillApi
-        ..saveSawmill(sawmill)
-        ..setLastSyncDate('fromServer', sawmill.lastEdit);
+        ..saveSawmill(sawmill, fromServer: true)
+        ..setLastSyncDate(sawmill.lastEdit);
     }
   }
 
@@ -46,16 +47,17 @@ class SawmillRepository {
   ///
   /// If a [sawmill] with the same id already exists, it will be replaced.
   Future<void> saveSawmill(Sawmill sawmill) {
-    _sawmillApi.saveSawmill(sawmill);
-    return _sawmillSyncService.sendSawmillUpdate(sawmill.toJson());
+    final s = sawmill.copyWith(lastEdit: DateTime.now());
+    _sawmillApi.saveSawmill(s);
+    return _sawmillSyncService.sendSawmillUpdate(s.toJson());
   }
 
   /// Deletes the `sawmill` with the given id.
   Future<void> deleteSawmill(String id) {
-    _sawmillApi.deleteSawmill(id);
+    _sawmillApi.markSawmillDeleted(id: id);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 

@@ -12,7 +12,9 @@ class FinishedLocationsBloc
     extends Bloc<FinishedLocationsEvent, FinishedLocationsState> {
   FinishedLocationsBloc({
     required LocationRepository locationRepository,
+    required ContractRepository contractRepository,
   })  : _locationRepository = locationRepository,
+        _contractRepository = contractRepository,
         super(FinishedLocationsState()) {
     on<FinishedLocationsSubscriptionRequested>(_onSubscriptionRequested);
     on<FinishedLocationsLocationUpdate>(_onLocationUpdate);
@@ -26,6 +28,7 @@ class FinishedLocationsBloc
   }
 
   final LocationRepository _locationRepository;
+  final ContractRepository _contractRepository;
   late final Timer _dateCheckTimer;
   final scrollController = ScrollController();
 
@@ -66,10 +69,19 @@ class FinishedLocationsBloc
       state.endDate,
     );
 
+    final contractNames = <String, String>{};
+
+    for (final location in locations) {
+      final contract =
+          await _contractRepository.getContractById(location.contractId);
+      contractNames[location.contractId] = contract.name;
+    }
+
     emit(
       state.copyWith(
         status: FinishedLocationsStatus.success,
         locations: locations,
+        contractNames: contractNames,
       ),
     );
   }

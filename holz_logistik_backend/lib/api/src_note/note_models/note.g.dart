@@ -9,7 +9,7 @@ part of 'note.dart';
 Note _$NoteFromJson(Map<String, dynamic> json) => Note(
       id: json['id'] as String?,
       lastEdit: _$JsonConverterFromJson<int, DateTime>(
-          json['lastEdit'], const DateTimeConverter().fromJson),
+          json['lastEdit'], const DateTimeConverter().fromJson,),
       text: json['text'] as String? ?? '',
       userId: json['userId'] as String? ?? '',
     );

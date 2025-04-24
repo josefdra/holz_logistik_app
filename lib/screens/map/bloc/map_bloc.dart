@@ -16,12 +16,15 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     required LocationRepository locationRepository,
     required AuthenticationRepository authenticationRepository,
     required SawmillRepository sawmillRepository,
+    required ContractRepository contractRepository,
   })  : _locationRepository = locationRepository,
         _authenticationRepository = authenticationRepository,
         _sawmillRepository = sawmillRepository,
+        _contractRepository = contractRepository,
         _locationService = LocationService(),
         super(MapState()) {
     on<MapSubscriptionRequested>(_onSubscriptionRequested);
+    on<MapLocationsUpdate>(_onLocationsUpdate);
     on<MapSawmillsUpdate>(_onSawmillsUpdate);
     on<MapResetMapRotation>(_onResetMapRotation);
     on<MapAuthenticationUpdate>(_onAuthenticationUpdate);
@@ -32,6 +35,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     on<MapDisableTrackingMode>(_onDisableTrackingMode);
     on<MapMapTap>(_onMapTap);
     on<MapConnectivityChanged>(_onConnectivityChanged);
+    on<MapMapReady>(_onMapReady);
 
     _initLocationTracking();
   }
@@ -39,9 +43,11 @@ class MapBloc extends Bloc<MapEvent, MapState> {
   final LocationRepository _locationRepository;
   final AuthenticationRepository _authenticationRepository;
   final SawmillRepository _sawmillRepository;
+  final ContractRepository _contractRepository;
   final MapController mapController = MapController();
   final LocationService _locationService;
 
+  late final StreamSubscription<List<Location>>? _locationSubscription;
   late final StreamSubscription<User>? _authenticationSubscription;
   late final StreamSubscription<Map<String, Sawmill>>? _sawmillSubscription;
   late final StreamSubscription<List<ConnectivityResult>>?
@@ -73,20 +79,32 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       (sawmills) => add(MapSawmillsUpdate(sawmills)),
     );
 
-    _connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen(
-              (connectivity) =>
-                  add(MapConnectivityChanged(connectivity: connectivity)),
-            );
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+          (connectivity) =>
+              add(MapConnectivityChanged(connectivity: connectivity)),
+        );
 
-    await emit.forEach<List<Location>>(
-      _locationRepository.activeLocations,
-      onData: (locations) => state.copyWith(
+    _locationSubscription = _locationRepository.activeLocations
+        .listen((locations) => add(MapLocationsUpdate(locations: locations)));
+  }
+
+  Future<void> _onLocationsUpdate(
+    MapLocationsUpdate event,
+    Emitter<MapState> emit,
+  ) async {
+    final contractNames = <String, String>{};
+
+    for (final location in event.locations) {
+      final contract =
+          await _contractRepository.getContractById(location.contractId);
+      contractNames[location.contractId] = contract.name;
+    }
+
+    emit(
+      state.copyWith(
         status: MapStatus.success,
-        locations: locations,
-      ),
-      onError: (_, __) => state.copyWith(
-        status: MapStatus.failure,
+        locations: event.locations,
+        contractNames: contractNames,
       ),
     );
   }
@@ -95,7 +113,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     MapResetMapRotation event,
     Emitter<MapState> emit,
   ) async {
-    mapController.rotate(0);
+    if (state.mapReady) {
+      mapController.rotate(0);
+    }
   }
 
   void _onAuthenticationUpdate(
@@ -117,10 +137,12 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Emitter<MapState> emit,
   ) async {
     emit(state.copyWith(trackingMode: true));
-    mapController.rotate(0);
+    if (state.mapReady) {
+      mapController.rotate(0);
 
-    if (state.trackingMode && state.userLocation != null) {
-      mapController.move(state.userLocation!, 14);
+      if (state.trackingMode && state.userLocation != null) {
+        mapController.move(state.userLocation!, 14);
+      }
     }
   }
 
@@ -150,7 +172,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
       ),
     );
 
-    if (state.trackingMode) {
+    if (state.trackingMode && state.mapReady) {
       mapController.move(newLocation, mapController.camera.zoom);
     }
   }
@@ -176,9 +198,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     Emitter<MapState> emit,
   ) async {
     final result = event.connectivity[0];
-    if (result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.mobile ||
-        result == ConnectivityResult.ethernet) {
+    if ((result == ConnectivityResult.wifi ||
+            result == ConnectivityResult.mobile ||
+            result == ConnectivityResult.ethernet) &&
+        state.mapReady) {
       mapController.move(
         mapController.camera.center,
         mapController.camera.zoom,
@@ -186,11 +209,19 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     }
   }
 
+  void _onMapReady(
+    MapMapReady event,
+    Emitter<MapState> emit,
+  ) {
+    emit(state.copyWith(mapReady: true));
+  }
+
   @override
   Future<void> close() {
     _locationService.dispose();
     _authenticationSubscription?.cancel();
     _sawmillSubscription?.cancel();
+    _locationSubscription?.cancel();
     _connectivitySubscription?.cancel();
     return super.close();
   }

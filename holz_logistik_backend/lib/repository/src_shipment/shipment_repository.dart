@@ -26,7 +26,6 @@ class ShipmentRepository {
   void _init() {
     _shipmentSyncService
       ..registerDateGetter(_shipmentApi.getLastSyncDate)
-      ..registerDateSetter(_shipmentApi.setLastSyncDate)
       ..registerDataGetter(_shipmentApi.getUpdates);
   }
 
@@ -43,13 +42,14 @@ class ShipmentRepository {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _shipmentApi.deleteShipment(
         id: data['id'] as String,
-        locationId: data['locationId'] as String,
       );
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _shipmentApi.setSynced(id: data['id'] as String);
     } else {
       final shipment = Shipment.fromJson(data);
       _shipmentApi
-        ..saveShipment(shipment)
-        ..setLastSyncDate('fromServer', shipment.lastEdit);
+        ..saveShipment(shipment, fromServer: true)
+        ..setLastSyncDate(shipment.lastEdit);
     }
   }
 
@@ -61,13 +61,14 @@ class ShipmentRepository {
     final roundedOversizeQuantity =
         (shipment.oversizeQuantity * 10).round() / 10;
 
-    _shipmentApi.saveShipment(
-      shipment.copyWith(
-        quantity: roundedQuantity,
-        oversizeQuantity: roundedOversizeQuantity,
-      ),
+    final s = shipment.copyWith(
+      quantity: roundedQuantity,
+      oversizeQuantity: roundedOversizeQuantity,
+      lastEdit: DateTime.now(),
     );
-    return _shipmentSyncService.sendShipmentUpdate(shipment.toJson());
+
+    _shipmentApi.saveShipment(s);
+    return _shipmentSyncService.sendShipmentUpdate(s.toJson());
   }
 
   /// Deletes the `shipment` with the given id.
@@ -75,10 +76,10 @@ class ShipmentRepository {
     required String id,
     required String locationId,
   }) {
-    _shipmentApi.deleteShipment(id: id, locationId: locationId);
+    _shipmentApi.markShipmentDeleted(id: id, locationId: locationId);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'locationId': locationId,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };

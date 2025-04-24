@@ -22,6 +22,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
         _contractRepository = contractRepository,
         super(const LocationListState()) {
     on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
+    on<LocationListLocationsUpdate>(_onLocationsUpdate);
     on<LocationListLocationDeleted>(_onLocationDeleted);
     on<LocationListSearchQueryChanged>(
       _onSearchQueryChanged,
@@ -37,20 +38,36 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   final ContractRepository _contractRepository;
   final scrollController = ScrollController();
 
+  late final StreamSubscription<List<Location>>? _locationSubscription;
+
   Future<void> _onSubscriptionRequested(
     LocationListSubscriptionRequested event,
     Emitter<LocationListState> emit,
   ) async {
     emit(state.copyWith(status: LocationListStatus.loading));
 
-    await emit.forEach<List<Location>>(
-      _locationRepository.activeLocations,
-      onData: (locations) => state.copyWith(
+    _locationSubscription = _locationRepository.activeLocations.listen(
+      (locations) => add(LocationListLocationsUpdate(locations: locations)),
+    );
+  }
+
+  Future<void> _onLocationsUpdate(
+    LocationListLocationsUpdate event,
+    Emitter<LocationListState> emit,
+  ) async {
+    final contractNames = <String, String>{};
+
+    for (final location in event.locations) {
+      final contract =
+          await _contractRepository.getContractById(location.contractId);
+      contractNames[location.contractId] = contract.name;
+    }
+
+    emit(
+      state.copyWith(
         status: LocationListStatus.success,
-        locations: locations,
-      ),
-      onError: (_, __) => state.copyWith(
-        status: LocationListStatus.failure,
+        locations: event.locations,
+        contractNames: contractNames,
       ),
     );
   }
@@ -92,6 +109,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   @override
   Future<void> close() {
     scrollController.dispose();
+    _locationSubscription?.cancel();
     return super.close();
   }
 }

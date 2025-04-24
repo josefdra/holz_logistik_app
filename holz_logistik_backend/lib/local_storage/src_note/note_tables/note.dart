@@ -18,6 +18,12 @@ class NoteTable {
   /// The column name for storing the id of the user that created the note.
   static const String columnUserId = 'userId';
 
+  /// The column name for storing the sync status.
+  static const String columnSynced = 'synced';
+
+  /// The column name for storing the deleted status.
+  static const String columnDeleted = 'deleted';
+
   /// SQL statement for creating the notes table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -25,6 +31,8 @@ class NoteTable {
       $columnLastEdit INTEGER NOT NULL,
       $columnText TEXT NOT NULL,
       $columnUserId TEXT NOT NULL,
+      $columnSynced INTEGER DEFAULT 0,
+      $columnDeleted INTEGER DEFAULT 0,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId})
     )
   ''';

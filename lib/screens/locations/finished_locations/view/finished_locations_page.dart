@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/screens/locations/finished_locations/finished_locations.dart';
 import 'package:holz_logistik/widgets/locations/location_widgets.dart';
-import 'package:holz_logistik_backend/repository/location_repository.dart';
+import 'package:holz_logistik_backend/repository/repository.dart';
 
 class FinishedLocationsPage extends StatelessWidget {
   const FinishedLocationsPage({super.key});
@@ -13,6 +13,7 @@ class FinishedLocationsPage extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => FinishedLocationsBloc(
           locationRepository: context.read<LocationRepository>(),
+          contractRepository: context.read<ContractRepository>(),
         ),
         child: const FinishedLocationsPage(),
       ),
@@ -24,6 +25,7 @@ class FinishedLocationsPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => FinishedLocationsBloc(
         locationRepository: context.read<LocationRepository>(),
+        contractRepository: context.read<ContractRepository>(),
       )..add(const FinishedLocationsSubscriptionRequested()),
       child: Scaffold(
         appBar: AppBar(title: const Text('Abgeschlossene Standorte')),
@@ -131,6 +133,7 @@ class FinishedLocationsList extends StatelessWidget {
           final location = state.locations.elementAt(index);
           return LocationListTile(
             location: location,
+            contractName: state.contractNames[location.contractId]!,
             onTap: () => showDialog<LocationDetailsWidget>(
               context: context,
               builder: (context) => LocationDetailsWidget(

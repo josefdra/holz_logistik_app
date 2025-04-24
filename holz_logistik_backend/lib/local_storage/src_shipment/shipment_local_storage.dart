@@ -26,7 +26,6 @@ class ShipmentLocalStorage extends ShipmentApi {
   late final Stream<Shipment> _shipmentUpdates =
       _shipmentUpdatesStreamController.stream;
 
-  static const _syncToServerKey = '__shipment_sync_to_server_date_key__';
   static const _syncFromServerKey = '__shipment_sync_from_server_date_key__';
 
   /// Migration function for shipment table
@@ -43,53 +42,18 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Provides the last sync date
   @override
-  Future<DateTime> getLastSyncDate(String type) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
-
-    final dateMillis = prefs.getInt(key);
-    final date = dateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
-        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-    return date;
-  }
+  Future<DateTime> getLastSyncDate() =>
+      _coreLocalStorage.getLastSyncDate(_syncFromServerKey);
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(String type, DateTime date) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final dateInt = date.toUtc().millisecondsSinceEpoch;
+  Future<void> setLastSyncDate(DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
 
-    if (type == 'fromServer') {
-      final lastDate = await getLastSyncDate(type);
-      if (dateInt > lastDate.millisecondsSinceEpoch) {
-        const key = _syncFromServerKey;
-
-        await prefs.setInt(key, dateInt);
-      }
-    }
-
-    const key = _syncToServerKey;
-
-    await prefs.setInt(key, dateInt);
-  }
-
-  /// Gets shipment updates
+  /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() async {
-    final db = await _coreLocalStorage.database;
-    final date = await getLastSyncDate('toServer');
-
-    final result = await db.query(
-      ShipmentTable.tableName,
-      where: '${ShipmentTable.columnLastEdit} > ? ORDER BY '
-          '${ShipmentTable.columnLastEdit} ASC',
-      whereArgs: [date.millisecondsSinceEpoch],
-    );
-
-    return result;
-  }
+  Future<List<Map<String, dynamic>>> getUpdates() =>
+      _coreLocalStorage.getUpdates(ShipmentTable.tableName);
 
   @override
   Future<List<Shipment>> getShipmentsByLocation(String locationId) async {
@@ -121,7 +85,7 @@ class ShipmentLocalStorage extends ShipmentApi {
           '${ShipmentTable.columnLastEdit} <= ?',
       whereArgs: [
         start.toUtc().millisecondsSinceEpoch,
-        end.toUtc().millisecondsSinceEpoch
+        end.toUtc().millisecondsSinceEpoch,
       ],
     );
 
@@ -155,8 +119,11 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Insert or Update a [shipment]
   @override
-  Future<int> saveShipment(Shipment shipment) async {
-    final result = await _insertOrUpdateShipment(shipment.toJson());
+  Future<int> saveShipment(Shipment shipment, {bool fromServer = false}) async {
+    final json = shipment.toJson();
+    if (fromServer) json['synced'] = 1;
+
+    final result = await _insertOrUpdateShipment(json);
 
     _shipmentUpdatesStreamController.add(shipment);
 
@@ -168,18 +135,29 @@ class ShipmentLocalStorage extends ShipmentApi {
     return _coreLocalStorage.delete(ShipmentTable.tableName, id);
   }
 
-  /// Delete a Shipment based on [id] and [locationId]
+  /// Marks a Shipment deleted based on [id] and [locationId]
   @override
-  Future<int> deleteShipment({
+  Future<int> markShipmentDeleted({
     required String id,
     required String locationId,
   }) async {
     final shipment = await getShipmentById(id);
-    final result = await _deleteShipment(id);
+    final shipmentJson = shipment.toJson();
+    shipmentJson['deleted'] = 1;
+    final result = await _insertOrUpdateShipment(shipmentJson);
 
     _shipmentUpdatesStreamController.add(shipment);
     return result;
   }
+
+  /// Delete a Shipment based on [id]
+  @override
+  Future<void> deleteShipment({required String id}) => _deleteShipment(id);
+
+  /// Sets synced
+  @override
+  Future<void> setSynced({required String id}) =>
+      _coreLocalStorage.setSynced(ShipmentTable.tableName, id);
 
   /// Close the [_shipmentUpdatesStreamController]
   @override

@@ -27,7 +27,6 @@ class NoteLocalStorage extends NoteApi {
 
   late final Stream<List<Note>> _notes = _noteStreamController.stream;
 
-  static const _syncToServerKey = '__note_sync_to_server_date_key__';
   static const _syncFromServerKey = '__note_sync_from_server_date_key__';
 
   /// Migration function for note table
@@ -53,53 +52,18 @@ class NoteLocalStorage extends NoteApi {
 
   /// Provides the last sync date
   @override
-  Future<DateTime> getLastSyncDate(String type) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
-
-    final dateMillis = prefs.getInt(key);
-    final date = dateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
-        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-    return date;
-  }
+  Future<DateTime> getLastSyncDate() =>
+      _coreLocalStorage.getLastSyncDate(_syncFromServerKey);
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(String type, DateTime date) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final dateInt = date.toUtc().millisecondsSinceEpoch;
+  Future<void> setLastSyncDate(DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
 
-    if (type == 'fromServer') {
-      final lastDate = await getLastSyncDate(type);
-      if (dateInt > lastDate.millisecondsSinceEpoch) {
-        const key = _syncFromServerKey;
-
-        await prefs.setInt(key, dateInt);
-      }
-    }
-
-    const key = _syncToServerKey;
-
-    await prefs.setInt(key, dateInt);
-  }
-
-  /// Gets note updates
+  /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() async {
-    final db = await _coreLocalStorage.database;
-    final date = await getLastSyncDate('toServer');
-
-    final result = await db.query(
-      NoteTable.tableName,
-      where: '${NoteTable.columnLastEdit} > ? ORDER BY '
-          '${NoteTable.columnLastEdit} ASC',
-      whereArgs: [date.millisecondsSinceEpoch],
-    );
-
-    return result;
-  }
+  Future<List<Map<String, dynamic>>> getUpdates() =>
+      _coreLocalStorage.getUpdates(NoteTable.tableName);
 
   /// Insert or Update a `note` to the database based on [noteData]
   Future<int> _insertOrUpdateNote(Map<String, dynamic> noteData) async {
@@ -108,8 +72,11 @@ class NoteLocalStorage extends NoteApi {
 
   /// Insert or Update a [note]
   @override
-  Future<int> saveNote(Note note) async {
-    final result = await _insertOrUpdateNote(note.toJson());
+  Future<int> saveNote(Note note, {bool fromServer = false}) async {
+    final json = note.toJson();
+    if (fromServer) json['synced'] = 1;
+
+    final result = await _insertOrUpdateNote(json);
     final notes = [..._noteStreamController.value];
     final noteIndex = notes.indexWhere((n) => n.id == note.id);
     if (noteIndex > -1) {
@@ -124,21 +91,35 @@ class NoteLocalStorage extends NoteApi {
   }
 
   /// Delete a Note from the database based on [id]
-  Future<int> _deleteNote(String id) async {
-    return _coreLocalStorage.delete(NoteTable.tableName, id);
+  Future<void> _deleteNote(String id) async {
+    await _coreLocalStorage.delete(NoteTable.tableName, id);
   }
 
-  /// Delete a Note based on [id]
+  /// Marks a Note as deleted based on [id]
   @override
-  Future<int> deleteNote(String id) async {
-    final result = await _deleteNote(id);
+  Future<void> markNoteDeleted({required String id}) async {
+    final noteJson = Map<String, dynamic>.from(
+      (await _coreLocalStorage.getById(NoteTable.tableName, id)).first,
+    );
+    noteJson['deleted'] = 1;
+    await _insertOrUpdateNote(noteJson);
+
     final notes = [..._noteStreamController.value]
       ..removeWhere((n) => n.id == id);
 
     _noteStreamController.add(notes);
 
-    return result;
+    return Future<void>.value();
   }
+
+  /// Delete a Note based on [id]
+  @override
+  Future<void> deleteNote({required String id}) => _deleteNote(id);
+
+  /// Sets synced
+  @override
+  Future<void> setSynced({required String id}) =>
+      _coreLocalStorage.setSynced(NoteTable.tableName, id);
 
   /// Close the [_noteStreamController]
   @override

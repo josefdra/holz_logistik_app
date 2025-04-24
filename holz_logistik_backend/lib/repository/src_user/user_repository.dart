@@ -26,19 +26,20 @@ class UserRepository {
   void _init() {
     _userSyncService
       ..registerDateGetter(_userApi.getLastSyncDate)
-      ..registerDateSetter(_userApi.setLastSyncDate)
       ..registerDataGetter(_userApi.getUpdates);
   }
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data['deleted'] == true || data['deleted'] == 1) {
-      _userApi.deleteUser(data['id'] as String);
+      _userApi.deleteUser(id: data['id'] as String);
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _userApi.setSynced(id: data['id'] as String);
     } else {
       final user = User.fromJson(data);
       _userApi
-        ..saveUser(user)
-        ..setLastSyncDate('fromServer', user.lastEdit);
+        ..saveUser(user, fromServer: true)
+        ..setLastSyncDate(user.lastEdit);
     }
   }
 
@@ -46,8 +47,9 @@ class UserRepository {
   ///
   /// If a [user] with the same id already exists, it will be replaced.
   Future<void> saveUser(User user) {
-    _userApi.saveUser(user);
-    return _userSyncService.sendUserUpdate(user.toJson());
+    final u = user.copyWith(lastEdit: DateTime.now());
+    _userApi.saveUser(u);
+    return _userSyncService.sendUserUpdate(u.toJson());
   }
 
   /// Saves a future user.
@@ -58,10 +60,10 @@ class UserRepository {
 
   /// Deletes the `user` with the given id.
   Future<void> deleteUser(String id) {
-    _userApi.deleteUser(id);
+    _userApi.markUserDeleted(id: id);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 

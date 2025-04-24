@@ -26,7 +26,6 @@ class PhotoLocalStorage extends PhotoApi {
   late final Stream<String> _photoUpdates =
       _photoUpdatesStreamController.stream;
 
-  static const _syncToServerKey = '__photo_sync_to_server_date_key__';
   static const _syncFromServerKey = '__photo_sync_from_server_date_key__';
 
   /// Migration function for photo table
@@ -43,61 +42,25 @@ class PhotoLocalStorage extends PhotoApi {
 
   /// Provides the last sync date
   @override
-  Future<DateTime> getLastSyncDate(String type) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
-
-    final dateMillis = prefs.getInt(key);
-    final date = dateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
-        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-    return date;
-  }
+  Future<DateTime> getLastSyncDate() =>
+      _coreLocalStorage.getLastSyncDate(_syncFromServerKey);
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(String type, DateTime date) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final dateInt = date.toUtc().millisecondsSinceEpoch;
+  Future<void> setLastSyncDate(DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
 
-    if (type == 'fromServer') {
-      final lastDate = await getLastSyncDate(type);
-      if (dateInt > lastDate.millisecondsSinceEpoch) {
-        const key = _syncFromServerKey;
-
-        await prefs.setInt(key, dateInt);
-      }
-    }
-
-    const key = _syncToServerKey;
-
-    await prefs.setInt(key, dateInt);
-  }
-
-  /// Gets photo updates
+  /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() async {
-    final db = await _coreLocalStorage.database;
-    final date = await getLastSyncDate('toServer');
-
-    final result = await db.query(
-      PhotoTable.tableName,
-      where: '${PhotoTable.columnLastEdit} > ? ORDER BY '
-          '${PhotoTable.columnLastEdit} ASC',
-      whereArgs: [date.millisecondsSinceEpoch],
-    );
-
-    return result;
-  }
+  Future<List<Map<String, dynamic>>> getUpdates() =>
+      _coreLocalStorage.getUpdates(PhotoTable.tableName);
 
   @override
   Future<bool> checkIfPhotoExists(String photoId) async {
     final db = await _coreLocalStorage.database;
     final res = await db.rawQuery(
-      '''
-    SELECT ${PhotoTable.columnId} FROM ${PhotoTable.tableName} WHERE ${PhotoTable.columnId} = ?
-  ''',
+      'SELECT ${PhotoTable.columnId} FROM ${PhotoTable.tableName} '
+      'WHERE ${PhotoTable.columnDeleted} = 0 AND ${PhotoTable.columnId} = ?',
       [photoId],
     );
 
@@ -119,9 +82,9 @@ class PhotoLocalStorage extends PhotoApi {
   Future<List<String>> getPhotoIdsByLocation(String locationId) async {
     final db = await _coreLocalStorage.database;
     final res = await db.rawQuery(
-      '''
-    SELECT ${PhotoTable.columnId} FROM ${PhotoTable.tableName} WHERE ${PhotoTable.columnLocationId} = ?
-  ''',
+      'SELECT ${PhotoTable.columnId} FROM ${PhotoTable.tableName} '
+      'WHERE ${PhotoTable.columnDeleted} = 0 '
+      'AND ${PhotoTable.columnLocationId} = ?',
       [locationId],
     );
 
@@ -140,8 +103,11 @@ class PhotoLocalStorage extends PhotoApi {
 
   /// Insert or Update a [photo]
   @override
-  Future<int> savePhoto(Photo photo) async {
-    final result = await _insertOrUpdatePhoto(photo.toJson());
+  Future<int> savePhoto(Photo photo, {bool fromServer = false}) async {
+    final json = photo.toJson();
+    if (fromServer) json['synced'] = 1;
+
+    final result = await _insertOrUpdatePhoto(json);
 
     _photoUpdatesStreamController.add(photo.locationId);
 
@@ -155,27 +121,41 @@ class PhotoLocalStorage extends PhotoApi {
 
   /// Delete a Photo based on [id] and [locationId]
   @override
-  Future<int> deletePhoto({
+  Future<void> markPhotoDeleted({
     required String id,
     required String locationId,
   }) async {
-    final result = await _deletePhoto(id);
+    final photoJson = Map<String, dynamic>.from(
+      (await _coreLocalStorage.getById(PhotoTable.tableName, id)).first,
+    );
+    photoJson['deleted'] = 1;
+    await _insertOrUpdatePhoto(photoJson);
+
     _photoUpdatesStreamController.add(locationId);
 
-    return result;
+    return Future<void>.value();
   }
 
-  /// Delete a Photos based on [locationId]
+  /// Delete a Photo based on [id]
   @override
-  Future<int> deletePhotosByLocationId({
+  Future<int> deletePhoto({required String id}) => _deletePhoto(id);
+
+  /// Delete Photos based on [locationId]
+  @override
+  Future<void> deletePhotosByLocationId({
     required String locationId,
   }) async {
-    return _coreLocalStorage.deleteByColumn(
-      PhotoTable.tableName,
-      PhotoTable.columnLocationId,
-      locationId,
-    );
+    final ids = await getPhotoIdsByLocation(locationId);
+
+    for (final id in ids) {
+      await markPhotoDeleted(id: id, locationId: locationId);
+    }
   }
+
+  /// Sets synced
+  @override
+  Future<void> setSynced({required String id}) =>
+      _coreLocalStorage.setSynced(PhotoTable.tableName, id);
 
   /// Close the [_photoUpdatesStreamController]
   @override

@@ -27,7 +27,6 @@ class UserLocalStorage extends UserApi {
 
   late final Stream<Map<String, User>> _users = _userStreamController.stream;
 
-  static const _syncToServerKey = '__user_sync_to_server_date_key__';
   static const _syncFromServerKey = '__user_sync_from_server_date_key__';
 
   /// Migration function for user table
@@ -58,53 +57,18 @@ class UserLocalStorage extends UserApi {
 
   /// Provides the last sync date
   @override
-  Future<DateTime> getLastSyncDate(String type) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
-
-    final dateMillis = prefs.getInt(key);
-    final date = dateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
-        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-    return date;
-  }
+  Future<DateTime> getLastSyncDate() =>
+      _coreLocalStorage.getLastSyncDate(_syncFromServerKey);
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(String type, DateTime date) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final dateInt = date.toUtc().millisecondsSinceEpoch;
+  Future<void> setLastSyncDate(DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
 
-    if (type == 'fromServer') {
-      final lastDate = await getLastSyncDate(type);
-      if (dateInt > lastDate.millisecondsSinceEpoch) {
-        const key = _syncFromServerKey;
-
-        await prefs.setInt(key, dateInt);
-      }
-    }
-
-    const key = _syncToServerKey;
-
-    await prefs.setInt(key, dateInt);
-  }
-
-  /// Gets user updates
+  /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() async {
-    final db = await _coreLocalStorage.database;
-    final date = await getLastSyncDate('toServer');
-
-    final result = await db.query(
-      UserTable.tableName,
-      where: '${UserTable.columnLastEdit} > ? ORDER BY '
-          '${UserTable.columnLastEdit} ASC',
-      whereArgs: [date.millisecondsSinceEpoch],
-    );
-
-    return result;
-  }
+  Future<List<Map<String, dynamic>>> getUpdates() =>
+      _coreLocalStorage.getUpdates(UserTable.tableName);
 
   /// Insert or Update a `user` to the database based on [userData]
   Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
@@ -113,10 +77,12 @@ class UserLocalStorage extends UserApi {
 
   /// Insert or Update a [user]
   @override
-  Future<int> saveUser(User user) async {
+  Future<int> saveUser(User user, {bool fromServer = false}) async {
     if (user.name == '') return 0;
+    final json = user.toJson();
+    if (fromServer) json['synced'] = 1;
 
-    final result = await _insertOrUpdateUser(user.toJson());
+    final result = await _insertOrUpdateUser(json);
     final users = Map<String, User>.from(_userStreamController.value);
 
     users[user.id] = user;
@@ -130,17 +96,29 @@ class UserLocalStorage extends UserApi {
     return _coreLocalStorage.delete(UserTable.tableName, id);
   }
 
-  /// Delete a User based on [id]
+  /// Marks a User as deleted based on [id]
   @override
-  Future<int> deleteUser(String id) async {
-    final result = await _deleteUser(id);
+  Future<void> markUserDeleted({required String id}) async {
+    final userJson = Map<String, dynamic>.from(
+      (await _coreLocalStorage.getById(UserTable.tableName, id)).first,
+    );
+    userJson['deleted'] = 1;
+    await _insertOrUpdateUser(userJson);
+
     final users = Map<String, User>.from(_userStreamController.value)
       ..removeWhere((key, _) => key == id);
 
     _userStreamController.add(users);
-
-    return result;
   }
+
+  /// Delete a User based on [id]
+  @override
+  Future<int> deleteUser({required String id}) => _deleteUser(id);
+
+  /// Sets synced
+  @override
+  Future<void> setSynced({required String id}) =>
+      _coreLocalStorage.setSynced(UserTable.tableName, id);
 
   /// Close the [_userStreamController]
   @override

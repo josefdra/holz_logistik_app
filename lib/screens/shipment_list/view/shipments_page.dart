@@ -151,6 +151,7 @@ class ShipmentList extends StatelessWidget {
             userName: state.users[shipment.userId]!.name,
             sawmillName:
                 state.sawmills[shipment.sawmillId]!.name,
+            contractRepository: context.read<ContractRepository>(),
             onDeleted: () {
               context.read<ShipmentsBloc>().add(
                     ShipmentsShipmentDeleted(shipment),

@@ -37,7 +37,11 @@ class AnalyticsContractListTile extends StatelessWidget {
               textAlign: TextAlign.start,
             ),
           ),
-          Container(width: 70, height: 5, color: colorFromString(contract.id)),
+          Container(
+            width: 70,
+            height: 5,
+            color: colorFromString(contract.name),
+          ),
           Expanded(
             child: Text(
               '${contract.availableQuantity} fm',

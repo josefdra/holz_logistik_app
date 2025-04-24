@@ -29,7 +29,6 @@ class ContractRepository {
   void _init() {
     _contractSyncService
       ..registerDateGetter(_contractApi.getLastSyncDate)
-      ..registerDateSetter(_contractApi.setLastSyncDate)
       ..registerDataGetter(_contractApi.getUpdates);
   }
 
@@ -53,13 +52,14 @@ class ContractRepository {
     if (data['deleted'] == true || data['deleted'] == 1) {
       _contractApi.deleteContract(
         id: data['id'] as String,
-        done: data['done'] as bool,
       );
+    } else if (data['synced'] == true || data['synced'] == 1) {
+      _contractApi.setSynced(id: data['id'] as String);
     } else {
       final contract = Contract.fromJson(data);
       _contractApi
-        ..saveContract(contract)
-        ..setLastSyncDate('fromServer', contract.lastEdit);
+        ..saveContract(contract, fromServer: true)
+        ..setLastSyncDate(contract.lastEdit);
     }
   }
 
@@ -67,16 +67,17 @@ class ContractRepository {
   ///
   /// If a [contract] with the same id already exists, it will be updated.
   Future<void> saveContract(Contract contract) {
-    _contractApi.saveContract(contract);
-    return _contractSyncService.sendContractUpdate(contract.toJson());
+    final c = contract.copyWith(lastEdit: DateTime.now());
+    _contractApi.saveContract(c);
+    return _contractSyncService.sendContractUpdate(c.toJson());
   }
 
   /// Deletes the `contract` with the given id.
   Future<void> deleteContract({required String id, required bool done}) {
-    _contractApi.deleteContract(id: id, done: done);
+    _contractApi.markContractDeleted(id: id, done: done);
     final data = {
       'id': id,
-      'deleted': true,
+      'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
 

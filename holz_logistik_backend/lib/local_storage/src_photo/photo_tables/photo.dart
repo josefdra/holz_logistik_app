@@ -18,6 +18,12 @@ class PhotoTable {
   /// The column name for storing the location id of the photo.
   static const String columnLocationId = 'locationId';
 
+  /// The column name for storing the sync status.
+  static const String columnSynced = 'synced';
+
+  /// The column name for storing the deleted status.
+  static const String columnDeleted = 'deleted';
+
   /// SQL statement for creating the photos table with the defined schema.
   static const String createTable = '''
     CREATE TABLE $tableName (
@@ -25,6 +31,8 @@ class PhotoTable {
       $columnLastEdit INTEGER NOT NULL,
       $columnPhoto BLOB NOT NULL,
       $columnLocationId TEXT NOT NULL,
+      $columnSynced INTEGER DEFAULT 0,
+      $columnDeleted INTEGER DEFAULT 0,
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId})
     )
   ''';

@@ -15,6 +15,15 @@ final class LocationListSubscriptionRequested extends LocationListEvent {
   const LocationListSubscriptionRequested();
 }
 
+class LocationListLocationsUpdate extends LocationListEvent {
+  const LocationListLocationsUpdate({required this.locations});
+
+  final List<Location> locations;
+
+  @override
+  List<Object> get props => [locations];
+}
+
 final class LocationListLocationDeleted extends LocationListEvent {
   const LocationListLocationDeleted(this.location);
 

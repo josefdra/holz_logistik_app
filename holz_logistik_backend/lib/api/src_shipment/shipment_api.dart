@@ -11,10 +11,10 @@ abstract class ShipmentApi {
   Stream<Shipment> get shipmentUpdates;
 
   /// Provides the last sync date
-  Future<DateTime> getLastSyncDate(String type);
+  Future<DateTime> getLastSyncDate();
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(String type, DateTime date);
+  Future<void> setLastSyncDate(DateTime date);
 
   /// Gets updates
   Future<List<Map<String, dynamic>>> getUpdates();
@@ -31,10 +31,19 @@ abstract class ShipmentApi {
   /// Saves or updates a [shipment].
   ///
   /// If a [shipment] with the same id already exists, it will be updated.
-  Future<void> saveShipment(Shipment shipment);
+  Future<void> saveShipment(Shipment shipment, {bool fromServer = false});
 
-  /// Deletes the `shipment` with the given [id] and [locationId].
-  Future<void> deleteShipment({required String id, required String locationId});
+  /// Marks a `shipment` with the given [id] and [locationId] as deleted.
+  Future<void> markShipmentDeleted({
+    required String id,
+    required String locationId,
+  });
+
+  /// Deletes the `shipment` with the given [id].
+  Future<void> deleteShipment({required String id});
+
+  /// Sets synced
+  Future<void> setSynced({required String id});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

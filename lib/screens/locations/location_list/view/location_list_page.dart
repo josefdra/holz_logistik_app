@@ -130,6 +130,7 @@ class LocationList extends StatelessWidget {
                           state.searchQueryedLocations.elementAt(index);
                       return LocationListTile(
                         location: location,
+                        contractName: state.contractNames[location.contractId]!,
                         photo: state.photos[location.id],
                         onTap: () => showDialog<LocationDetailsWidget>(
                           context: context,

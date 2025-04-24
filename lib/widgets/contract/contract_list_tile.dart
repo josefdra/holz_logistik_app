@@ -17,7 +17,7 @@ class ContractListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Container(width: 15, color: colorFromString(contract.id)),
+      leading: Container(width: 15, color: colorFromString(contract.name)),
       onTap: onTap,
       title: Text(contract.title),
       subtitle: Text(contract.additionalInfo),

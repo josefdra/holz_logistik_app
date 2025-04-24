@@ -6,6 +6,7 @@ final class FinishedLocationsState extends Equatable {
   FinishedLocationsState({
     this.status = FinishedLocationsStatus.initial,
     this.locations = const [],
+    this.contractNames = const {},
     DateTime? endDate,
     DateTime? startDate,
     this.customDate = false,
@@ -18,6 +19,7 @@ final class FinishedLocationsState extends Equatable {
 
   final FinishedLocationsStatus status;
   final List<Location> locations;
+  final Map<String, String> contractNames;
   final DateTime endDate;
   final DateTime startDate;
   final bool customDate;
@@ -25,6 +27,7 @@ final class FinishedLocationsState extends Equatable {
   FinishedLocationsState copyWith({
     FinishedLocationsStatus? status,
     List<Location>? locations,
+    Map<String, String>? contractNames,
     DateTime? endDate,
     DateTime? startDate,
     bool? customDate,
@@ -32,6 +35,7 @@ final class FinishedLocationsState extends Equatable {
     return FinishedLocationsState(
       status: status ?? this.status,
       locations: locations ?? this.locations,
+      contractNames: contractNames ?? this.contractNames,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
       customDate: customDate ?? this.customDate,
@@ -42,6 +46,7 @@ final class FinishedLocationsState extends Equatable {
   List<Object?> get props => [
         status,
         locations,
+        contractNames,
         endDate,
         startDate,
         customDate,

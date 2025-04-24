@@ -29,7 +29,6 @@ class SawmillLocalStorage extends SawmillApi {
   late final Stream<Map<String, Sawmill>> _sawmills =
       _sawmillStreamController.stream;
 
-  static const _syncToServerKey = '__sawmill_sync_to_server_date_key__';
   static const _syncFromServerKey = '__sawmill_sync_from_server_date_key__';
 
   /// Migration function for sawmill table
@@ -59,53 +58,18 @@ class SawmillLocalStorage extends SawmillApi {
 
   /// Provides the last sync date
   @override
-  Future<DateTime> getLastSyncDate(String type) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final key = type == 'toServer' ? _syncToServerKey : _syncFromServerKey;
-
-    final dateMillis = prefs.getInt(key);
-    final date = dateMillis != null
-        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
-        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-
-    return date;
-  }
+  Future<DateTime> getLastSyncDate() =>
+      _coreLocalStorage.getLastSyncDate(_syncFromServerKey);
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(String type, DateTime date) async {
-    final prefs = await _coreLocalStorage.sharedPreferences;
-    final dateInt = date.toUtc().millisecondsSinceEpoch;
+  Future<void> setLastSyncDate(DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
 
-    if (type == 'fromServer') {
-      final lastDate = await getLastSyncDate(type);
-      if (dateInt > lastDate.millisecondsSinceEpoch) {
-        const key = _syncFromServerKey;
-
-        await prefs.setInt(key, dateInt);
-      }
-    }
-
-    const key = _syncToServerKey;
-
-    await prefs.setInt(key, dateInt);
-  }
-
-  /// Gets sawmill updates
+  /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() async {
-    final db = await _coreLocalStorage.database;
-    final date = await getLastSyncDate('toServer');
-
-    final result = await db.query(
-      SawmillTable.tableName,
-      where: '${SawmillTable.columnLastEdit} > ? ORDER BY '
-          '${SawmillTable.columnLastEdit} ASC',
-      whereArgs: [date.millisecondsSinceEpoch],
-    );
-
-    return result;
-  }
+  Future<List<Map<String, dynamic>>> getUpdates() =>
+      _coreLocalStorage.getUpdates(SawmillTable.tableName);
 
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
   Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {
@@ -117,8 +81,11 @@ class SawmillLocalStorage extends SawmillApi {
 
   /// Insert or Update a [sawmill]
   @override
-  Future<int> saveSawmill(Sawmill sawmill) async {
-    final result = await _insertOrUpdateSawmill(sawmill.toJson());
+  Future<int> saveSawmill(Sawmill sawmill, {bool fromServer = false}) async {
+    final json = sawmill.toJson();
+    if (fromServer) json['synced'] = 1;
+
+    final result = await _insertOrUpdateSawmill(json);
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value);
 
     sawmills[sawmill.id] = sawmill;
@@ -128,22 +95,32 @@ class SawmillLocalStorage extends SawmillApi {
   }
 
   /// Delete a Sawmill from the database based on [id]
-  Future<int> _deleteSawmill(String id) async {
-    return _coreLocalStorage.delete(SawmillTable.tableName, id);
+  Future<void> _deleteSawmill(String id) async {
+    await _coreLocalStorage.delete(SawmillTable.tableName, id);
   }
 
   /// Delete a Sawmill based on [id]
   @override
-  Future<int> deleteSawmill(String id) async {
-    final result = await _deleteSawmill(id);
-    final sawmills =
-        Map<String, Sawmill>.from(_sawmillStreamController.value)
-          ..removeWhere((key, _) => key == id);
+  Future<void> markSawmillDeleted({required String id}) async {
+    final sawmillJson = Map<String, dynamic>.from(
+      (await _coreLocalStorage.getById(SawmillTable.tableName, id)).first,
+    );
+    await _insertOrUpdateSawmill(sawmillJson);
+
+    final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value)
+      ..removeWhere((key, _) => key == id);
 
     _sawmillStreamController.add(sawmills);
-
-    return result;
   }
+
+  /// Delete a Sawmill based on [id]
+  @override
+  Future<void> deleteSawmill({required String id}) => _deleteSawmill(id);
+
+  /// Sets synced
+  @override
+  Future<void> setSynced({required String id}) =>
+      _coreLocalStorage.setSynced(SawmillTable.tableName, id);
 
   /// Close the [_sawmillStreamController]
   @override

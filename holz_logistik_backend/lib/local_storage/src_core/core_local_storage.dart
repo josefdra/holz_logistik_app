@@ -92,6 +92,7 @@ class CoreLocalStorage {
     final db = await database;
     return db.query(
       tableName,
+      where: 'deleted = 0',
     );
   }
 
@@ -103,7 +104,7 @@ class CoreLocalStorage {
     final db = await database;
     return db.query(
       tableName,
-      where: 'id = ?',
+      where: 'deleted = 0 AND id = ?',
       whereArgs: [id],
     );
   }
@@ -118,7 +119,7 @@ class CoreLocalStorage {
 
     return db.query(
       tableName,
-      where: '$columnName = ?',
+      where: 'deleted = 0 AND $columnName = ?',
       whereArgs: [id],
     );
   }
@@ -159,14 +160,10 @@ class CoreLocalStorage {
     );
 
     if (existing.isNotEmpty) {
-      final oldDate = DateTime.parse(
-        existing[0]['lastEdit'] as String,
-      );
-      final newDate = DateTime.parse(
-        data['lastEdit'] as String,
-      );
+      final oldDate = existing[0]['lastEdit'] as int;
+      final newDate = data['lastEdit'] as int;
 
-      if (oldDate.millisecondsSinceEpoch > newDate.millisecondsSinceEpoch) {
+      if (oldDate > newDate) {
         return 0;
       }
 
@@ -199,5 +196,56 @@ class CoreLocalStorage {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  /// Provides the last sync date
+  Future<DateTime> getLastSyncDate(String key) async {
+    final prefs = await sharedPreferences;
+
+    final dateMillis = prefs.getInt(key);
+    final date = dateMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
+        : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+
+    return date;
+  }
+
+  /// Sets the last sync date
+  Future<void> setLastSyncDate(String key, DateTime date) async {
+    final prefs = await sharedPreferences;
+    final dateInt = date.millisecondsSinceEpoch;
+    final lastDate = await getLastSyncDate(key);
+
+    if (dateInt > lastDate.millisecondsSinceEpoch) {
+      await prefs.setInt(key, dateInt);
+    }
+  }
+
+  /// Gets unsynced updates
+  Future<List<Map<String, dynamic>>> getUpdates(String tableName) async {
+    final db = await database;
+
+    final result = await db.query(
+      tableName,
+      where: 'synced = 0 ORDER BY lastEdit ASC',
+    );
+
+    return result;
+  }
+
+  /// Sets as synced
+  Future<void> setSynced(String tableName, String id) async {
+    final db = await database;
+
+    final result = await db.query(tableName, where: 'id = ?', whereArgs: [id]);
+
+    if (result.isNotEmpty) {
+      await db.update(
+        tableName,
+        {'synced': 1},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    }
   }
 }
