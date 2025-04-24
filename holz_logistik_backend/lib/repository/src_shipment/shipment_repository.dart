@@ -39,7 +39,14 @@ class ShipmentRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
+    if (data.containsKey('newSyncDate')) {
+      _shipmentApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
       _shipmentApi.deleteShipment(
         id: data['id'] as String,
       );
@@ -47,9 +54,7 @@ class ShipmentRepository {
       _shipmentApi.setSynced(id: data['id'] as String);
     } else {
       final shipment = Shipment.fromJson(data);
-      _shipmentApi
-        ..saveShipment(shipment, fromServer: true)
-        ..setLastSyncDate(shipment.lastEdit);
+      _shipmentApi.saveShipment(shipment, fromServer: true);
     }
   }
 

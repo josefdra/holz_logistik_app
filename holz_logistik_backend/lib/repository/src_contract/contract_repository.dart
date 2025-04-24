@@ -49,7 +49,14 @@ class ContractRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
+    if (data.containsKey('newSyncDate')) {
+      _contractApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
       _contractApi.deleteContract(
         id: data['id'] as String,
       );
@@ -57,9 +64,7 @@ class ContractRepository {
       _contractApi.setSynced(id: data['id'] as String);
     } else {
       final contract = Contract.fromJson(data);
-      _contractApi
-        ..saveContract(contract, fromServer: true)
-        ..setLastSyncDate(contract.lastEdit);
+      _contractApi.saveContract(contract, fromServer: true);
     }
   }
 

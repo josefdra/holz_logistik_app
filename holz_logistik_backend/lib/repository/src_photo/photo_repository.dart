@@ -35,7 +35,14 @@ class PhotoRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
+    if (data.containsKey('newSyncDate')) {
+      _photoApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
       _photoApi.deletePhoto(
         id: data['id'] as String,
       );
@@ -43,9 +50,7 @@ class PhotoRepository {
       _photoApi.setSynced(id: data['id'] as String);
     } else {
       final photo = Photo.fromJson(data);
-      _photoApi
-        ..savePhoto(photo, fromServer: true)
-        ..setLastSyncDate(photo.lastEdit);
+      _photoApi.savePhoto(photo, fromServer: true);
     }
   }
 

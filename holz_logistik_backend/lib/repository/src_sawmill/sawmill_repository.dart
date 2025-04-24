@@ -31,15 +31,22 @@ class SawmillRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
-      _sawmillApi.deleteSawmill(id: data['id'] as String);
+    if (data.containsKey('newSyncDate')) {
+      _sawmillApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
+      _sawmillApi.deleteSawmill(
+        id: data['id'] as String,
+      );
     } else if (data['synced'] == true || data['synced'] == 1) {
       _sawmillApi.setSynced(id: data['id'] as String);
     } else {
       final sawmill = Sawmill.fromJson(data);
-      _sawmillApi
-        ..saveSawmill(sawmill, fromServer: true)
-        ..setLastSyncDate(sawmill.lastEdit);
+      _sawmillApi.saveSawmill(sawmill, fromServer: true);
     }
   }
 

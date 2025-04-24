@@ -45,7 +45,14 @@ class LocationRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
+    if (data.containsKey('newSyncDate')) {
+      _locationApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
       _locationApi.deleteLocation(
         id: data['id'] as String,
       );
@@ -53,9 +60,7 @@ class LocationRepository {
       _locationApi.setSynced(id: data['id'] as String);
     } else {
       final location = Location.fromJson(data);
-      _locationApi
-        ..saveLocation(location, fromServer: true)
-        ..setLastSyncDate(location.lastEdit);
+      _locationApi.saveLocation(location, fromServer: true);
     }
   }
 

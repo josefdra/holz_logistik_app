@@ -31,15 +31,22 @@ class UserRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
-      _userApi.deleteUser(id: data['id'] as String);
+    if (data.containsKey('newSyncDate')) {
+      _userApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
+      _userApi.deleteUser(
+        id: data['id'] as String,
+      );
     } else if (data['synced'] == true || data['synced'] == 1) {
       _userApi.setSynced(id: data['id'] as String);
     } else {
       final user = User.fromJson(data);
-      _userApi
-        ..saveUser(user, fromServer: true)
-        ..setLastSyncDate(user.lastEdit);
+      _userApi.saveUser(user, fromServer: true);
     }
   }
 

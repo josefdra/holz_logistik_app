@@ -31,15 +31,22 @@ class NoteRepository {
 
   /// Handle updates from Server
   void _handleServerUpdate(Map<String, dynamic> data) {
-    if (data['deleted'] == true || data['deleted'] == 1) {
-      _noteApi.deleteNote(id: data['id'] as String);
+    if (data.containsKey('newSyncDate')) {
+      _noteApi.setLastSyncDate(
+        DateTime.fromMillisecondsSinceEpoch(
+          data['newSyncDate'] as int,
+          isUtc: true,
+        ),
+      );
+    } else if (data['deleted'] == true || data['deleted'] == 1) {
+      _noteApi.deleteNote(
+        id: data['id'] as String,
+      );
     } else if (data['synced'] == true || data['synced'] == 1) {
       _noteApi.setSynced(id: data['id'] as String);
     } else {
       final note = Note.fromJson(data);
-      _noteApi
-        ..saveNote(note, fromServer: true)
-        ..setLastSyncDate(note.lastEdit);
+      _noteApi.saveNote(note, fromServer: true);
     }
   }
 
