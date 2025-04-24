@@ -119,7 +119,6 @@ class _NameField extends StatelessWidget {
       maxLength: 50,
       inputFormatters: [
         LengthLimitingTextInputFormatter(50),
-        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
       ],
       onChanged: (value) {
         context.read<EditUserBloc>().add(EditUserNameChanged(value));

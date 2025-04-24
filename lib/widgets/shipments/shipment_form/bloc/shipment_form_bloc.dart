@@ -117,24 +117,13 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
   Map<String, String?> _validateFields() {
     final errors = <String, String?>{};
 
-    if (state.quantity == 0 || state.quantity > state.currentQuantity) {
+    if (state.quantity == 0) {
       errors['quantity'] =
-          'Menge darf nicht 0 oder größer als \ndie verfügbare Menge sein';
+          'Menge darf nicht 0 sein';
     }
 
-    if (state.oversizeQuantity > state.currentOversizeQuantity) {
-      errors['oversizeQuantity'] =
-          'Menge ÜS darf nicht größer als die \nverfügbare Menge ÜS sein';
-    }
-
-    if (state.oversizeQuantity > state.quantity) {
-      errors['oversizeQuantity'] =
-          'Menge ÜS kann nicht größer als \nMenge sein';
-    }
-
-    if (state.pieceCount == 0 || state.pieceCount > state.currentPieceCount) {
-      errors['pieceCount'] = 'Stückzahl darf nicht 0 oder größer als '
-          '\ndie verfügbare Stückzahl sein';
+    if (state.pieceCount == 0) {
+      errors['pieceCount'] = 'Stückzahl darf nicht 0 sein';
     }
 
     if (state.sawmillId.isEmpty || state.sawmillId == '') {

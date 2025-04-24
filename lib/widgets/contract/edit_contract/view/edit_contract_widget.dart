@@ -130,7 +130,6 @@ class _TitleField extends StatelessWidget {
       maxLength: 50,
       inputFormatters: [
         LengthLimitingTextInputFormatter(50),
-        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
       ],
       onChanged: (value) {
         context.read<EditContractBloc>().add(EditContractTitleChanged(value));
@@ -214,6 +213,7 @@ class _QuantityField extends StatelessWidget {
     final state = context.watch<EditContractBloc>().state;
     final value =
         state.availableQuantity != 0 ? state.availableQuantity.toString() : '';
+    final error = state.validationErrors['title'];
 
     return TextFormField(
       key: const Key('editLocationView_initialQuantity_textFormField'),
@@ -222,6 +222,7 @@ class _QuantityField extends StatelessWidget {
         enabled: !state.status.isLoadingOrSuccess,
         labelText: 'Vertragsmenge',
         border: const OutlineInputBorder(),
+        errorText: error,
         counterText: '',
       ),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),

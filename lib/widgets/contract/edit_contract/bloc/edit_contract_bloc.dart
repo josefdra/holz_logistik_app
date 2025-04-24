@@ -74,6 +74,10 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
       errors['title'] = 'Titel darf nicht leer sein';
     }
 
+    if (state.availableQuantity == 0) {
+      errors['quantity'] = 'Menge darf nicht 0 sein';
+    }
+
     return errors;
   }
 
@@ -108,10 +112,8 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
     late final double shippedQuantity;
 
     if (state.initialContract != null) {
-      final diff =
-          state.initialContract!.availableQuantity - state.availableQuantity;
-      bookedQuantity = state.initialContract!.bookedQuantity - diff;
-      shippedQuantity = state.initialContract!.shippedQuantity - diff;
+      bookedQuantity = state.initialContract!.bookedQuantity;
+      shippedQuantity = state.initialContract!.shippedQuantity;
     } else {
       bookedQuantity = 0;
       shippedQuantity = 0;

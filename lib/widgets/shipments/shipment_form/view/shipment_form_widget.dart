@@ -180,7 +180,6 @@ class _OversizeQuantityField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
-    final error = state.validationErrors['oversizeQuantity'];
 
     return Column(
       children: [
@@ -195,7 +194,6 @@ class _OversizeQuantityField extends StatelessWidget {
           decoration: InputDecoration(
             enabled: !state.status.isLoadingOrSuccess,
             labelText: 'Davon ÜS',
-            errorText: error,
             border: const OutlineInputBorder(),
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
