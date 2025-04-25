@@ -82,6 +82,32 @@ class CoreSyncService {
     _pongTimeoutTimer?.cancel();
   }
 
+  /// Sends data for all registered types
+  Future<void> sendSyncData() async {
+    for (final key in _dataGetters.keys) {
+      final dataList = await _dataGetters[key]!.call();
+
+      for (final data in dataList) {
+        final dataCopy = Map<String, dynamic>.from(data)..remove('synced');
+        await sendMessage(key, dataCopy);
+      }
+    }
+
+    return sendMessage('sync_complete', null);
+  }
+
+  /// Request a sync for all registered types
+  Future<void> sendSyncRequest() async {
+    final data = <String, int>{};
+
+    for (final key in _dateGetters.keys) {
+      final date = await _dateGetters[key]!.call();
+      data[key] = date.toUtc().millisecondsSinceEpoch;
+    }
+
+    return sendMessage('sync_request', data);
+  }
+
   /// Handle incoming messages
   void _handleMessage(dynamic rawMessage) {
     print('RAW MESSAGE RECEIVED: $rawMessage');
@@ -98,11 +124,21 @@ class CoreSyncService {
       if (type == 'pong') {
         _resetPongTimeout();
         return;
-      }
-
-      final messageHandler = _messageHandlers[type];
-      if (messageHandler != null) {
-        messageHandler(data);
+      } else if (type == 'authentication_response') {
+        final messageHandler = _messageHandlers[type];
+        if (messageHandler != null) {
+          messageHandler(data);
+        }
+        sendSyncData();
+      } else if (type == 'sync_to_server_complete') {
+        sendSyncRequest();
+      } else if (type == 'sync_from_server_complete') {
+        _startPingTimer();
+      } else {
+        final messageHandler = _messageHandlers[type];
+        if (messageHandler != null) {
+          messageHandler(data);
+        }
       }
     } catch (e) {
       debugPrint('Error handling WebSocket message: $e');
@@ -172,7 +208,6 @@ class CoreSyncService {
     if (_missedPongs >= _maxMissedPongs) {
       debugPrint('WebSocket connection lost: too many missed pongs');
       _cleanup();
-      _connectionStreamController.add(ConnectionStatus.disconnected);
     }
   }
 
@@ -227,8 +262,6 @@ class CoreSyncService {
         );
 
         await sendMessage('authentication_request', {'apiKey': _apiKey});
-
-        _startPingTimer();
         _connectionStreamController.add(ConnectionStatus.connected);
       }
     } catch (e) {
@@ -239,49 +272,17 @@ class CoreSyncService {
     }
   }
 
-  /// Sends data for all registered types
-  Future<void> sendSyncData() async {
-    for (final key in _dataGetters.keys) {
-      final dataList = await _dataGetters[key]!.call();
-
-      for (final data in dataList) {
-        final dataCopy = Map<String, dynamic>.from(data)..remove('synced');
-        await sendMessage(key, dataCopy);
-      }
-    }
-
-    return sendMessage('sync_complete', null);
-  }
-
-  /// Request a sync for all registered types
-  Future<void> sendSyncRequest() async {
-    final data = <String, int>{};
-
-    for (final key in _dateGetters.keys) {
-      final date = await _dateGetters[key]!.call();
-      data[key] = date.toUtc().millisecondsSinceEpoch;
-    }
-
-    return sendMessage('sync_request', data);
-  }
-
   /// Sets up connection
   Future<void> connect({String? apiKey}) async {
     if (apiKey != null) _apiKey = apiKey;
 
     _cleanup();
     await _connect();
-    await sendSyncData();
-    await sendSyncRequest();
   }
 
   /// Close the WebSocket connection and clean up resources
   void dispose() {
-    _pingTimer?.cancel();
-    _pongTimeoutTimer?.cancel();
-    _reconnectTimer?.cancel();
-    _channelSubscription?.cancel();
-    _channelSubscription = null;
+    _cleanup();
     _connectionStreamController.close();
 
     try {

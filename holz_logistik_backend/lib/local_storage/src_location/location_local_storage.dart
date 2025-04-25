@@ -70,7 +70,7 @@ class LocationLocalStorage extends LocationApi {
       whereArgs: [id, if (isOversize) 1 else 0],
     );
 
-    if(idsJson.isEmpty) return const <String>[];
+    if (idsJson.isEmpty) return const <String>[];
 
     return idsJson
         .map(
@@ -144,8 +144,18 @@ class LocationLocalStorage extends LocationApi {
 
   /// Gets unsynced updates
   @override
-  Future<List<Map<String, dynamic>>> getUpdates() =>
-      _coreLocalStorage.getUpdates(LocationTable.tableName);
+  Future<List<Map<String, dynamic>>> getUpdates() async {
+    final db = await _coreLocalStorage.database;
+
+    final locationsJson = await db.query(
+      LocationTable.tableName,
+      where: 'synced = 0 ORDER BY lastEdit ASC',
+    );
+
+    final locations = await _addSawmillsToLocations(locationsJson);
+
+    return locations.map((location) => location.toJson()).toList();
+  }
 
   @override
   Future<List<Location>> getFinishedLocationsByDate(
@@ -300,7 +310,7 @@ class LocationLocalStorage extends LocationApi {
     required bool done,
   }) async {
     final resultList =
-        await _coreLocalStorage.getById(LocationTable.tableName, id);
+        await _coreLocalStorage.getByIdForDeletion(LocationTable.tableName, id);
 
     if (resultList.isEmpty) return 0;
 
@@ -327,7 +337,8 @@ class LocationLocalStorage extends LocationApi {
   /// Delete a Location based on [id]
   @override
   Future<int> deleteLocation({required String id}) async {
-    final result = await _coreLocalStorage.getById(LocationTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(LocationTable.tableName, id);
 
     if (result.isEmpty) return 0;
 

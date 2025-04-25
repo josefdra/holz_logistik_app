@@ -106,7 +106,7 @@ class UserLocalStorage extends UserApi {
   @override
   Future<void> markUserDeleted({required String id}) async {
     final resultList =
-        await _coreLocalStorage.getById(UserTable.tableName, id);
+        await _coreLocalStorage.getByIdForDeletion(UserTable.tableName, id);
 
     if (resultList.isEmpty) return Future<void>.value();
 
@@ -124,7 +124,8 @@ class UserLocalStorage extends UserApi {
   /// Delete a User based on [id]
   @override
   Future<int> deleteUser({required String id}) async {
-    final result = await _coreLocalStorage.getById(UserTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(UserTable.tableName, id);
 
     if (result.isEmpty) return 0;
 

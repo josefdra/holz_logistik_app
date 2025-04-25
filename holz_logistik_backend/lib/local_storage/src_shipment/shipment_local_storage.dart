@@ -149,7 +149,7 @@ class ShipmentLocalStorage extends ShipmentApi {
     required String locationId,
   }) async {
     final resultList =
-        await _coreLocalStorage.getById(ShipmentTable.tableName, id);
+        await _coreLocalStorage.getByIdForDeletion(ShipmentTable.tableName, id);
 
     if (resultList.isEmpty) return 0;
 
@@ -166,7 +166,8 @@ class ShipmentLocalStorage extends ShipmentApi {
   /// Delete a Shipment based on [id]
   @override
   Future<void> deleteShipment({required String id}) async {
-    final result = await _coreLocalStorage.getById(ShipmentTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(ShipmentTable.tableName, id);
 
     if (result.isEmpty) return Future<void>.value();
 

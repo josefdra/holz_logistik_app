@@ -109,6 +109,19 @@ class CoreLocalStorage {
     );
   }
 
+  /// Gets entity of [tableName] by [id]
+  Future<List<Map<String, dynamic>>> getByIdForDeletion(
+    String tableName,
+    String id,
+  ) async {
+    final db = await database;
+    return db.query(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   /// Gets entities of table [tableName] based on [id] of [columnName]
   Future<List<Map<String, dynamic>>> getByColumn(
     String tableName,

@@ -109,7 +109,7 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Future<void> markSawmillDeleted({required String id}) async {
     final resultList =
-        await _coreLocalStorage.getById(SawmillTable.tableName, id);
+        await _coreLocalStorage.getByIdForDeletion(SawmillTable.tableName, id);
 
     if (resultList.isEmpty) return Future<void>.value();
 
@@ -127,7 +127,8 @@ class SawmillLocalStorage extends SawmillApi {
   /// Delete a Sawmill based on [id]
   @override
   Future<void> deleteSawmill({required String id}) async {
-    final result = await _coreLocalStorage.getById(SawmillTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(SawmillTable.tableName, id);
 
     if (result.isEmpty) return Future<void>.value();
 

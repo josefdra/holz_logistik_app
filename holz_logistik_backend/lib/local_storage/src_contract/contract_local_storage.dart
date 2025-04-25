@@ -210,7 +210,7 @@ class ContractLocalStorage extends ContractApi {
     required bool done,
   }) async {
     final resultList =
-        await _coreLocalStorage.getById(ContractTable.tableName, id);
+        await _coreLocalStorage.getByIdForDeletion(ContractTable.tableName, id);
 
     if (resultList.isEmpty) return 0;
 
@@ -218,6 +218,7 @@ class ContractLocalStorage extends ContractApi {
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
     json['synced'] = 0;
+    json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
 
     final result = await _insertOrUpdateContract(json);
 
@@ -237,7 +238,8 @@ class ContractLocalStorage extends ContractApi {
   /// Delete a Contract based on [id]
   @override
   Future<int> deleteContract({required String id}) async {
-    final result = await _coreLocalStorage.getById(ContractTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(ContractTable.tableName, id);
 
     if (result.isEmpty) return 0;
 

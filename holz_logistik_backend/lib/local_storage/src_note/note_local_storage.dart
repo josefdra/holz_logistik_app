@@ -104,7 +104,8 @@ class NoteLocalStorage extends NoteApi {
   /// Marks a Note as deleted based on [id]
   @override
   Future<void> markNoteDeleted({required String id}) async {
-    final resultList = await _coreLocalStorage.getById(NoteTable.tableName, id);
+    final resultList =
+        await _coreLocalStorage.getByIdForDeletion(NoteTable.tableName, id);
 
     if (resultList.isEmpty) return Future<void>.value();
 
@@ -124,7 +125,8 @@ class NoteLocalStorage extends NoteApi {
   /// Delete a Note based on [id]
   @override
   Future<void> deleteNote({required String id}) async {
-    final result = await _coreLocalStorage.getById(NoteTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(NoteTable.tableName, id);
 
     if (result.isEmpty) return Future<void>.value();
 

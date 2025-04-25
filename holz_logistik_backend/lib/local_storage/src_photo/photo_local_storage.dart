@@ -132,7 +132,7 @@ class PhotoLocalStorage extends PhotoApi {
     required String locationId,
   }) async {
     final resultList =
-        await _coreLocalStorage.getById(PhotoTable.tableName, id);
+        await _coreLocalStorage.getByIdForDeletion(PhotoTable.tableName, id);
 
     if (resultList.isEmpty) return Future<void>.value();
 
@@ -150,7 +150,8 @@ class PhotoLocalStorage extends PhotoApi {
   /// Delete a Photo based on [id]
   @override
   Future<int> deletePhoto({required String id}) async {
-    final result = await _coreLocalStorage.getById(PhotoTable.tableName, id);
+    final result =
+        await _coreLocalStorage.getByIdForDeletion(PhotoTable.tableName, id);
 
     if (result.isEmpty) return 0;
 
