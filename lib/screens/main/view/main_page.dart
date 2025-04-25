@@ -43,6 +43,8 @@ class MainView extends StatelessWidget {
             ? state.selectedTab.index
             : (state.selectedTab.index >= 4 ? 0 : state.selectedTab.index);
 
+        final connectionIcon = _getConnectionIcon(state.connectionStatus);
+
         final navItems = [
           const BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -74,6 +76,11 @@ class MainView extends StatelessWidget {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Holz Logistik'),
+            leading: IconButton(
+              onPressed: () =>
+                  context.read<MainBloc>().add(const MainConnectPressed()),
+              icon: connectionIcon,
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.settings),
@@ -112,5 +119,35 @@ class MainView extends StatelessWidget {
         );
       },
     );
+  }
+
+  Widget _getConnectionIcon(ConnectionStatus status) {
+    switch (status) {
+      case ConnectionStatus.disconnected:
+        return const Icon(
+          Icons.cloud_off,
+          color: Colors.grey,
+        );
+      case ConnectionStatus.connecting:
+        return const Icon(
+          Icons.cloud_sync,
+          color: Colors.orange,
+        );
+      case ConnectionStatus.connected:
+        return const Icon(
+          Icons.cloud_done,
+          color: Colors.green,
+        );
+      case ConnectionStatus.reconnecting:
+        return const Icon(
+          Icons.sync,
+          color: Colors.blue,
+        );
+      case ConnectionStatus.error:
+        return const Icon(
+          Icons.error_outline,
+          color: Colors.red,
+        );
+    }
   }
 }

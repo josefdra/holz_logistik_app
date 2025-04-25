@@ -111,6 +111,7 @@ class CoreSyncService {
 
   /// Clean up resources
   void _cleanup() {
+    _connection = false;
     _pingTimer?.cancel();
     _pongTimeoutTimer?.cancel();
     _reconnectTimer?.cancel();
@@ -244,8 +245,8 @@ class CoreSyncService {
       final dataList = await _dataGetters[key]!.call();
 
       for (final data in dataList) {
-        data.remove('synced');
-        await sendMessage(key, data);
+        final dataCopy = Map<String, dynamic>.from(data)..remove('synced');
+        await sendMessage(key, dataCopy);
       }
     }
 

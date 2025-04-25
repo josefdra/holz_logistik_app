@@ -23,6 +23,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     on<MainTabChanged>(_onTabChanged);
     on<MainConnectionChanged>(_onConnectionChanged);
     on<MainConnectivityChanged>(_onConnectivityChanged);
+    on<MainConnectPressed>(_onConnectPressed);
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -87,7 +88,9 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   Future<void> _onConnectionChanged(
     MainConnectionChanged event,
     Emitter<MainState> emit,
-  ) async {}
+  ) async {
+    emit(state.copyWith(connectionStatus: event.connectionStatus));
+  }
 
   Future<void> _onConnectivityChanged(
     MainConnectivityChanged event,
@@ -98,7 +101,16 @@ class MainBloc extends Bloc<MainEvent, MainState> {
         result == ConnectivityResult.mobile ||
         result == ConnectivityResult.ethernet) {
       await _connect();
+    } else {
+      emit(state.copyWith(connectionStatus: ConnectionStatus.disconnected));
     }
+  }
+
+  Future<void> _onConnectPressed(
+    MainConnectPressed event,
+    Emitter<MainState> emit,
+  ) async {
+    await _connect();
   }
 
   @override

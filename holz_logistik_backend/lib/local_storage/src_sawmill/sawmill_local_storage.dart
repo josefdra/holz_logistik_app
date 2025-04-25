@@ -83,7 +83,13 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Future<int> saveSawmill(Sawmill sawmill, {bool fromServer = false}) async {
     final json = sawmill.toJson();
-    if (fromServer) json['synced'] = 1;
+
+    if (fromServer) {
+      json['synced'] = 1;
+    } else {
+      json['synced'] = 0;
+      json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
+    }
 
     final result = await _insertOrUpdateSawmill(json);
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value);
@@ -109,6 +115,7 @@ class SawmillLocalStorage extends SawmillApi {
 
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
+    json['synced'] = 0;
     await _insertOrUpdateSawmill(json);
 
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value)

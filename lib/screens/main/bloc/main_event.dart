@@ -41,3 +41,7 @@ final class MainConnectivityChanged extends MainEvent {
   @override
   List<Object> get props => [connectivity];
 }
+
+final class MainConnectPressed extends MainEvent {
+  const MainConnectPressed();
+}

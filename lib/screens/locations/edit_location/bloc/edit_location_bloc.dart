@@ -364,7 +364,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       await _contractRepository.saveContract(updatedInitialContract);
     }
 
-    if (state.contractId.isNotEmpty && state.initialLocation != null) {
+    if (state.contractId.isNotEmpty) {
       final currentContract = updatedInitialContract != null &&
               state.contractId == state.initialLocation!.contractId
           ? updatedInitialContract

@@ -259,7 +259,13 @@ class LocationLocalStorage extends LocationApi {
   @override
   Future<int> saveLocation(Location location, {bool fromServer = false}) async {
     final json = location.toJson();
-    if (fromServer) json['synced'] = 1;
+
+    if (fromServer) {
+      json['synced'] = 1;
+    } else {
+      json['synced'] = 0;
+      json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
+    }
 
     final result = await _insertOrUpdateLocation(json);
     final activeLocations =
@@ -301,6 +307,7 @@ class LocationLocalStorage extends LocationApi {
     final location = Location.fromJson(resultList.first);
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
+    json['synced'] = 0;
 
     final result = await _insertOrUpdateLocation(json);
 

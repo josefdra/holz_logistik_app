@@ -160,7 +160,7 @@ class CoreLocalStorage {
     );
 
     if (existing.isNotEmpty) {
-      final oldDate = existing[0]['lastEdit'] as int;
+      final oldDate = existing.first['lastEdit'] as int;
       final newDate = data['lastEdit'] as int;
 
       if (oldDate > newDate) {

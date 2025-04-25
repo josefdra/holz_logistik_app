@@ -47,8 +47,8 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final updatedErrors = Map<String, String?>.from(state.validationErrors)
       ..remove(event.fieldName);
 
-    final locationFinished = (state.currentQuantity == event.quantity) &&
-        (state.currentPieceCount == state.pieceCount);
+    final locationFinished = (state.currentQuantity <= event.quantity) &&
+        (state.currentPieceCount <= state.pieceCount);
 
     emit(
       state.copyWith(
@@ -81,8 +81,8 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final updatedErrors = Map<String, String?>.from(state.validationErrors)
       ..remove(event.fieldName);
 
-    final locationFinished = (state.currentQuantity == state.quantity) &&
-        (state.currentPieceCount == event.pieceCount);
+    final locationFinished = (state.currentQuantity <= state.quantity) &&
+        (state.currentPieceCount <= event.pieceCount);
 
     emit(
       state.copyWith(

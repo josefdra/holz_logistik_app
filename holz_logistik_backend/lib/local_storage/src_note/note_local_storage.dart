@@ -74,7 +74,13 @@ class NoteLocalStorage extends NoteApi {
   @override
   Future<int> saveNote(Note note, {bool fromServer = false}) async {
     final json = note.toJson();
-    if (fromServer) json['synced'] = 1;
+
+    if (fromServer) {
+      json['synced'] = 1;
+    } else {
+      json['synced'] = 0;
+      json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
+    }
 
     final result = await _insertOrUpdateNote(json);
     final notes = [..._noteStreamController.value];
@@ -104,6 +110,7 @@ class NoteLocalStorage extends NoteApi {
 
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
+    json['synced'] = 0;
     await _insertOrUpdateNote(json);
 
     final notes = [..._noteStreamController.value]

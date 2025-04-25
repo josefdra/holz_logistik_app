@@ -122,7 +122,13 @@ class ShipmentLocalStorage extends ShipmentApi {
   @override
   Future<int> saveShipment(Shipment shipment, {bool fromServer = false}) async {
     final json = shipment.toJson();
-    if (fromServer) json['synced'] = 1;
+
+    if (fromServer) {
+      json['synced'] = 1;
+    } else {
+      json['synced'] = 0;
+      json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
+    }
 
     final result = await _insertOrUpdateShipment(json);
 
@@ -150,6 +156,7 @@ class ShipmentLocalStorage extends ShipmentApi {
     final shipment = Shipment.fromJson(resultList.first);
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
+    json['synced'] = 0;
     final result = await _insertOrUpdateShipment(json);
 
     _shipmentUpdatesStreamController.add(shipment);
