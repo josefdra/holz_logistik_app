@@ -34,7 +34,7 @@ class MapPage extends StatelessWidget {
         locationRepository: context.read<LocationRepository>(),
         authenticationRepository: context.read<AuthenticationRepository>(),
         sawmillRepository: context.read<SawmillRepository>(),
-          contractRepository: context.read<ContractRepository>(),
+        contractRepository: context.read<ContractRepository>(),
       )..add(const MapSubscriptionRequested()),
       child: const Scaffold(
         body: MapView(),
@@ -90,7 +90,7 @@ class MapView extends StatelessWidget {
       options: MapOptions(
         onMapReady: () => context.read<MapBloc>().add(const MapMapReady()),
         initialCenter: const LatLng(47.9831, 11.9050),
-        initialZoom: 15,
+        initialZoom: 12,
         interactionOptions: const InteractionOptions(
           rotationThreshold: 30,
         ),

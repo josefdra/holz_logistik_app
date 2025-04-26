@@ -107,6 +107,14 @@ class PhotoLocalStorage extends PhotoApi {
     final json = photo.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        PhotoTable.tableName,
+        photo.lastEdit,
+        photo.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;
@@ -139,7 +147,7 @@ class PhotoLocalStorage extends PhotoApi {
     final photo = Photo.fromJson(resultList.first);
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
-    json['synced'] = 0;
+      json['synced'] = 0;
     await _insertOrUpdatePhoto(json);
 
     _photoUpdatesStreamController.add(photo.locationId);

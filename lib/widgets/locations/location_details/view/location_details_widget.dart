@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:holz_logistik/models/general/color.dart';
 import 'package:holz_logistik/models/locations/locations.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik/widgets/locations/location_details/location_details.dart';
 import 'package:holz_logistik/widgets/photos/photo_viewer/view/photo_view_page.dart';
 import 'package:holz_logistik/widgets/shipments/shipment_widgets.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
+import 'package:latlong2/latlong.dart';
 
 class LocationDetailsWidget extends StatelessWidget {
   const LocationDetailsWidget({
@@ -25,6 +28,7 @@ class LocationDetailsWidget extends StatelessWidget {
         shipmentRepository: context.read<ShipmentRepository>(),
         photoRepository: context.read<PhotoRepository>(),
         authenticationRepository: context.read<AuthenticationRepository>(),
+        userRepository: context.read<UserRepository>(),
         initialLocation: location,
       )..add(const LocationDetailsSubscriptionRequested()),
       child: const LocationDetailsView(),
@@ -78,7 +82,32 @@ class LocationDetailsView extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         _buildDateAndInfo(state),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
+                        _buildMap(context, state),
+                        const SizedBox(height: 10),
+                        Center(
+                          child: Text(
+                            'Abfuhren:',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                                ),
+                          ),
+                        ),
+                        ...state.shipments.map(
+                          (shipment) => SmallShipmentListTile(
+                            shipment: shipment,
+                            userName: state.userNames[shipment.userId] ?? '',
+                            sawmillName:
+                                state.sawmillNames[shipment.sawmillId] ?? '',
+                            contractRepository:
+                                context.read<ContractRepository>(),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -299,6 +328,42 @@ class LocationDetailsView extends StatelessWidget {
         const SizedBox(height: 10),
         Text(state.location.additionalInfo),
       ],
+    );
+  }
+
+  Widget _buildMap(BuildContext context, LocationDetailsState state) {
+    return SizedBox(
+      height: 200,
+      child: FlutterMap(
+        options: MapOptions(
+          initialCenter:
+              LatLng(state.location.latitude, state.location.longitude),
+          initialZoom: 12,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.draexl_it.holz_logistik',
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                width: 50,
+                height: 50,
+                point:
+                    LatLng(state.location.latitude, state.location.longitude),
+                child: Icon(
+                  !state.location.started
+                      ? Icons.location_pin
+                      : Icons.location_off,
+                  color: colorFromString(state.contract.name),
+                  size: 50,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

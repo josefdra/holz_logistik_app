@@ -24,6 +24,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     on<LocationListSubscriptionRequested>(_onSubscriptionRequested);
     on<LocationListLocationsUpdate>(_onLocationsUpdate);
     on<LocationListLocationDeleted>(_onLocationDeleted);
+    on<LocationListContractUpdate>(_onContractUpdate);
     on<LocationListSearchQueryChanged>(
       _onSearchQueryChanged,
       transformer: debounce(
@@ -39,6 +40,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   final scrollController = ScrollController();
 
   late final StreamSubscription<List<Location>>? _locationSubscription;
+  late final StreamSubscription<Contract>? _contractSubscription;
 
   Future<void> _onSubscriptionRequested(
     LocationListSubscriptionRequested event,
@@ -49,6 +51,11 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     _locationSubscription = _locationRepository.activeLocations.listen(
       (locations) => add(LocationListLocationsUpdate(locations: locations)),
     );
+
+    _contractSubscription =
+        _contractRepository.contractUpdates.listen((contract) {
+      add(const LocationListContractUpdate());
+    });
   }
 
   Future<void> _onLocationsUpdate(
@@ -56,11 +63,15 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     Emitter<LocationListState> emit,
   ) async {
     final contractNames = <String, String>{};
+    final locationHasShipments = <String, bool>{};
 
     for (final location in event.locations) {
       final contract =
           await _contractRepository.getContractById(location.contractId);
       contractNames[location.contractId] = contract.name;
+      locationHasShipments[location.id] =
+          (await _shipmentRepository.getShipmentsByLocation(location.id))
+              .isNotEmpty;
     }
 
     emit(
@@ -95,6 +106,25 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     await _contractRepository.saveContract(updatedContract);
   }
 
+  Future<void> _onContractUpdate(
+    LocationListContractUpdate event,
+    Emitter<LocationListState> emit,
+  ) async {
+    final contractNames = <String, String>{};
+
+    for (final location in state.locations) {
+      final contract =
+          await _contractRepository.getContractById(location.contractId);
+      contractNames[location.contractId] = contract.name;
+    }
+
+    emit(
+      state.copyWith(
+        contractNames: contractNames,
+      ),
+    );
+  }
+
   void _onSearchQueryChanged(
     LocationListSearchQueryChanged event,
     Emitter<LocationListState> emit,
@@ -110,6 +140,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
   Future<void> close() {
     scrollController.dispose();
     _locationSubscription?.cancel();
+    _contractSubscription?.cancel();
     return super.close();
   }
 }

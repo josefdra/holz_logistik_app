@@ -82,6 +82,14 @@ class UserLocalStorage extends UserApi {
     final json = user.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        UserTable.tableName,
+        user.lastEdit,
+        user.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;

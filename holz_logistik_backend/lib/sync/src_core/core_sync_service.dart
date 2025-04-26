@@ -134,6 +134,7 @@ class CoreSyncService {
         sendSyncRequest();
       } else if (type == 'sync_from_server_complete') {
         _startPingTimer();
+        _connectionStreamController.add(ConnectionStatus.synced);
       } else {
         final messageHandler = _messageHandlers[type];
         if (messageHandler != null) {

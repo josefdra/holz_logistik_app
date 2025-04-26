@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:holz_logistik_backend/api/contract_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:holz_logistik_backend/sync/contract_sync_service.dart';
 
 /// {@template contract_repository}
@@ -72,14 +73,19 @@ class ContractRepository {
   ///
   /// If a [contract] with the same id already exists, it will be updated.
   Future<void> saveContract(Contract contract) {
-    final c = contract.copyWith(lastEdit: DateTime.now());
-    _contractApi.saveContract(c);
-    return _contractSyncService.sendContractUpdate(c.toJson());
+    final updatedContract = contract.copyWith(
+      availableQuantity: customRound(contract.availableQuantity),
+      bookedQuantity: customRound(contract.bookedQuantity),
+      shippedQuantity: customRound(contract.shippedQuantity),
+      lastEdit: DateTime.now(),
+    );
+    _contractApi.saveContract(updatedContract);
+    return _contractSyncService.sendContractUpdate(updatedContract.toJson());
   }
 
   /// Deletes the `contract` with the given id.
-  Future<void> deleteContract({required String id, required bool done}) {
-    _contractApi.markContractDeleted(id: id, done: done);
+  Future<void> deleteContract({required String id, required bool done}) async {
+    await _contractApi.markContractDeleted(id: id, done: done);
     final data = {
       'id': id,
       'deleted': 1,

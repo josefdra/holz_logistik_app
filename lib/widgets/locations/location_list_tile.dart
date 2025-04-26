@@ -43,12 +43,42 @@ class LocationListTile extends StatelessWidget {
               Text('Davon ÜS: ${location.currentOversizeQuantity} fm'),
             ],
           ),
-          trailing: privileged
+          trailing: privileged && onDelete != null
               ? IconButton(
-                  onPressed: () => onDelete?.call(),
+                  onPressed: () => _showDeleteConfirmation(context),
                   icon: const Icon(Icons.delete_outline),
                 )
               : null,
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Standort löschen'),
+          content: const Text('Diesen Standort sicher löschen?'),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Abbrechen'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                    onDelete?.call();
+                  },
+                  child: const Text('Löschen'),
+                ),
+              ],
+            ),
+          ],
         );
       },
     );

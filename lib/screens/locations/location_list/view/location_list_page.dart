@@ -139,9 +139,11 @@ class LocationList extends StatelessWidget {
                             location: location,
                           ),
                         ),
-                        onDelete: () => context
-                            .read<LocationListBloc>()
-                            .add(LocationListLocationDeleted(location)),
+                        onDelete: !location.started
+                            ? () => context
+                                .read<LocationListBloc>()
+                                .add(LocationListLocationDeleted(location))
+                            : null,
                       );
                     },
                   ),

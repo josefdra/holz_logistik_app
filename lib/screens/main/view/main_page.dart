@@ -135,12 +135,17 @@ class MainView extends StatelessWidget {
         );
       case ConnectionStatus.connected:
         return const Icon(
+          Icons.sync,
+          color: Colors.blue,
+        );
+      case ConnectionStatus.synced:
+        return const Icon(
           Icons.cloud_done,
           color: Colors.green,
         );
       case ConnectionStatus.reconnecting:
         return const Icon(
-          Icons.sync,
+          Icons.sync_problem,
           color: Colors.blue,
         );
       case ConnectionStatus.error:

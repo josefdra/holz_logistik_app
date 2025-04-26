@@ -114,10 +114,17 @@ class ShipmentsBloc extends Bloc<ShipmentsEvent, ShipmentsState> {
       state.endDate,
     );
 
+    final partieNrs = <String, String>{};
+    for (final shipment in shipments) {
+      partieNrs[shipment.locationId] =
+          await _locationRepository.getPartieNrById(shipment.locationId);
+    }
+
     emit(
       state.copyWith(
         status: ShipmentsStatus.success,
         shipments: shipments,
+        partieNr: partieNrs,
       ),
     );
   }

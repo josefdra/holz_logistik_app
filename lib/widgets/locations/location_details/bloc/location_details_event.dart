@@ -74,6 +74,28 @@ final class LocationDetailsUserUpdate extends LocationDetailsEvent {
   List<Object> get props => [user];
 }
 
+final class LocationDetailsInitNames extends LocationDetailsEvent {
+  const LocationDetailsInitNames();
+}
+
+final class LocationDetailsUsersUpdate extends LocationDetailsEvent {
+  const LocationDetailsUsersUpdate(this.users);
+
+  final Map<String, User> users;
+
+  @override
+  List<Object> get props => [users];
+}
+
+final class LocationDetailsSawmillsUpdate extends LocationDetailsEvent {
+  const LocationDetailsSawmillsUpdate(this.sawmills);
+
+  final Map<String, Sawmill> sawmills;
+
+  @override
+  List<Object> get props => [sawmills];
+}
+
 final class LocationDetailsLocationReactivated extends LocationDetailsEvent {
   const LocationDetailsLocationReactivated();
 }

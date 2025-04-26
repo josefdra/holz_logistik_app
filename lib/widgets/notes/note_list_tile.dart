@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 class NoteListTile extends StatelessWidget {
@@ -16,28 +15,40 @@ class NoteListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User>(
-      stream: context.read<AuthenticationRepository>().authenticatedUser,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return Container();
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListTile(
+        onTap: onTap,
+        title: Text(note.text),
+        trailing: IconButton(
+          onPressed: () => _showDeleteConfirmation(context),
+          icon: const Icon(Icons.delete_outline),
+        ),
+      ),
+    );
+  }
 
-        final user = snapshot.data!;
-        final canModify =
-            user.id == note.userId || user.role.isPrivileged == true;
-
-        return Container(
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ListTile(
-            onTap: canModify ? onTap : null,
-            title: Text(note.text),
-            trailing: canModify
-                ? IconButton(
-                    onPressed: () => onDelete?.call(),
-                    icon: const Icon(Icons.delete_outline),
-                  )
-                : null,
-          ),
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Notiz löschen'),
+          content: const Text('Diese Notiz sicher löschen?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onDelete?.call();
+              },
+              child: const Text('Löschen'),
+            ),
+          ],
         );
       },
     );

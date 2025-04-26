@@ -59,9 +59,9 @@ class SawmillRepository {
     return _sawmillSyncService.sendSawmillUpdate(s.toJson());
   }
 
-  /// Deletes the `sawmill` with the given id.
-  Future<void> deleteSawmill(String id) {
-    _sawmillApi.markSawmillDeleted(id: id);
+  /// Deletes the `sawmill` with the given id
+  Future<void> deleteSawmill(String id) async {
+    await _sawmillApi.markSawmillDeleted(id: id);
     final data = {
       'id': id,
       'deleted': 1,

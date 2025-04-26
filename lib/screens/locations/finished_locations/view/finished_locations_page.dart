@@ -117,7 +117,7 @@ class FinishedLocationsList extends StatelessWidget {
       } else {
         return Center(
           child: Text(
-            'Nix',
+            'Keine abgeschlossene Standorte vorhanden',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         );
@@ -140,9 +140,6 @@ class FinishedLocationsList extends StatelessWidget {
                 location: location,
               ),
             ),
-            onDelete: () => context
-                .read<FinishedLocationsBloc>()
-                .add(FinishedLocationsLocationDeleted(location)),
           );
         },
       ),

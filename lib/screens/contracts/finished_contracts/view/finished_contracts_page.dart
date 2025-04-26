@@ -115,7 +115,7 @@ class FinishedContractsList extends StatelessWidget {
       } else {
         return Center(
           child: Text(
-            'Nix',
+            'Keine abgeschlossenen Verträge vorhanden',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         );

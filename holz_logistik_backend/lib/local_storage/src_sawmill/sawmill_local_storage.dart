@@ -85,6 +85,14 @@ class SawmillLocalStorage extends SawmillApi {
     final json = sawmill.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        SawmillTable.tableName,
+        sawmill.lastEdit,
+        sawmill.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;
@@ -115,7 +123,7 @@ class SawmillLocalStorage extends SawmillApi {
 
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
-    json['synced'] = 0;
+      json['synced'] = 0;
     await _insertOrUpdateSawmill(json);
 
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value)

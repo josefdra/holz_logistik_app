@@ -9,6 +9,9 @@ enum ConnectionStatus {
   /// The device is connected
   connected,
 
+  /// The device is fully synced
+  synced,
+
   /// The device is reconnecting
   reconnecting,
 

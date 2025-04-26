@@ -33,6 +33,10 @@ final class LocationListLocationDeleted extends LocationListEvent {
   List<Object> get props => [location];
 }
 
+final class LocationListContractUpdate extends LocationListEvent {
+  const LocationListContractUpdate();
+}
+
 class LocationListSearchQueryChanged extends LocationListEvent {
   const LocationListSearchQueryChanged(this.searchQuery);
 

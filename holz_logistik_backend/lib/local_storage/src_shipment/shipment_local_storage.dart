@@ -124,6 +124,14 @@ class ShipmentLocalStorage extends ShipmentApi {
     final json = shipment.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        ShipmentTable.tableName,
+        shipment.lastEdit,
+        shipment.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;

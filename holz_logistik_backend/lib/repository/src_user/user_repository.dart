@@ -66,8 +66,8 @@ class UserRepository {
   }
 
   /// Deletes the `user` with the given id.
-  Future<void> deleteUser(String id) {
-    _userApi.markUserDeleted(id: id);
+  Future<void> deleteUser(String id) async {
+    await _userApi.markUserDeleted(id: id);
     final data = {
       'id': id,
       'deleted': 1,

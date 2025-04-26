@@ -76,6 +76,14 @@ class NoteLocalStorage extends NoteApi {
     final json = note.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        NoteTable.tableName,
+        note.lastEdit,
+        note.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;

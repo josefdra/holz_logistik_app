@@ -26,6 +26,9 @@ abstract class LocationApi {
   Future<List<Location>> getFinishedLocationsByDate(
       DateTime start, DateTime end,);
 
+  /// Get partieNr by id
+  Future<String> getPartieNrById(String id);
+
   /// Provides a single location by [id]
   Future<Location> getLocationById(String id);
 

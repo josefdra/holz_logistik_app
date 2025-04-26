@@ -132,7 +132,7 @@ class ShipmentList extends StatelessWidget {
       } else {
         return Center(
           child: Text(
-            'Nix',
+            'Keine Abfuhren vorhanden',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         );
@@ -151,6 +151,7 @@ class ShipmentList extends StatelessWidget {
             userName: state.users[shipment.userId]?.name ?? '',
             sawmillName:
                 state.sawmills[shipment.sawmillId]?.name ?? '',
+            partieNr: state.partieNr[shipment.locationId] ?? '',
             contractRepository: context.read<ContractRepository>(),
             onDeleted: () {
               context.read<ShipmentsBloc>().add(

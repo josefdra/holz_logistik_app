@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:holz_logistik_backend/api/shipment_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:holz_logistik_backend/sync/shipment_sync_service.dart';
 
 /// {@template shipment_repository}
@@ -62,26 +63,21 @@ class ShipmentRepository {
   ///
   /// If a [shipment] with the same id already exists, it will be replaced.
   Future<void> saveShipment(Shipment shipment) {
-    final roundedQuantity = (shipment.quantity * 10).round() / 10;
-    final roundedOversizeQuantity =
-        (shipment.oversizeQuantity * 10).round() / 10;
-
-    final s = shipment.copyWith(
-      quantity: roundedQuantity,
-      oversizeQuantity: roundedOversizeQuantity,
+    final updatedShipment = shipment.copyWith(
+      quantity: customRound(shipment.quantity),
+      oversizeQuantity: customRound(shipment.oversizeQuantity),
       lastEdit: DateTime.now(),
     );
-
-    _shipmentApi.saveShipment(s);
-    return _shipmentSyncService.sendShipmentUpdate(s.toJson());
+    _shipmentApi.saveShipment(updatedShipment);
+    return _shipmentSyncService.sendShipmentUpdate(updatedShipment.toJson());
   }
 
   /// Deletes the `shipment` with the given id.
   Future<void> deleteShipment({
     required String id,
     required String locationId,
-  }) {
-    _shipmentApi.markShipmentDeleted(id: id, locationId: locationId);
+  }) async {
+    await _shipmentApi.markShipmentDeleted(id: id, locationId: locationId);
     final data = {
       'id': id,
       'deleted': 1,

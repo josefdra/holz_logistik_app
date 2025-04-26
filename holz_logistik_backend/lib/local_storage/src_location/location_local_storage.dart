@@ -180,6 +180,20 @@ class LocationLocalStorage extends LocationApi {
   }
 
   @override
+  Future<String> getPartieNrById(String id) async {
+    final db = await _coreLocalStorage.database;
+
+    final result = await db.rawQuery(
+      'SELECT partieNr FROM ${LocationTable.tableName} WHERE id = ?',
+      [id],
+    );
+
+    if (result.isEmpty) return '';
+
+    return result.first['partieNr']! as String;
+  }
+
+  @override
   Future<Location> getLocationById(String id) async {
     final locations = await _coreLocalStorage.getById(
       LocationTable.tableName,
@@ -271,6 +285,14 @@ class LocationLocalStorage extends LocationApi {
     final json = location.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        LocationTable.tableName,
+        location.lastEdit,
+        location.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;

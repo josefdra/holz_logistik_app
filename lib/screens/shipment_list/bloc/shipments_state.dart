@@ -7,6 +7,7 @@ final class ShipmentsState extends Equatable {
     this.status = ShipmentsStatus.initial,
     this.users = const {},
     this.sawmills = const {},
+    this.partieNr = const {},
     this.shipments = const [],
     DateTime? endDate,
     DateTime? startDate,
@@ -21,6 +22,7 @@ final class ShipmentsState extends Equatable {
   final ShipmentsStatus status;
   final Map<String, User> users;
   final Map<String, Sawmill> sawmills;
+  final Map<String, String> partieNr;
   final List<Shipment> shipments;
   final DateTime endDate;
   final DateTime startDate;
@@ -30,6 +32,7 @@ final class ShipmentsState extends Equatable {
     ShipmentsStatus? status,
     Map<String, User>? users,
     Map<String, Sawmill>? sawmills,
+    Map<String, String>? partieNr,
     List<Shipment>? shipments,
     DateTime? endDate,
     DateTime? startDate,
@@ -39,6 +42,7 @@ final class ShipmentsState extends Equatable {
       status: status ?? this.status,
       users: users ?? this.users,
       sawmills: sawmills ?? this.sawmills,
+      partieNr: partieNr ?? this.partieNr,
       shipments: shipments != null ? sortByDate(shipments) : this.shipments,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
@@ -51,6 +55,7 @@ final class ShipmentsState extends Equatable {
         status,
         users, 
         sawmills,
+        partieNr,
         shipments,
         endDate,
         startDate,

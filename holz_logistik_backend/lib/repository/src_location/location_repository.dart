@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:holz_logistik_backend/api/location_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 import 'package:holz_logistik_backend/sync/location_sync_service.dart';
 
 /// {@template location_repository}
@@ -39,6 +40,9 @@ class LocationRepository {
   ) =>
       _locationApi.getFinishedLocationsByDate(start, end);
 
+  /// Get PartieNr by id
+  Future<String> getPartieNrById(String id) => _locationApi.getPartieNrById(id);
+
   /// Provides a single location by [id]
   Future<Location> getLocationById(String id) =>
       _locationApi.getLocationById(id);
@@ -68,14 +72,20 @@ class LocationRepository {
   ///
   /// If a [location] with the same id already exists, it will be replaced.
   Future<void> saveLocation(Location location) {
-    final l = location.copyWith(lastEdit: DateTime.now());
-    _locationApi.saveLocation(l);
-    return _locationSyncService.sendLocationUpdate(l.toJson());
+    final updatedLocation = location.copyWith(
+      initialQuantity: customRound(location.initialQuantity),
+      initialOversizeQuantity: customRound(location.initialOversizeQuantity),
+      currentQuantity: customRound(location.currentQuantity),
+      currentOversizeQuantity: customRound(location.currentOversizeQuantity),
+      lastEdit: DateTime.now(),
+    );
+    _locationApi.saveLocation(updatedLocation);
+    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
   }
 
   /// Deletes the `location` with the given id.
-  Future<void> deleteLocation({required String id, required bool done}) {
-    _locationApi.markLocationDeleted(id: id, done: done);
+  Future<void> deleteLocation({required String id, required bool done}) async {
+    await _locationApi.markLocationDeleted(id: id, done: done);
     final data = {
       'id': id,
       'deleted': 1,
@@ -110,9 +120,7 @@ class LocationRepository {
       started: started,
       done: updatedLocationFinished,
     );
-    await _locationApi.saveLocation(updatedLocation);
-
-    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
+    await saveLocation(updatedLocation);
   }
 
   /// Updates the values based on a shipment
@@ -146,7 +154,7 @@ class LocationRepository {
       quantity,
       oversizeQuantity,
       pieceCount,
-      started: !started,
+      started: started,
       locationFinished: false,
     );
   }

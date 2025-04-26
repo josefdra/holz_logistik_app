@@ -261,4 +261,27 @@ class CoreLocalStorage {
       );
     }
   }
+
+  /// Checks if server update is newer
+  Future<bool> isNewer(String tableName, DateTime lastEdit, String id) async {
+    final db = await database;
+
+    final result = await db.query(
+      tableName,
+      columns: ['lastEdit'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    var isNewer = false;
+    if (result.isNotEmpty) {
+      final oldLastEdit = result.first['lastEdit']! as int;
+
+      if (oldLastEdit < lastEdit.millisecondsSinceEpoch) isNewer = true;
+    } else {
+      isNewer = true;
+    }
+
+    return isNewer;
+  }
 }

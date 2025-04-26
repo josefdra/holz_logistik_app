@@ -60,8 +60,8 @@ class NoteRepository {
   }
 
   /// Deletes the `note` with the given id.
-  Future<void> deleteNote(String id) {
-    _noteApi.markNoteDeleted(id: id);
+  Future<void> deleteNote(String id) async {
+    await _noteApi.markNoteDeleted(id: id);
     final data = {
       'id': id,
       'deleted': 1,

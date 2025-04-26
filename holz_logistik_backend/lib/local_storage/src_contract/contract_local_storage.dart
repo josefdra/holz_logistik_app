@@ -52,8 +52,7 @@ class ContractLocalStorage extends ContractApi {
     final contractsJson = await db.query(
       ContractTable.tableName,
       where: '${ContractTable.columnDeleted} = 0 AND '
-          '${ContractTable.columnDone} = 0 AND '
-          '${ContractTable.columnDeleted} = 0',
+          '${ContractTable.columnDone} = 0',
     );
 
     final contracts = <Contract>[];
@@ -171,6 +170,14 @@ class ContractLocalStorage extends ContractApi {
     final json = contract.toJson();
 
     if (fromServer) {
+      if (!(await _coreLocalStorage.isNewer(
+        ContractTable.tableName,
+        contract.lastEdit,
+        contract.id,
+      ))) {
+        return 0;
+      }
+
       json['synced'] = 1;
     } else {
       json['synced'] = 0;
