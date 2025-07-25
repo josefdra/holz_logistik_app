@@ -28,6 +28,7 @@ final class EditLocationState extends Equatable {
     this.newSawmill,
     this.date,
     this.validationErrors = const {},
+    this.isPrivileged = false,
     TextEditingController? newSawmillController,
     MultiSelectController<String>? sawmillController,
     MultiSelectController<String>? oversizeSawmillController,
@@ -54,6 +55,7 @@ final class EditLocationState extends Equatable {
   final Sawmill? newSawmill;
   final DateTime? date;
   final Map<String, String?> validationErrors;
+  final bool isPrivileged;
   final TextEditingController newSawmillController;
   final MultiSelectController<String> sawmillController;
   final MultiSelectController<String> oversizeSawmillController;
@@ -78,6 +80,7 @@ final class EditLocationState extends Equatable {
     Sawmill? newSawmill,
     DateTime? date,
     Map<String, String?>? validationErrors,
+    bool? isPrivileged,
     TextEditingController? newSawmillController,
     MultiSelectController<String>? sawmillController,
     MultiSelectController<String>? oversizeSawmillController,
@@ -102,6 +105,7 @@ final class EditLocationState extends Equatable {
       newSawmill: newSawmill ?? this.newSawmill,
       date: date ?? this.date,
       validationErrors: validationErrors ?? this.validationErrors,
+      isPrivileged: isPrivileged ?? this.isPrivileged,
       newSawmillController: newSawmillController ?? this.newSawmillController,
       sawmillController: sawmillController ?? this.sawmillController,
       oversizeSawmillController:
@@ -128,6 +132,7 @@ final class EditLocationState extends Equatable {
         newSawmill,
         date,
         validationErrors,
+        isPrivileged,
         newSawmillController,
         sawmillController,
         oversizeSawmillController,

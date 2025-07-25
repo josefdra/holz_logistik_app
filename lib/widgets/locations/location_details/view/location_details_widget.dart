@@ -403,17 +403,17 @@ class LocationDetailsView extends StatelessWidget {
           label: 'Navigation',
           onPressed: () => startNavigation(state.location),
         ),
-        if (state.user.role.isPrivileged)
-          _buildActionButton(
-            context: context,
-            icon: Icons.edit,
-            label: 'Bearbeiten',
-            onPressed: () => Navigator.of(context).push(
-              EditLocationPage.route(
-                initialLocation: state.location,
-              ),
+        _buildActionButton(
+          context: context,
+          icon: Icons.edit,
+          label: 'Bearbeiten',
+          onPressed: () => Navigator.of(context).push(
+            EditLocationPage.route(
+              isPrivileged: state.user.role.isPrivileged,
+              initialLocation: state.location,
             ),
           ),
+        ),
       ],
     );
   }

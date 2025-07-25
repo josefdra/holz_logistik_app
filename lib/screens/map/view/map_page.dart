@@ -239,6 +239,7 @@ class MapView extends StatelessWidget {
                             .add(const MapToggleAddMarkerMode());
                         Navigator.of(context).push(
                           EditLocationPage.route(
+                            isPrivileged: state.user.role.isPrivileged,
                             newMarkerPosition: state.newMarkerPosition,
                           ),
                         );

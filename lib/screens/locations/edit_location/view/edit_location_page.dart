@@ -16,6 +16,7 @@ class EditLocationPage extends StatelessWidget {
   });
 
   static Route<void> route({
+    required bool isPrivileged,
     Location? initialLocation,
     LatLng? newMarkerPosition,
   }) {
@@ -28,6 +29,7 @@ class EditLocationPage extends StatelessWidget {
           photoRepository: context.read<PhotoRepository>(),
           initialLocation: initialLocation,
           newMarkerPosition: newMarkerPosition,
+          isPrivileged: isPrivileged,
         )..add(const EditLocationInit()),
         child: const EditLocationPage(),
       ),
@@ -54,6 +56,7 @@ class EditLocationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = context.select((EditLocationBloc bloc) => bloc.state.status);
+    final state = context.watch<EditLocationBloc>().state;
     final isNewLocation = context.select(
       (EditLocationBloc bloc) => bloc.state.isNewLocation,
     );
@@ -61,9 +64,7 @@ class EditLocationView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isNewLocation
-              ? 'Standort hinzufügen'
-              : 'Standort bearbeiten',
+          isNewLocation ? 'Standort hinzufügen' : 'Standort bearbeiten',
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -80,15 +81,15 @@ class EditLocationView extends StatelessWidget {
             ? const CircularProgressIndicator()
             : const Icon(Icons.check),
       ),
-      body: const Scrollbar(
+      body: Scrollbar(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _PartieNrField(),
-                _AdditionalInfoField(),
-                Row(
+                const _PartieNrField(),
+                const _AdditionalInfoField(),
+                const Row(
                   children: [
                     Expanded(
                       child: _DateField(),
@@ -99,8 +100,8 @@ class EditLocationView extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                Row(
+                const SizedBox(height: 20),
+                const Row(
                   children: [
                     Expanded(
                       child: _InitialOversizeQuantityField(),
@@ -111,8 +112,8 @@ class EditLocationView extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                Row(
+                const SizedBox(height: 20),
+                const Row(
                   children: [
                     Expanded(
                       child: _ContractField(),
@@ -123,12 +124,12 @@ class EditLocationView extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                _SawmillsField(),
-                SizedBox(height: 20),
-                _OversizeSawmillsField(),
-                SizedBox(height: 20),
-                _PhotoField(),
+                if (state.isPrivileged) const SizedBox(height: 20),
+                if (state.isPrivileged) const _SawmillsField(),
+                if (state.isPrivileged) const SizedBox(height: 20),
+                if (state.isPrivileged) const _OversizeSawmillsField(),
+                const SizedBox(height: 20),
+                const _PhotoField(),
               ],
             ),
           ),
@@ -151,7 +152,7 @@ class _PartieNrField extends StatelessWidget {
       key: const Key('editLocationView_partieNr_textFormField'),
       initialValue: state.partieNr,
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         labelText: 'Partie Nummer',
         hintText: hintText,
         errorText: error,
@@ -182,7 +183,7 @@ class _AdditionalInfoField extends StatelessWidget {
       key: const Key('editLocationView_additionalInfo_textFormField'),
       initialValue: state.additionalInfo,
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         labelText: 'Zusätzliche Info',
         hintText: hintText,
         border: const OutlineInputBorder(),
@@ -213,7 +214,7 @@ class _DateField extends StatelessWidget {
       readOnly: true,
       decoration: InputDecoration(
         labelText: 'Datum',
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         border: const OutlineInputBorder(),
         suffixIcon: IconButton(
           onPressed: () async {
@@ -275,7 +276,7 @@ class _InitialQuantityField extends StatelessWidget {
       key: const Key('editLocationView_initialQuantity_textFormField'),
       initialValue: state.initialLocation?.initialQuantity.toString() ?? '',
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         labelText: 'Menge (fm)',
         errorText: error,
         border: const OutlineInputBorder(),
@@ -311,7 +312,7 @@ class _InitialOversizeQuantityField extends StatelessWidget {
       initialValue:
           state.initialLocation?.initialOversizeQuantity.toString() ?? '',
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         labelText: 'Davon ÜS (fm)',
         border: const OutlineInputBorder(),
         errorText: error,
@@ -346,7 +347,7 @@ class _InitialPieceCountField extends StatelessWidget {
       key: const Key('editLocationView_initialPieceCount_textFormField'),
       initialValue: state.initialLocation?.initialPieceCount.toString() ?? '',
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         labelText: 'Stückzahl',
         errorText: error,
         border: const OutlineInputBorder(),
@@ -386,11 +387,13 @@ class _ContractField extends StatelessWidget {
         ? selectedId
         : null;
 
+    final isEnabled = !state.status.isLoadingOrSuccess && state.isPrivileged;
+
     return DropdownButtonFormField<String>(
       isExpanded: true,
       decoration: InputDecoration(
         labelText: 'Vertrag',
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: isEnabled,
         errorText: error,
         border: const OutlineInputBorder(),
       ),
@@ -401,13 +404,15 @@ class _ContractField extends StatelessWidget {
           child: Text(contract.title),
         );
       }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          context
-              .read<EditLocationBloc>()
-              .add(EditLocationContractChanged(value));
-        }
-      },
+      onChanged: isEnabled
+          ? (value) {
+              if (value != null) {
+                context
+                    .read<EditLocationBloc>()
+                    .add(EditLocationContractChanged(value));
+              }
+            }
+          : null,
     );
   }
 }
@@ -424,7 +429,7 @@ class _NewSawmillField extends StatelessWidget {
       key: const Key('editLocationView_newSawmill_textFormField'),
       decoration: InputDecoration(
         labelText: 'Neues Sägewerk erstellen',
-        enabled: !state.status.isLoadingOrSuccess,
+        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
         border: const OutlineInputBorder(),
         suffixIcon: IconButton(
           key: const Key('editLocationView_addSawmill_iconButton'),
@@ -459,6 +464,7 @@ class _SawmillsField extends StatelessWidget {
       builder: (context, state) {
         return MultiDropdown(
           controller: state.sawmillController,
+          enabled: !state.status.isLoadingOrSuccess,
           key: const Key('editLocationView_sawmill_dropDown'),
           fieldDecoration: const FieldDecoration(
             labelText: 'Sägewerke',
@@ -483,6 +489,7 @@ class _OversizeSawmillsField extends StatelessWidget {
       builder: (context, state) {
         return MultiDropdown(
           controller: state.oversizeSawmillController,
+          enabled: !state.status.isLoadingOrSuccess,
           key: const Key('editLocationView_oversizeSawmill_dropDown'),
           fieldDecoration: const FieldDecoration(
             labelText: 'Sägewerke ÜS',

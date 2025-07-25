@@ -19,6 +19,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     required PhotoRepository photoRepository,
     required Location? initialLocation,
     required LatLng? newMarkerPosition,
+    required bool isPrivileged,
   })  : _locationsRepository = locationsRepository,
         _contractRepository = contractRepository,
         _sawmillRepository = sawmillRepository,
@@ -37,6 +38,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
             contractId: initialLocation?.contractId ?? '',
             sawmills: initialLocation?.sawmillIds ?? const [],
             oversizeSawmills: initialLocation?.oversizeSawmillIds ?? const [],
+            isPrivileged: isPrivileged,
           ),
         ) {
     on<EditLocationInit>(_onInit);
