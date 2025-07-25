@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:image_picker/image_picker.dart';
@@ -54,7 +53,6 @@ class EditLocationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final status = context.select((EditLocationBloc bloc) => bloc.state.status);
     final isNewLocation = context.select(
       (EditLocationBloc bloc) => bloc.state.isNewLocation,
@@ -64,8 +62,8 @@ class EditLocationView extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           isNewLocation
-              ? l10n.editLocationAddAppBarTitle
-              : l10n.editLocationEditAppBarTitle,
+              ? 'Standort hinzufügen'
+              : 'Standort bearbeiten',
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -145,7 +143,6 @@ class _PartieNrField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
     final hintText = state.initialLocation?.partieNr ?? '';
     final error = state.validationErrors['partieNr'];
@@ -155,7 +152,7 @@ class _PartieNrField extends StatelessWidget {
       initialValue: state.partieNr,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editLocationPartieNrLabel,
+        labelText: 'Partie Nummer',
         hintText: hintText,
         errorText: error,
         border: const OutlineInputBorder(),
@@ -178,8 +175,6 @@ class _AdditionalInfoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final state = context.watch<EditLocationBloc>().state;
     final hintText = state.initialLocation?.additionalInfo ?? '';
 
@@ -188,7 +183,7 @@ class _AdditionalInfoField extends StatelessWidget {
       initialValue: state.additionalInfo,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editLocationAdditionalInfoLabel,
+        labelText: 'Zusätzliche Info',
         hintText: hintText,
         border: const OutlineInputBorder(),
       ),
@@ -273,8 +268,6 @@ class _InitialQuantityField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final state = context.watch<EditLocationBloc>().state;
     final error = state.validationErrors['initialQuantity'];
 
@@ -283,7 +276,7 @@ class _InitialQuantityField extends StatelessWidget {
       initialValue: state.initialLocation?.initialQuantity.toString() ?? '',
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editLocationInitialQuantityLabel,
+        labelText: 'Menge (fm)',
         errorText: error,
         border: const OutlineInputBorder(),
         counterText: '',
@@ -310,8 +303,6 @@ class _InitialOversizeQuantityField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final state = context.watch<EditLocationBloc>().state;
     final error = state.validationErrors['initialOversizeQuantity'];
 
@@ -321,7 +312,7 @@ class _InitialOversizeQuantityField extends StatelessWidget {
           state.initialLocation?.initialOversizeQuantity.toString() ?? '',
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editLocationInitialOversizeQuantityLabel,
+        labelText: 'Davon ÜS (fm)',
         border: const OutlineInputBorder(),
         errorText: error,
         counterText: '',
@@ -348,8 +339,6 @@ class _InitialPieceCountField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final state = context.watch<EditLocationBloc>().state;
     final error = state.validationErrors['initialPieceCount'];
 
@@ -358,7 +347,7 @@ class _InitialPieceCountField extends StatelessWidget {
       initialValue: state.initialLocation?.initialPieceCount.toString() ?? '',
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editLocationInitialPieceCountLabel,
+        labelText: 'Stückzahl',
         errorText: error,
         border: const OutlineInputBorder(),
         counterText: '',
@@ -385,7 +374,6 @@ class _ContractField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
     final error = state.validationErrors['contract'];
 
@@ -401,7 +389,7 @@ class _ContractField extends StatelessWidget {
     return DropdownButtonFormField<String>(
       isExpanded: true,
       decoration: InputDecoration(
-        labelText: l10n.editLocationContractLabel,
+        labelText: 'Vertrag',
         enabled: !state.status.isLoadingOrSuccess,
         errorText: error,
         border: const OutlineInputBorder(),
@@ -429,14 +417,13 @@ class _NewSawmillField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final state = context.watch<EditLocationBloc>().state;
 
     return TextField(
       controller: state.newSawmillController,
       key: const Key('editLocationView_newSawmill_textFormField'),
       decoration: InputDecoration(
-        labelText: l10n.editLocationNewSawmillLabel,
+        labelText: 'Neues Sägewerk erstellen',
         enabled: !state.status.isLoadingOrSuccess,
         border: const OutlineInputBorder(),
         suffixIcon: IconButton(
@@ -468,16 +455,14 @@ class _SawmillsField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocBuilder<EditLocationBloc, EditLocationState>(
       builder: (context, state) {
         return MultiDropdown(
           controller: state.sawmillController,
           key: const Key('editLocationView_sawmill_dropDown'),
-          fieldDecoration: FieldDecoration(
-            labelText: l10n.editLocationSawmillsLabel,
-            border: const OutlineInputBorder(),
+          fieldDecoration: const FieldDecoration(
+            labelText: 'Sägewerke',
+            border: OutlineInputBorder(),
           ),
           items: state.sawmillController.items,
           onSelectionChange: (selectedItems) => context
@@ -494,16 +479,14 @@ class _OversizeSawmillsField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocBuilder<EditLocationBloc, EditLocationState>(
       builder: (context, state) {
         return MultiDropdown(
           controller: state.oversizeSawmillController,
           key: const Key('editLocationView_oversizeSawmill_dropDown'),
-          fieldDecoration: FieldDecoration(
-            labelText: l10n.editLocationOversizeSawmillsLabel,
-            border: const OutlineInputBorder(),
+          fieldDecoration: const FieldDecoration(
+            labelText: 'Sägewerke ÜS',
+            border: OutlineInputBorder(),
           ),
           items: state.oversizeSawmillController.items,
           onSelectionChange: (selectedItems) => context

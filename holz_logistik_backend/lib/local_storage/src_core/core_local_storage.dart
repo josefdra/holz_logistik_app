@@ -33,7 +33,7 @@ class CoreLocalStorage {
     _sharedPrefs = await SharedPreferences.getInstance();
     return _sharedPrefs!;
   }
-
+ 
   /// Get the database instance, initializing if needed
   Future<Database> get database async {
     if (_database != null) return _database!;

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/models/users/users.dart';
 import 'package:holz_logistik/screens/users/user_list/user_list.dart';
 
@@ -9,8 +8,6 @@ class UserListFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final activeFilter =
         context.select((UserListBloc bloc) => bloc.state.filter);
 
@@ -26,25 +23,25 @@ class UserListFilterButton extends StatelessWidget {
       },
       itemBuilder: (context) {
         return [
-          PopupMenuItem(
+          const PopupMenuItem(
             value: UserListFilter.all,
-            child: Text(l10n.userListFilterAll),
+            child: Text('Alle'),
           ),
-          PopupMenuItem(
+          const PopupMenuItem(
             value: UserListFilter.basicOnly,
-            child: Text(l10n.userListFilterBasicOnly),
+            child: Text('Nur Basisnutzer'),
           ),
-          PopupMenuItem(
+          const PopupMenuItem(
             value: UserListFilter.privilegedOnly,
-            child: Text(l10n.userListFilterPrivilegedOnly),
+            child: Text('Nur privilegierte Nutzer'),
           ),
-          PopupMenuItem(
+          const PopupMenuItem(
             value: UserListFilter.adminOnly,
-            child: Text(l10n.userListFilterAdminOnly),
+            child: Text('Nur Admins'),
           ),
-          PopupMenuItem(
+          const PopupMenuItem(
             value: UserListFilter.elevatedAccess,
-            child: Text(l10n.userListFilterElevatedAccess),
+            child: Text('Nutzer mit erhöhten Rechten'),
           ),
         ];
       },

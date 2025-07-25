@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:holz_logistik/models/analytics/analytics.dart';
+import 'package:holz_logistik_backend/general/models/round.dart';
 
 class AnalyticsSawmillListTile extends StatelessWidget {
   const AnalyticsSawmillListTile({
@@ -50,7 +51,7 @@ class AnalyticsSawmillListTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLegendItem(
-                      text: 'Menge: ${data.quantity} fm',
+                      text: 'Menge: ${customRound(data.quantity)} fm',
                       color: const Color.fromARGB(255, 170, 224, 239),
                     ),
                     _buildLegendItem(
@@ -63,7 +64,7 @@ class AnalyticsSawmillListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildLegendItem(
-                    text: 'Davon ÜS: ${data.oversizeQuantity} fm',
+                    text: 'Davon ÜS: ${customRound(data.oversizeQuantity)} fm',
                     color: const Color.fromARGB(255, 100, 169, 212),
                   ),
                   const SizedBox(height: 17),

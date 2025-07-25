@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/locations/finished_locations/finished_locations.dart';
 import 'package:holz_logistik/screens/locations/location_list/location_list.dart';
 import 'package:holz_logistik/widgets/locations/location_widgets.dart';
@@ -73,8 +72,6 @@ class LocationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocListener<LocationListBloc, LocationListState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) async {
@@ -82,8 +79,9 @@ class LocationList extends StatelessWidget {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: Text(l10n.locationListErrorSnackbarText),
+              const SnackBar(
+                content:
+                    Text('Beim Laden der Standorte ist ein Fehler aufgetreten'),
               ),
             );
         }
@@ -112,7 +110,7 @@ class LocationList extends StatelessWidget {
                   } else {
                     return Center(
                       child: Text(
-                        l10n.locationListEmptyText,
+                        'Keine Standorte verfügbar',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     );

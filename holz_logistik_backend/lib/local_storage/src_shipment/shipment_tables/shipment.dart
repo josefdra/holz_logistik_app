@@ -55,7 +55,7 @@ class ShipmentTable {
       $columnDeleted INTEGER DEFAULT 0,
       FOREIGN KEY ($columnUserId) REFERENCES ${UserTable.tableName}(${UserTable.columnId}),
       FOREIGN KEY ($columnContractId) REFERENCES ${ContractTable.tableName}(${ContractTable.columnId}),
-      FOREIGN KEY ($columnSawmillId) REFERENCES ${SawmillTable.tableName}(${LocationTable.columnId})
+      FOREIGN KEY ($columnSawmillId) REFERENCES ${SawmillTable.tableName}(${LocationTable.columnId}),
       FOREIGN KEY ($columnLocationId) REFERENCES ${LocationTable.tableName}(${LocationTable.columnId})
     )
   ''';

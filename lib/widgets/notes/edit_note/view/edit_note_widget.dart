@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/widgets/notes/edit_note/edit_note.dart';
 import 'package:holz_logistik_backend/repository/authentication_repository.dart';
 import 'package:holz_logistik_backend/repository/note_repository.dart';
@@ -47,8 +46,8 @@ class EditNoteView extends StatelessWidget {
         }
 
         return Dialog(
-      insetPadding: 
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 70),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 70),
           child: SizedBox(
             width: 600,
             child: Padding(
@@ -106,8 +105,6 @@ class _TextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final state = context.watch<EditNoteBloc>().state;
     final hintText = state.initialNote?.text ?? '';
     final error = state.validationErrors['text'];
@@ -117,7 +114,7 @@ class _TextField extends StatelessWidget {
       initialValue: state.text,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editNoteTextLabel,
+        labelText: 'Notiz',
         hintText: hintText,
         errorText: error,
         border: const OutlineInputBorder(),

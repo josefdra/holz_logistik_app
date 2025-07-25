@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/settings/settings.dart';
 import 'package:holz_logistik/screens/users/user_list/user_list.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
@@ -42,11 +41,9 @@ class CustomScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settingsAppBarTitle),
+        title: const Text('Einstellungen'),
         actions: [
           if (admin)
             IconButton(
@@ -67,8 +64,6 @@ class SettingsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocBuilder<SettingsBloc, SettingsState>(
       builder: (context, state) {
         if (state.status == SettingsStatus.loading) {
@@ -87,7 +82,7 @@ class SettingsWidget extends StatelessWidget {
               if (state.authenticatedUser.name == '')
                 Center(
                   child: Text(
-                    l10n.settingsNotAuthenticatedText,
+                    'Nicht angemeldet',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 )
@@ -102,9 +97,7 @@ class SettingsWidget extends StatelessWidget {
               TextFormField(
                 key: const Key('settingsPage_apiKey_textFormField'),
                 initialValue: '',
-                decoration: InputDecoration(
-                  labelText: l10n.settingsApiKeyLabel,
-                ),
+                decoration: const InputDecoration(labelText: 'ApiKey'),
                 maxLength: 50,
                 onChanged: (value) {
                   context
@@ -121,7 +114,7 @@ class SettingsWidget extends StatelessWidget {
                         );
                     onApiKeyChanged?.call();
                   },
-                  child: Text(l10n.settingsSaveButtonText),
+                  child: const Text('Speichern'),
                 ),
               ),
             ],

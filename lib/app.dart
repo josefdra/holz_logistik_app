@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/main/view/main_page.dart';
 import 'package:holz_logistik_backend/api/api.dart';
 import 'package:holz_logistik_backend/local_storage/local_storage.dart';
@@ -122,8 +121,6 @@ class AppView extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Holz Logistik App',
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

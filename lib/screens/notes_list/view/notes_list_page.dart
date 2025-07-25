@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/notes_list/notes_list.dart';
 import 'package:holz_logistik/widgets/notes/note_widgets.dart';
 import 'package:holz_logistik_backend/repository/note_repository.dart';
@@ -50,8 +49,6 @@ class NoteList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return MultiBlocListener(
       listeners: [
         BlocListener<NotesListBloc, NotesListState>(
@@ -61,8 +58,8 @@ class NoteList extends StatelessWidget {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.noteListErrorSnackbarText),
+                  const SnackBar(
+                    content: Text('Fehler beim Laden der Notizen'),
                   ),
                 );
             }
@@ -79,11 +76,11 @@ class NoteList extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   duration: const Duration(seconds: 5),
-                  content: Text(
-                    l10n.noteListNoteDeletedSnackbarText,
+                  content: const Text(
+                    'Notiz gelöscht',
                   ),
                   action: SnackBarAction(
-                    label: l10n.noteListUndoDeletionButtonText,
+                    label: 'Rückgängig',
                     onPressed: () {
                       messenger.hideCurrentSnackBar();
                       context
@@ -106,7 +103,7 @@ class NoteList extends StatelessWidget {
             } else {
               return Center(
                 child: Text(
-                  l10n.noteListEmptyText,
+                  'Keine Notizen',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               );

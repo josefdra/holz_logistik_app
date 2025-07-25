@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/widgets/contract/edit_contract/edit_contract.dart';
 import 'package:holz_logistik_backend/repository/contract_repository.dart';
 
@@ -112,7 +111,6 @@ class _TitleField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final state = context.watch<EditContractBloc>().state;
     final hintText = state.initialContract?.title ?? '';
     final error = state.validationErrors['title'];
@@ -122,7 +120,7 @@ class _TitleField extends StatelessWidget {
       initialValue: state.title,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editContractTitleLabel,
+        labelText: 'Titel',
         hintText: hintText,
         errorText: error,
         border: const OutlineInputBorder(),
@@ -247,8 +245,6 @@ class _AdditionalInfoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     final state = context.watch<EditContractBloc>().state;
     final hintText = state.initialContract?.additionalInfo ?? '';
 
@@ -257,7 +253,7 @@ class _AdditionalInfoField extends StatelessWidget {
       initialValue: state.additionalInfo,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editContractAdditionalInfoLabel,
+        labelText: 'Zusätzliche Info',
         hintText: hintText,
         border: const OutlineInputBorder(),
       ),

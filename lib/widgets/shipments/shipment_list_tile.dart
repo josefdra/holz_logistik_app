@@ -59,7 +59,7 @@ class ShipmentListTile extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               SizedBox(
-                width: 50,
+                width: 70,
                 height: 50,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,

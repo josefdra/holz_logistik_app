@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/locations/edit_location/edit_location.dart';
 import 'package:holz_logistik/screens/map/map.dart';
 import 'package:holz_logistik/widgets/locations/location_details/location_details.dart';
@@ -48,8 +47,6 @@ class MapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocListener<MapBloc, MapState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
@@ -57,8 +54,8 @@ class MapView extends StatelessWidget {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: Text(l10n.mapErrorSnackbarText),
+              const SnackBar(
+                content: Text('Fehler beim Laden der Karte'),
               ),
             );
         }

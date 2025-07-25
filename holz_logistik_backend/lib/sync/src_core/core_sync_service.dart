@@ -110,7 +110,9 @@ class CoreSyncService {
 
   /// Handle incoming messages
   void _handleMessage(dynamic rawMessage) {
-    print('RAW MESSAGE RECEIVED: $rawMessage');
+    if (kDebugMode) {
+      print('RAW MESSAGE RECEIVED: $rawMessage');
+    }
 
     try {
       _reconnectAttempts = 0;

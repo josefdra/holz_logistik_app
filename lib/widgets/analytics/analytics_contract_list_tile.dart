@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:holz_logistik/models/general/color.dart';
 import 'package:holz_logistik_backend/api/contract_api.dart';
+import 'package:holz_logistik_backend/general/general.dart';
 
 class AnalyticsContractListTile extends StatelessWidget {
   const AnalyticsContractListTile({
@@ -44,7 +45,7 @@ class AnalyticsContractListTile extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              '${contract.availableQuantity} fm',
+              '${customRound(contract.availableQuantity)} fm',
               textAlign: TextAlign.end,
               style: const TextStyle(fontSize: 12),
             ),
@@ -95,11 +96,12 @@ class AnalyticsContractListTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLegendItem(
-                      text: 'Gebucht: ${contract.bookedQuantity} fm',
+                      text:
+                          'Gebucht: ${customRound(contract.bookedQuantity)} fm',
                       color: const Color.fromARGB(255, 194, 218, 135),
                     ),
                     _buildLegendItem(
-                      text: 'Verfügbar: $restQuantity fm',
+                      text: 'Verfügbar: ${customRound(restQuantity)} fm',
                       color: Colors.grey.shade100,
                     ),
                   ],
@@ -109,7 +111,9 @@ class AnalyticsContractListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildLegendItem(
-                    text: 'Abgefahren: ${contract.shippedQuantity} fm',
+                    text:
+                        'Abgefahren: ${customRound(contract.shippedQuantity)} '
+                        'fm',
                     color: const Color.fromARGB(255, 69, 131, 46),
                   ),
                   const SizedBox(height: 17),

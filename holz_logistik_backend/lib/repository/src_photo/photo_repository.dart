@@ -87,7 +87,7 @@ class PhotoRepository {
 
   /// Deletes the `photo` with the given id.
   Future<void> deletePhoto(
-      {required String id, required String locationId}) async {
+      {required String id, required String locationId,}) async {
     await _photoApi.markPhotoDeleted(id: id, locationId: locationId);
     final data = {
       'id': id,

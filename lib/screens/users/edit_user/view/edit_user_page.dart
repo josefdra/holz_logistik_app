@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/users/edit_user/edit_user.dart';
 import 'package:holz_logistik/widgets/user/user_widgets.dart';
 import 'package:holz_logistik_backend/repository/user_repository.dart';
@@ -39,7 +38,6 @@ class EditUserView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final status = context.select((EditUserBloc bloc) => bloc.state.status);
     final isNewUser = context.select(
       (EditUserBloc bloc) => bloc.state.isNewUser,
@@ -49,8 +47,8 @@ class EditUserView extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           isNewUser
-              ? l10n.editUserAddAppBarTitle
-              : l10n.editUserEditAppBarTitle,
+              ? 'Neuen Nutzer hinzufügen'
+              : 'Nutzer bearbeiten',
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -105,7 +103,6 @@ class _NameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final state = context.watch<EditUserBloc>().state;
     final hintText = state.initialUser?.name ?? '';
 
@@ -113,7 +110,7 @@ class _NameField extends StatelessWidget {
       initialValue: state.name,
       decoration: InputDecoration(
         enabled: !state.status.isLoadingOrSuccess,
-        labelText: l10n.editUserNameLabel,
+        labelText: 'Name',
         hintText: hintText,
       ),
       maxLength: 50,

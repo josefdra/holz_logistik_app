@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/contracts/contract_list/contract_list.dart';
 import 'package:holz_logistik/screens/contracts/finished_contracts/finished_contracts.dart';
 import 'package:holz_logistik/widgets/contract/contract_list_tile.dart';
@@ -56,8 +55,6 @@ class ContractList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return Column(
       children: [
         Expanded(
@@ -69,8 +66,8 @@ class ContractList extends StatelessWidget {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
                   ..showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.contractListErrorSnackbarText),
+                    const SnackBar(
+                      content: Text('Fehler beim Laden der Verträge'),
                     ),
                   );
               }
@@ -85,7 +82,7 @@ class ContractList extends StatelessWidget {
                   } else {
                     return Center(
                       child: Text(
-                        l10n.contractListEmptyText,
+                        'Keine Verträge verfügbar',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     );

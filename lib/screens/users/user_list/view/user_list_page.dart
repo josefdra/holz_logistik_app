@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:holz_logistik/l10n/l10n.dart';
 import 'package:holz_logistik/screens/users/edit_user/edit_user.dart';
 import 'package:holz_logistik/screens/users/user_list/user_list.dart';
 import 'package:holz_logistik/widgets/user/user_widgets.dart';
@@ -23,15 +22,13 @@ class UserListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocProvider(
       create: (context) => UserListBloc(
         userRepository: context.read<UserRepository>(),
       )..add(const UserListSubscriptionRequested()),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l10n.userListAppBarTitle),
+          title: const Text('Nutzer'),
           actions: const [
             UserListFilterButton(),
           ],
@@ -56,8 +53,6 @@ class UserList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return BlocListener<UserListBloc, UserListState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
@@ -65,8 +60,10 @@ class UserList extends StatelessWidget {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: Text(l10n.userListErrorSnackbarText),
+              const SnackBar(
+                content: Text(
+                  'Ein Fehler ist während dem Laden der Nutzer aufgetreten',
+                ),
               ),
             );
         }
@@ -81,7 +78,7 @@ class UserList extends StatelessWidget {
             } else {
               return Center(
                 child: Text(
-                  l10n.userListEmptyText,
+                  'Keine Nutzer gefunden',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               );
