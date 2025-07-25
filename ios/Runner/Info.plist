@@ -30,6 +30,8 @@
 		<string>http</string>
 		<string>maps</string>
 		<string>google-maps</string>
+    <string>googlechromes</string>
+    <string>comgooglemaps</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
