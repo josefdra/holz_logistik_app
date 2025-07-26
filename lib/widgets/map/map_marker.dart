@@ -21,10 +21,36 @@ class MapMarker {
 
   List<Marker> build() {
     final markerPoint = LatLng(location.latitude, location.longitude);
-    final markerIcon = Icon(
-      !location.started ? Icons.location_pin : Icons.location_off,
-      color: colorFromString(contractName),
-      size: 50,
+    final markerIcon = Stack(
+      children: [
+        Positioned(
+          left: 0,
+          top: 0,
+          child: Icon(
+            !location.started ? Icons.location_pin : Icons.location_off,
+            color: Colors.black,
+            size: 60,
+          ),
+        ),
+        Positioned(
+          left: 15,
+          top: 12,
+          child: Icon(
+            !location.started ? Icons.location_pin : Icons.location_off,
+            color: Colors.black,
+            size: 30,
+          ),
+        ),
+        Positioned(
+          left: 5,
+          top: 4,
+          child: Icon(
+            !location.started ? Icons.location_pin : Icons.location_off,
+            color: colorFromString(contractName),
+            size: 50,
+          ),
+        ),
+      ],
     );
 
     final baseMarker = Marker(
@@ -41,12 +67,12 @@ class MapMarker {
       return [baseMarker];
     } else {
       final sawmillNames = location.sawmillIds
-              .map((id) => sawmills[id]?.name ?? 'Unbekannt')
-              .join(', ');
+          .map((id) => sawmills[id]?.name ?? 'Unbekannt')
+          .join(', ');
 
       final oversizeSawmillNames = location.oversizeSawmillIds
-              .map((id) => sawmills[id]?.name ?? 'Unbekannt')
-              .join(', ');
+          .map((id) => sawmills[id]?.name ?? 'Unbekannt')
+          .join(', ');
 
       final showRegularSawmills = sawmillNames.isNotEmpty;
       final showOversizeSawmills = oversizeSawmillNames.isNotEmpty;
