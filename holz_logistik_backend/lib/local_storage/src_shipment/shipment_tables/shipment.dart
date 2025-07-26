@@ -21,6 +21,9 @@ class ShipmentTable {
   /// The column name for storing the piece count of the shipment.
   static const String columnPieceCount = 'pieceCount';
 
+  /// The column name for storing additional info about the shipment.
+  static const String columnAdditionalInfo = 'additionalInfo';
+
   /// The column name for storing the user id of the shipment.
   static const String columnUserId = 'userId';
 
@@ -47,6 +50,7 @@ class ShipmentTable {
       $columnQuantity REAL NOT NULL,
       $columnOversizeQuantity REAL NOT NULL,
       $columnPieceCount INTEGER NOT NULL,
+      $columnAdditionalInfo TEXT,
       $columnUserId TEXT NOT NULL,
       $columnContractId TEXT NOT NULL,
       $columnSawmillId TEXT NOT NULL,

@@ -34,7 +34,12 @@ class ShipmentLocalStorage extends ShipmentApi {
     int oldVersion,
     int newVersion,
   ) async {
-    // Migration logic here if needed
+    if (oldVersion < 2 && newVersion >= 2) {
+      await db.execute('''
+      ALTER TABLE ${ShipmentTable.tableName} 
+      ADD COLUMN ${ShipmentTable.columnAdditionalInfo} TEXT
+    ''');
+    }
   }
 
   @override

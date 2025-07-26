@@ -11,6 +11,9 @@ extension ShipmentFormStatusX on ShipmentFormStatus {
 
 final class ShipmentFormState extends Equatable {
   const ShipmentFormState({
+    required this.initialCurrentQuantity,
+    required this.initialCurrentOversizeQuantity,
+    required this.initialCurrentPieceCount,
     required this.currentQuantity,
     required this.currentOversizeQuantity,
     required this.currentPieceCount,
@@ -20,11 +23,15 @@ final class ShipmentFormState extends Equatable {
     this.quantity = 0,
     this.oversizeQuantity = 0,
     this.pieceCount = 0,
+    this.additionalInfo = '',
     this.sawmillId = '',
     this.validationErrors = const {},
     this.locationFinished = false,
   });
 
+  final double initialCurrentQuantity;
+  final double initialCurrentOversizeQuantity;
+  final int initialCurrentPieceCount;
   final double currentQuantity;
   final double currentOversizeQuantity;
   final int currentPieceCount;
@@ -34,11 +41,15 @@ final class ShipmentFormState extends Equatable {
   final double quantity;
   final double oversizeQuantity;
   final int pieceCount;
+  final String additionalInfo;
   final String sawmillId;
   final Map<String, String?> validationErrors;
   final bool locationFinished;
 
   ShipmentFormState copyWith({
+    double? initialCurrentQuantity,
+    double? initialCurrentOversizeQuantity,
+    int? initialCurrentPieceCount,
     double? currentQuantity,
     double? currentOversizeQuantity,
     int? currentPieceCount,
@@ -48,11 +59,18 @@ final class ShipmentFormState extends Equatable {
     double? quantity,
     double? oversizeQuantity,
     int? pieceCount,
+    String? additionalInfo,
     String? sawmillId,
     Map<String, String?>? validationErrors,
     bool? locationFinished,
   }) {
     return ShipmentFormState(
+      initialCurrentQuantity:
+          initialCurrentQuantity ?? this.initialCurrentQuantity,
+      initialCurrentOversizeQuantity:
+          initialCurrentOversizeQuantity ?? this.initialCurrentOversizeQuantity,
+      initialCurrentPieceCount:
+          initialCurrentPieceCount ?? this.initialCurrentPieceCount,
       currentQuantity: currentQuantity ?? this.currentQuantity,
       currentOversizeQuantity:
           currentOversizeQuantity ?? this.currentOversizeQuantity,
@@ -63,6 +81,7 @@ final class ShipmentFormState extends Equatable {
       quantity: quantity ?? this.quantity,
       oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
       pieceCount: pieceCount ?? this.pieceCount,
+      additionalInfo: additionalInfo ?? this.additionalInfo,
       sawmillId: sawmillId ?? this.sawmillId,
       validationErrors: validationErrors ?? this.validationErrors,
       locationFinished: locationFinished ?? this.locationFinished,
@@ -71,6 +90,9 @@ final class ShipmentFormState extends Equatable {
 
   @override
   List<Object> get props => [
+        initialCurrentQuantity,
+        initialCurrentOversizeQuantity,
+        initialCurrentPieceCount,
         currentQuantity,
         currentOversizeQuantity,
         currentPieceCount,
@@ -80,6 +102,7 @@ final class ShipmentFormState extends Equatable {
         quantity,
         oversizeQuantity,
         pieceCount,
+        additionalInfo,
         sawmillId,
         validationErrors,
         locationFinished,

@@ -32,7 +32,7 @@ class ShipmentFormWidget extends StatelessWidget {
         shipmentRepository: context.read<ShipmentRepository>(),
         locationRepository: context.read<LocationRepository>(),
         contractRepository: context.read<ContractRepository>(),
-      ),
+      )..add(const ShipmentFormSubscriptionRequested()),
       child: BlocListener<ShipmentFormBloc, ShipmentFormState>(
         listenWhen: (previous, current) =>
             previous.status != current.status &&
@@ -65,14 +65,41 @@ class ShipmentFormView extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color:
                               Theme.of(context).colorScheme.onPrimaryContainer,
+                          fontSize: 28,
                         ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                const _QuantityField(),
-                const _OversizeQuantityField(),
-                const _PieceCountField(),
+                const SizedBox(height: 20),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(child: _QuantityField(isRest: false)),
+                    SizedBox(width: 10),
+                    Expanded(child: _QuantityField(isRest: true)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(child: _OversizeQuantityField(isRest: false)),
+                    SizedBox(width: 10),
+                    Expanded(child: _OversizeQuantityField(isRest: true)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(child: _PieceCountField(isRest: false)),
+                    SizedBox(width: 10),
+                    Expanded(child: _PieceCountField(isRest: true)),
+                  ],
+                ),
+                const SizedBox(height: 20),
                 const _SawmillField(),
+                const SizedBox(height: 20),
+                const _AdditionalInfoField(),
                 const _FinishLocationField(),
                 const SizedBox(height: 10),
                 Row(
@@ -132,128 +159,131 @@ class DecimalInputFormatter extends TextInputFormatter {
 }
 
 class _QuantityField extends StatelessWidget {
-  const _QuantityField();
+  const _QuantityField({required this.isRest});
+
+  final bool isRest;
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
-    final error = state.validationErrors['quantity'];
+    final error = isRest ? null : state.validationErrors['quantity'];
+    final controller =
+        isRest ? context.read<ShipmentFormBloc>().restQuantityController : null;
 
-    return Column(
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Verfügbare Menge: ${state.currentQuantity}'),
-        ),
-        const SizedBox(height: 10),
-        TextFormField(
-          key: const Key('shipmentForm_quantity_textFormField'),
-          initialValue: '',
-          decoration: InputDecoration(
-            enabled: !state.status.isLoadingOrSuccess,
-            labelText: 'Menge (fm)',
-            errorText: error,
-            border: const OutlineInputBorder(),
-          ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          maxLength: 20,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(20),
-            DecimalInputFormatter(),
-          ],
-          onChanged: (value) {
-            if (value.isNotEmpty) {
-              context
-                  .read<ShipmentFormBloc>()
-                  .add(ShipmentFormQuantityUpdate(double.parse(value)));
-            }
-          },
-        ),
+    return TextFormField(
+      controller: controller,
+      key: Key('${isRest ? 'rest' : ''}shipmentForm_quantity_textFormField'),
+      initialValue: isRest ? null : '',
+      decoration: InputDecoration(
+        enabled: !state.status.isLoadingOrSuccess,
+        labelText: '${isRest ? 'Rest' : 'Abfuhr'} (fm)',
+        errorText: error,
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(20),
+        DecimalInputFormatter(),
       ],
+      onChanged: (value) {
+        if (value.isNotEmpty) {
+          context.read<ShipmentFormBloc>().add(
+                isRest
+                    ? ShipmentFormRestQuantityUpdate(double.parse(value))
+                    : ShipmentFormQuantityUpdate(double.parse(value)),
+              );
+        } else if (isRest) {
+          controller!.clear();
+        }
+      },
     );
   }
 }
 
 class _OversizeQuantityField extends StatelessWidget {
-  const _OversizeQuantityField();
+  const _OversizeQuantityField({required this.isRest});
+
+  final bool isRest;
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
+    final controller = isRest
+        ? context.read<ShipmentFormBloc>().restOversizeQuantityController
+        : null;
 
-    return Column(
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Verfügbare Menge ÜS: ${state.currentOversizeQuantity}'),
-        ),
-        const SizedBox(height: 10),
-        TextFormField(
-          key: const Key('shipmentForm_oversizeQuantity_textFormField'),
-          initialValue: '',
-          decoration: InputDecoration(
-            enabled: !state.status.isLoadingOrSuccess,
-            labelText: 'Davon ÜS',
-            border: const OutlineInputBorder(),
-          ),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          maxLength: 20,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(20),
-            DecimalInputFormatter(),
-          ],
-          onChanged: (value) {
-            if (value.isNotEmpty) {
-              context.read<ShipmentFormBloc>().add(
-                    ShipmentFormOversizeQuantityUpdate(double.parse(value)),
-                  );
-            }
-          },
-        ),
+    return TextFormField(
+      controller: controller,
+      key: Key('${isRest ? 'rest' : ''}shipmentForm_oversizeQuantity_'
+          'textFormField'),
+      initialValue: isRest ? null : '',
+      decoration: InputDecoration(
+        enabled: !state.status.isLoadingOrSuccess,
+        labelText: '${isRest ? 'Rest' : 'Abfuhr'} davon ÜS',
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(20),
+        DecimalInputFormatter(),
       ],
+      onChanged: (value) {
+        if (value.isNotEmpty) {
+          context.read<ShipmentFormBloc>().add(
+                isRest
+                    ? ShipmentFormRestOversizeQuantityUpdate(
+                        double.parse(value),
+                      )
+                    : ShipmentFormOversizeQuantityUpdate(double.parse(value)),
+              );
+        } else if (isRest) {
+          controller!.clear();
+        }
+      },
     );
   }
 }
 
 class _PieceCountField extends StatelessWidget {
-  const _PieceCountField();
+  const _PieceCountField({required this.isRest});
+
+  final bool isRest;
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<ShipmentFormBloc>().state;
-    final error = state.validationErrors['pieceCount'];
+    final error = isRest ? null : state.validationErrors['pieceCount'];
+    final controller = isRest
+        ? context.read<ShipmentFormBloc>().restPieceCountController
+        : null;
 
-    return Column(
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text('Verfügbare Stückzahl: ${state.currentPieceCount}'),
-        ),
-        const SizedBox(height: 10),
-        TextFormField(
-          key: const Key('shipmentForm_pieceCount_textFormField'),
-          initialValue: '',
-          decoration: InputDecoration(
-            enabled: !state.status.isLoadingOrSuccess,
-            labelText: 'Stückzahl',
-            errorText: error,
-            border: const OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.number,
-          maxLength: 20,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(20),
-            DecimalInputFormatter(),
-          ],
-          onChanged: (value) {
-            if (value.isNotEmpty) {
-              context
-                  .read<ShipmentFormBloc>()
-                  .add(ShipmentFormPieceCountUpdate(int.parse(value)));
-            }
-          },
-        ),
+    return TextFormField(
+      controller: controller,
+      key: Key('${isRest ? 'rest' : ''}shipmentForm_pieceCount_'
+          'textFormField'),
+      initialValue: isRest ? null : '',
+      decoration: InputDecoration(
+        enabled: !state.status.isLoadingOrSuccess,
+        labelText: '${isRest ? 'Rest' : 'Abfuhr'} Stk',
+        errorText: error,
+        border: const OutlineInputBorder(),
+      ),
+      keyboardType: TextInputType.number,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(20),
+        DecimalInputFormatter(),
       ],
+      onChanged: (value) {
+        if (value.isNotEmpty) {
+          context.read<ShipmentFormBloc>().add(
+                isRest
+                    ? ShipmentFormRestPieceCountUpdate(int.parse(value))
+                    : ShipmentFormPieceCountUpdate(int.parse(value)),
+              );
+        } else if (isRest) {
+          controller!.clear();
+        }
+      },
     );
   }
 }
@@ -300,6 +330,35 @@ class _SawmillField extends StatelessWidget {
             }
           },
         );
+      },
+    );
+  }
+}
+
+class _AdditionalInfoField extends StatelessWidget {
+  const _AdditionalInfoField();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<ShipmentFormBloc>().state;
+
+    return TextFormField(
+      key: const Key('shipmentForm_additionalInfo_textFormField'),
+      initialValue: state.additionalInfo,
+      decoration: InputDecoration(
+        enabled: !state.status.isLoadingOrSuccess,
+        labelText: 'Zusätzliche Info',
+        border: const OutlineInputBorder(),
+      ),
+      maxLength: 60,
+      maxLines: 2,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(60),
+      ],
+      onChanged: (value) {
+        context
+            .read<ShipmentFormBloc>()
+            .add(ShipmentFormAdditionalInfoChanged(value));
       },
     );
   }

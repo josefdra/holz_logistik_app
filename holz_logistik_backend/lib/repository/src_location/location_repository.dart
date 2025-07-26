@@ -96,49 +96,46 @@ class LocationRepository {
     return _locationSyncService.sendLocationUpdate(data);
   }
 
-  /// Updates the current values of a location
-  Future<void> _updateCurrentValues(
-    String locationId,
-    double quantity,
-    double oversizeQuantity,
-    int pieceCount, {
-    required bool locationFinished,
-    bool? started,
-  }) async {
-    final location = await _locationApi.getLocationById(locationId);
-    final updatedQuantity = location.currentQuantity + quantity;
-    final updatedOversizeQuantity =
-        location.currentOversizeQuantity + oversizeQuantity;
-    final updatedPieceCount = location.currentPieceCount + pieceCount;
-    final updatedLocationFinished = locationFinished
-        ? locationFinished
-        : ((updatedQuantity == 0) || updatedPieceCount == 0);
-    final updatedLocation = location.copyWith(
-      currentQuantity: updatedQuantity,
-      currentOversizeQuantity: updatedOversizeQuantity,
-      currentPieceCount: updatedPieceCount,
-      started: started,
-      done: updatedLocationFinished,
-    );
-    await saveLocation(updatedLocation);
-  }
-
   /// Updates the values based on a shipment
   Future<void> addShipment(
     String locationId,
     double quantity,
     double oversizeQuantity,
-    int pieceCount, {
+    int pieceCount,
+    double currentQuantity,
+    double currentOversizeQuantity,
+    int currentPieceCount, {
     required bool locationFinished,
   }) async {
-    return _updateCurrentValues(
-      locationId,
-      -quantity,
-      -oversizeQuantity,
-      -pieceCount,
+    final location = await _locationApi.getLocationById(locationId);
+
+    final updatedInitialQuantity = location.initialQuantity +
+        currentQuantity -
+        (location.currentQuantity - quantity);
+
+    final updatedInitialOversizeQuantity = location.initialOversizeQuantity +
+        currentOversizeQuantity -
+        (location.currentOversizeQuantity - oversizeQuantity);
+
+    final updatedInitialPieceCount = location.initialPieceCount +
+        currentPieceCount -
+        (location.currentPieceCount - pieceCount);
+
+    final updatedLocationFinished = locationFinished
+        ? locationFinished
+        : ((currentQuantity == 0) || currentPieceCount == 0);
+
+    final updatedLocation = location.copyWith(
+      initialQuantity: updatedInitialQuantity,
+      initialOversizeQuantity: updatedInitialOversizeQuantity,
+      initialPieceCount: updatedInitialPieceCount,
+      currentQuantity: currentQuantity,
+      currentOversizeQuantity: currentOversizeQuantity,
+      currentPieceCount: currentPieceCount,
       started: true,
-      locationFinished: locationFinished,
+      done: updatedLocationFinished,
     );
+    await saveLocation(updatedLocation);
   }
 
   /// Updates the values based on a shipment
@@ -149,14 +146,21 @@ class LocationRepository {
     int pieceCount, {
     required bool started,
   }) async {
-    return _updateCurrentValues(
-      locationId,
-      quantity,
-      oversizeQuantity,
-      pieceCount,
+    final location = await _locationApi.getLocationById(locationId);
+    final updatedQuantity = location.currentQuantity + quantity;
+    final updatedOversizeQuantity =
+        location.currentOversizeQuantity + oversizeQuantity;
+    final updatedPieceCount = location.currentPieceCount + pieceCount;
+    final updatedLocationFinished =
+        (updatedQuantity == 0) || updatedPieceCount == 0;
+    final updatedLocation = location.copyWith(
+      currentQuantity: updatedQuantity,
+      currentOversizeQuantity: updatedOversizeQuantity,
+      currentPieceCount: updatedPieceCount,
       started: started,
-      locationFinished: false,
+      done: updatedLocationFinished,
     );
+    await saveLocation(updatedLocation);
   }
 
   /// Disposes any resources managed by the repository.

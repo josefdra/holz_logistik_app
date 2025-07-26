@@ -183,7 +183,7 @@ class _AdditionalInfoField extends StatelessWidget {
       key: const Key('editLocationView_additionalInfo_textFormField'),
       initialValue: state.additionalInfo,
       decoration: InputDecoration(
-        enabled: !state.status.isLoadingOrSuccess && state.isPrivileged,
+        enabled: !state.status.isLoadingOrSuccess,
         labelText: 'Zusätzliche Info',
         hintText: hintText,
         border: const OutlineInputBorder(),

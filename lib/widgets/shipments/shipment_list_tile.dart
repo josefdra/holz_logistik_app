@@ -81,6 +81,7 @@ class ShipmentListTile extends StatelessWidget {
               Text('Sägewerk: $sawmillName'),
               Text('${shipment.quantity} fm, ÜS: ${shipment.oversizeQuantity} '
                   'fm, ${shipment.pieceCount} Stk'),
+              if (shipment.additionalInfo != '') Text(shipment.additionalInfo),
             ],
           ),
           trailing: SizedBox(

@@ -12,13 +12,13 @@ Contract _$ContractFromJson(Map<String, dynamic> json) => Contract(
           ? false
           : TypeConverters.boolFromInt((json['done'] as num).toInt()),
       lastEdit: _$JsonConverterFromJson<int, DateTime>(
-          json['lastEdit'], const DateTimeConverter().fromJson,),
+          json['lastEdit'], const DateTimeConverter().fromJson),
       title: json['title'] as String? ?? '',
       additionalInfo: json['additionalInfo'] as String? ?? '',
       startDate: _$JsonConverterFromJson<int, DateTime>(
-          json['startDate'], const DateTimeConverter().fromJson,),
+          json['startDate'], const DateTimeConverter().fromJson),
       endDate: _$JsonConverterFromJson<int, DateTime>(
-          json['endDate'], const DateTimeConverter().fromJson,),
+          json['endDate'], const DateTimeConverter().fromJson),
       availableQuantity: (json['availableQuantity'] as num?)?.toDouble() ?? 0,
       bookedQuantity: (json['bookedQuantity'] as num?)?.toDouble() ?? 0,
       shippedQuantity: (json['shippedQuantity'] as num?)?.toDouble() ?? 0,

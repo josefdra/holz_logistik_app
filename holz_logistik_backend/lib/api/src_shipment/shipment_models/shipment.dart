@@ -28,7 +28,8 @@ mixin ShipmentSortGettable implements Gettable {
 /// A single `shipment` item.
 ///
 /// Contains a [id], time of the [lastEdit], [quantity], [oversizeQuantity],
-/// [pieceCount], [userId], [contractId], [sawmillId] and [locationId].
+/// [pieceCount], [additionalInfo], [userId], [contractId], [sawmillId] and 
+/// [locationId].
 ///
 /// [Shipment]s are immutable and can be copied using [copyWith], in addition to
 /// being serialized and deserialized using [toJson] and [fromJson]
@@ -44,6 +45,7 @@ class Shipment extends Equatable with ShipmentSortGettable {
     this.quantity = 0.0,
     this.oversizeQuantity = 0.0,
     this.pieceCount = 0,
+    this.additionalInfo = '',
     this.userId = '',
     this.contractId = '',
     this.sawmillId = '',
@@ -78,6 +80,11 @@ class Shipment extends Equatable with ShipmentSortGettable {
   /// Cannot be empty.
   final int pieceCount;
 
+  /// Some additional info about the `shipment`.
+  ///
+  /// Cannot be empty.
+  final String additionalInfo;
+
   /// The userId of the `shipment`.
   ///
   /// Cannot be empty.
@@ -108,6 +115,7 @@ class Shipment extends Equatable with ShipmentSortGettable {
     double? quantity,
     double? oversizeQuantity,
     int? pieceCount,
+    String? additionalInfo,
     String? userId,
     String? contractId,
     String? sawmillId,
@@ -119,6 +127,7 @@ class Shipment extends Equatable with ShipmentSortGettable {
       quantity: quantity ?? this.quantity,
       oversizeQuantity: oversizeQuantity ?? this.oversizeQuantity,
       pieceCount: pieceCount ?? this.pieceCount,
+      additionalInfo: additionalInfo ?? this.additionalInfo,
       userId: userId ?? this.userId,
       contractId: contractId ?? this.contractId,
       sawmillId: sawmillId ?? this.sawmillId,
@@ -139,6 +148,7 @@ class Shipment extends Equatable with ShipmentSortGettable {
         quantity,
         oversizeQuantity,
         pieceCount,
+        additionalInfo,
         userId,
         contractId,
         sawmillId,

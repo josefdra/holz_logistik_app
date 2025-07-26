@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:equatable/equatable.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
@@ -20,6 +23,9 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         _contractRepository = contractRepository,
         super(
           ShipmentFormState(
+            initialCurrentQuantity: currentQuantity,
+            initialCurrentOversizeQuantity: currentOversizeQuantity,
+            initialCurrentPieceCount: currentPieceCount,
             currentQuantity: currentQuantity,
             currentOversizeQuantity: currentOversizeQuantity,
             currentPieceCount: currentPieceCount,
@@ -27,9 +33,14 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
             userId: userId,
           ),
         ) {
+    on<ShipmentFormSubscriptionRequested>(_onSubscriptionRequested);
     on<ShipmentFormQuantityUpdate>(_onQuantityUpdate);
+    on<ShipmentFormRestQuantityUpdate>(_onRestQuantityUpdate);
     on<ShipmentFormOversizeQuantityUpdate>(_onOversizeQuantityUpdate);
+    on<ShipmentFormRestOversizeQuantityUpdate>(_onRestOversizeQuantityUpdate);
     on<ShipmentFormPieceCountUpdate>(_onPieceCountUpdate);
+    on<ShipmentFormRestPieceCountUpdate>(_onRestPieceCountUpdate);
+    on<ShipmentFormAdditionalInfoChanged>(_onAdditionalInfoChanged);
     on<ShipmentFormSawmillUpdate>(_onSawmillUpdate);
     on<ShipmentFormLocationFinishedUpdate>(_onLocationFinishedUpdate);
     on<ShipmentFormSubmitted>(_onSubmitted);
@@ -39,6 +50,22 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
   final ShipmentRepository _shipmentRepository;
   final LocationRepository _locationRepository;
   final ContractRepository _contractRepository;
+
+  final restQuantityController = TextEditingController();
+  final restOversizeQuantityController = TextEditingController();
+  final restPieceCountController = TextEditingController();
+
+  void _onSubscriptionRequested(
+    ShipmentFormSubscriptionRequested event,
+    Emitter<ShipmentFormState> emit,
+  ) {
+    restQuantityController.value =
+        TextEditingValue(text: state.currentQuantity.toString());
+    restOversizeQuantityController.value =
+        TextEditingValue(text: state.currentOversizeQuantity.toString());
+    restPieceCountController.value =
+        TextEditingValue(text: state.currentPieceCount.toString());
+  }
 
   void _onQuantityUpdate(
     ShipmentFormQuantityUpdate event,
@@ -50,10 +77,32 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final locationFinished = (state.currentQuantity <= event.quantity) &&
         (state.currentPieceCount <= state.pieceCount);
 
+    final double updatedCurrentQuantity =
+        max(state.initialCurrentQuantity - event.quantity, 0);
+
+    restQuantityController.value =
+        TextEditingValue(text: updatedCurrentQuantity.toString());
+
     emit(
       state.copyWith(
         validationErrors: updatedErrors,
         quantity: event.quantity,
+        currentQuantity: updatedCurrentQuantity,
+        locationFinished: locationFinished,
+      ),
+    );
+  }
+
+  void _onRestQuantityUpdate(
+    ShipmentFormRestQuantityUpdate event,
+    Emitter<ShipmentFormState> emit,
+  ) {
+    final locationFinished =
+        (event.currentQuantity <= 0) && (state.currentPieceCount <= 0);
+
+    emit(
+      state.copyWith(
+        currentQuantity: event.currentQuantity,
         locationFinished: locationFinished,
       ),
     );
@@ -66,10 +115,28 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final updatedErrors = Map<String, String?>.from(state.validationErrors)
       ..remove(event.fieldName);
 
+    final double updatedCurrentOversizeQuantity =
+        max(state.initialCurrentOversizeQuantity - event.oversizeQuantity, 0);
+
+    restOversizeQuantityController.value =
+        TextEditingValue(text: updatedCurrentOversizeQuantity.toString());
+
     emit(
       state.copyWith(
         validationErrors: updatedErrors,
         oversizeQuantity: event.oversizeQuantity,
+        currentOversizeQuantity: updatedCurrentOversizeQuantity,
+      ),
+    );
+  }
+
+  void _onRestOversizeQuantityUpdate(
+    ShipmentFormRestOversizeQuantityUpdate event,
+    Emitter<ShipmentFormState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        currentOversizeQuantity: event.currentOversizeQuantity,
       ),
     );
   }
@@ -84,13 +151,42 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final locationFinished = (state.currentQuantity <= state.quantity) &&
         (state.currentPieceCount <= event.pieceCount);
 
+    final updatedCurrentPieceCount =
+        max(state.initialCurrentPieceCount - event.pieceCount, 0);
+
+    restPieceCountController.value =
+        TextEditingValue(text: updatedCurrentPieceCount.toString());
+
     emit(
       state.copyWith(
         validationErrors: updatedErrors,
         pieceCount: event.pieceCount,
+        currentPieceCount: updatedCurrentPieceCount,
         locationFinished: locationFinished,
       ),
     );
+  }
+
+  void _onRestPieceCountUpdate(
+    ShipmentFormRestPieceCountUpdate event,
+    Emitter<ShipmentFormState> emit,
+  ) {
+    final locationFinished =
+        (state.currentQuantity <= 0) && (event.currentPieceCount <= 0);
+
+    emit(
+      state.copyWith(
+        currentPieceCount: event.currentPieceCount,
+        locationFinished: locationFinished,
+      ),
+    );
+  }
+
+  void _onAdditionalInfoChanged(
+    ShipmentFormAdditionalInfoChanged event,
+    Emitter<ShipmentFormState> emit,
+  ) {
+    emit(state.copyWith(additionalInfo: event.additionalInfo));
   }
 
   void _onSawmillUpdate(
@@ -110,7 +206,12 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     Emitter<ShipmentFormState> emit,
   ) {
     emit(
-      state.copyWith(locationFinished: event.locationFinished),
+      state.copyWith(
+        locationFinished: event.locationFinished,
+        currentQuantity: 0,
+        currentOversizeQuantity: 0,
+        currentPieceCount: 0,
+      ),
     );
   }
 
@@ -118,8 +219,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final errors = <String, String?>{};
 
     if (state.quantity == 0) {
-      errors['quantity'] =
-          'Menge darf nicht 0 sein';
+      errors['quantity'] = 'Menge darf nicht 0 sein';
     }
 
     if (state.pieceCount == 0) {
@@ -157,6 +257,7 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         quantity: state.quantity,
         oversizeQuantity: state.oversizeQuantity,
         pieceCount: state.pieceCount,
+        additionalInfo: state.additionalInfo,
         userId: state.userId,
         contractId: state.location.contractId,
         sawmillId: state.sawmillId,
@@ -176,6 +277,9 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         shipment.quantity,
         shipment.oversizeQuantity,
         shipment.pieceCount,
+        state.currentQuantity,
+        state.currentOversizeQuantity,
+        state.currentPieceCount,
         locationFinished: state.locationFinished,
       );
 
@@ -205,5 +309,13 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         status: ShipmentFormStatus.success,
       ),
     );
+  }
+
+  @override
+  Future<void> close() async {
+    restQuantityController.dispose();
+    restOversizeQuantityController.dispose();
+    restPieceCountController.dispose();
+    return super.close();
   }
 }
