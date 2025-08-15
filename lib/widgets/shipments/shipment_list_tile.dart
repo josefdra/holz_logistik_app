@@ -180,7 +180,7 @@ class SmallShipmentListTile extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               SizedBox(
-                width: 50,
+                width: 70,
                 height: 50,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -196,9 +196,14 @@ class SmallShipmentListTile extends StatelessWidget {
             ],
           ),
           title: Text(sawmillName),
-          subtitle:
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text('${shipment.quantity} fm, ÜS: ${shipment.oversizeQuantity} '
                   'fm, ${shipment.pieceCount} Stk'),
+              if (shipment.additionalInfo != '') Text(shipment.additionalInfo),
+            ],
+          ),
         );
       },
     );
