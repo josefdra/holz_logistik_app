@@ -25,7 +25,7 @@ class MapMarker {
       children: [
         Positioned(
           left: 0,
-          top: 0,
+          top: 30,
           child: Icon(
             !location.started ? Icons.location_pin : Icons.location_off,
             color: Colors.black,
@@ -34,7 +34,7 @@ class MapMarker {
         ),
         Positioned(
           left: 15,
-          top: 12,
+          top: 42,
           child: Icon(
             !location.started ? Icons.location_pin : Icons.location_off,
             color: Colors.black,
@@ -43,7 +43,7 @@ class MapMarker {
         ),
         Positioned(
           left: 5,
-          top: 4,
+          top: 34,
           child: Icon(
             !location.started ? Icons.location_pin : Icons.location_off,
             color: colorFromString(contractName),
@@ -54,8 +54,8 @@ class MapMarker {
     );
 
     final baseMarker = Marker(
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 90,
       point: markerPoint,
       child: GestureDetector(
         onTap: onTap,

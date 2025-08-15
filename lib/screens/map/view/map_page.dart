@@ -88,9 +88,6 @@ class MapView extends StatelessWidget {
         onMapReady: () => context.read<MapBloc>().add(const MapMapReady()),
         initialCenter: const LatLng(47.9831, 11.9050),
         initialZoom: 12,
-        interactionOptions: const InteractionOptions(
-          rotationThreshold: 30,
-        ),
         onTap: (tapPosition, point) => context.read<MapBloc>().add(
               MapMapTap(position: point),
             ),
