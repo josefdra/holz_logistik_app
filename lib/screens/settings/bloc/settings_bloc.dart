@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,7 +12,9 @@ part 'settings_state.dart';
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   SettingsBloc({
     required AuthenticationRepository authenticationRepository,
+    VoidCallback? onApiKeyChanged,
   })  : _authenticationRepository = authenticationRepository,
+        _connectionRequest = onApiKeyChanged,
         super(SettingsState()) {
     on<SettingsSubscriptionRequested>(_onSubscriptionRequested);
     on<SettingsApiKeyChanged>(_onApiKeyChanged);
@@ -19,6 +22,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   final AuthenticationRepository _authenticationRepository;
+  final VoidCallback? _connectionRequest;
 
   Future<void> _onSubscriptionRequested(
     SettingsSubscriptionRequested event,
@@ -49,6 +53,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     SettingsAuthenticationVerificationRequested event,
     Emitter<SettingsState> emit,
   ) {
-    _authenticationRepository.updateApiKey(state.apiKey);
+    // _authenticationRepository.updateApiKey(state.apiKey);
+
+    if (_connectionRequest != null) {
+      _connectionRequest();
+    }
   }
 }

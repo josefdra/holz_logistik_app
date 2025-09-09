@@ -27,22 +27,32 @@ class AuthenticationRepository {
   /// Provides the authenticated user.
   Future<User> get currentUser => _authenticationApi.currentUser;
 
+  /// Provides the active database
+  Future<String> get activeDb => _authenticationApi.activeDb;
+
+  /// Provides the database list
+  Future<List<String>> get databaseList => _authenticationApi.databaseList;
+
   /// Provides the api key.
   Future<String> get apiKey => _authenticationApi.apiKey;
+
+  /// Provides the banned status
+  Future<bool> get bannedStatus => _authenticationApi.bannedStatus;
 
   /// Handle updates from Server
   void _handleAuthenticationUpdates(Map<String, dynamic> data) {
     if (data['authenticated'] == true || data['authenticated'] == 1) {
-      _authenticationApi.updateAuthentication(User.fromJson(data));
-    } else {
-      _authenticationApi.removeAuthentication();
+      _authenticationApi
+        ..setActiveUser(User.fromJson(data))
+        ..addDb(data['apiKey'] as String);
+    } else if (data.containsKey('bannedStatus')) {
+      final bannedStatus = data['bannedStatus'] == 1;
+      _authenticationApi.setBannedStatus(bannedStatus: bannedStatus);
     }
   }
 
-  /// Updates the apiKey and requests authentication
-  Future<void> updateApiKey(String apiKey) {
-    return _authenticationApi.setApiKey(apiKey);
-  }
+  /// Sets the active database
+  void setActiveDb(String database) => _authenticationApi.setActiveDb(database);
 
   /// Disposes any resources managed by the repository.
   void dispose() => _authenticationApi.close();

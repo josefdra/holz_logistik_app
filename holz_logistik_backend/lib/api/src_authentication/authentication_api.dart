@@ -15,17 +15,29 @@ abstract class AuthenticationApi {
   /// Provides the current authenticated user.
   Future<User> get currentUser;
 
+  /// Provides active database
+  Future<String> get activeDb;
+
+  /// Provides a list of the users databases
+  Future<List<String>> get databaseList;
+
   /// Provides the api key.
   Future<String> get apiKey;
 
-  /// Adds the authentication of [user].
-  Future<void> updateAuthentication(User user);
+  /// Provides the banned status
+  Future<bool> get bannedStatus;
 
-  /// Sets the api key.
-  Future<void> setApiKey(String apiKey);
+  /// Sets the active [user]
+  Future<void> setActiveUser(User user);
 
-  /// Removes the authenticated `user`.
-  Future<void> removeAuthentication();
+  /// Sets the active [database]
+  Future<void> setActiveDb(String database);
+
+  /// Adds a new database and activates it
+  Future<void> addDb(String apiKey);
+
+  /// Sets the banned status of the user
+  Future<void> setBannedStatus({required bool bannedStatus});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

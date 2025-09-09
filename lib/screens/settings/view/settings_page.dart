@@ -16,6 +16,7 @@ class SettingsPage extends StatelessWidget {
       builder: (context) => BlocProvider(
         create: (context) => SettingsBloc(
           authenticationRepository: context.read<AuthenticationRepository>(),
+          onApiKeyChanged: onApiKeyChanged,
         )..add(const SettingsSubscriptionRequested()),
         child: SettingsPage(onApiKeyChanged: onApiKeyChanged),
       ),
@@ -27,6 +28,7 @@ class SettingsPage extends StatelessWidget {
     return BlocProvider(
       create: (context) => SettingsBloc(
         authenticationRepository: context.read<AuthenticationRepository>(),
+        onApiKeyChanged: onApiKeyChanged,
       )..add(const SettingsSubscriptionRequested()),
       child: SettingsWidget(onApiKeyChanged: onApiKeyChanged),
     );
@@ -62,6 +64,55 @@ class SettingsWidget extends StatelessWidget {
 
   final VoidCallback? onApiKeyChanged;
 
+  void _showApiKeyDialog(BuildContext context) {
+    final apiKeyController = TextEditingController();
+
+    showDialog<AlertDialog>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          content: SizedBox(
+            width: 300,
+            child: TextFormField(
+              controller: apiKeyController,
+              decoration: const InputDecoration(
+                labelText: 'API Key',
+                hintText: 'Geben Sie Ihren API Key ein',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Abbrechen'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (apiKeyController.text.isNotEmpty) {
+                      context
+                          .read<SettingsBloc>()
+                          .add(SettingsApiKeyChanged(apiKeyController.text));
+                      context.read<SettingsBloc>().add(
+                            const SettingsAuthenticationVerificationRequested(),
+                          );
+                      Navigator.of(dialogContext).pop();
+                    }
+                  },
+                  child: const Text('Speichern'),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsBloc, SettingsState>(
@@ -79,42 +130,27 @@ class SettingsWidget extends StatelessWidget {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (state.authenticatedUser.name == '')
-                Center(
-                  child: Text(
-                    'Nicht angemeldet',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                )
-              else
-                Center(
-                  child: Text(
-                    state.authenticatedUser.name,
-                    style: Theme.of(context).textTheme.headlineLarge,
-                  ),
-                ),
-              const SizedBox(height: 32),
-              TextFormField(
-                key: const Key('settingsPage_apiKey_textFormField'),
-                initialValue: '',
-                decoration: const InputDecoration(labelText: 'ApiKey'),
-                maxLength: 50,
-                onChanged: (value) {
-                  context
-                      .read<SettingsBloc>()
-                      .add(SettingsApiKeyChanged(value));
-                },
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: state.authenticatedUser.name == ''
+                    ? Center(
+                        child: Text(
+                          'Nicht angemeldet',
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          state.authenticatedUser.name,
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                      ),
               ),
-              const SizedBox(height: 16),
               Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.read<SettingsBloc>().add(
-                          const SettingsAuthenticationVerificationRequested(),
-                        );
-                    onApiKeyChanged?.call();
-                  },
-                  child: const Text('Speichern'),
+                child: ElevatedButton.icon(
+                  onPressed: () => _showApiKeyDialog(context),
+                  icon: const Icon(Icons.key),
+                  label: const Text('Datenbank hinzufügen'),
                 ),
               ),
             ],
