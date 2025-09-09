@@ -243,7 +243,8 @@ class AuthenticationLocalStorage extends AuthenticationApi {
     var dbToKeyMapJson = await _getStringFromPrefs(dbToKeyMapKey);
 
     if (dbToKeyMapJson != null) {
-      final dbToKeyMap = jsonDecode(dbToKeyMapJson) as Map<String, String>;
+      final decoded = jsonDecode(dbToKeyMapJson) as Map<String, dynamic>;
+      final dbToKeyMap = decoded.cast<String, String>();
       dbToKeyMap[dbName] = apiKey;
       dbToKeyMapJson = jsonEncode(dbToKeyMap);
 
