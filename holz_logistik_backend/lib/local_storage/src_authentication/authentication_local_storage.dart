@@ -150,6 +150,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   /// Checks if the user is banned
   Future<bool> getBannedStatus() async {
+    await _initCompleter.future;
     final deviceBannedKey = _keyMap['device_banned_key']!;
     final deviceBanned = await _getIntFromPrefs(deviceBannedKey);
 
@@ -162,6 +163,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   /// Gets the current authenticated user. Returns an emtpy new user if empty.
   Future<User> getActiveUser() async {
+    await _initCompleter.future;
     final activeUserKey = _keyMap['active_user_key']!;
     final userData = await _getStringFromPrefs(activeUserKey);
 
@@ -175,6 +177,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   /// Gets the active api key
   Future<String> getActiveApiKey() async {
+    await _initCompleter.future;
     final activeApiKeyKey = _keyMap['active_api_key_key']!;
     final activeApiKey = await _getStringFromPrefs(activeApiKeyKey);
 
@@ -187,6 +190,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   /// Gets the active database
   Future<String> getActiveDb() async {
+    await _initCompleter.future;
     final activeDbKey = _keyMap['active_db_key']!;
     final activeDb = await _getStringFromPrefs(activeDbKey);
 
@@ -199,6 +203,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   /// Gets the database list
   Future<List<String>> getDatabaseList() async {
+    await _initCompleter.future;
     final dbToKeyMapKey = _keyMap['db_to_key_map_key']!;
     final dbToKeyMapJson = await _getStringFromPrefs(dbToKeyMapKey);
 
@@ -213,6 +218,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   @override
   Future<void> setActiveUser(User user) async {
+    await _initCompleter.future;
     _authenticationStreamController.add(user);
 
     final activeUserKey = _keyMap['active_user_key']!;
@@ -221,6 +227,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   @override
   Future<void> setActiveDb(String dbName) async {
+    await _initCompleter.future;
     final activeDbKey = _keyMap['active_db_key']!;
     final activeApiKeyKey = _keyMap['active_api_key_key']!;
     final dbToKeyMapKey = _keyMap['db_to_key_map_key']!;
@@ -239,6 +246,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   @override
   Future<void> addDb(String apiKey) async {
+    await _initCompleter.future;
     final parts = apiKey.split('-');
     final dbName = parts.first;
 
@@ -261,6 +269,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   @override
   Future<void> setBannedStatus({required bool bannedStatus}) async {
+    await _initCompleter.future;
     final bannedInt = bannedStatus == true ? 1 : 0;
     final deviceBannedKey = _keyMap['device_banned_key']!;
     await _setIntToPrefs(deviceBannedKey, bannedInt);
