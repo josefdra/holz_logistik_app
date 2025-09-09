@@ -51,6 +51,10 @@ class AuthenticationRepository {
     }
   }
 
+  /// Sets the active apiKey
+  void setActiveApiKey(String apiKey) =>
+      _authenticationApi.setActiveApiKey(apiKey);
+
   /// Sets the active database
   void setActiveDb(String database) => _authenticationApi.setActiveDb(database);
 

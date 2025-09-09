@@ -54,10 +54,10 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   Future<void> _init() async {
     await _migrate();
     _keyMap = await _loadKeyMap();
+    _initCompleter.complete();
     final user = await getActiveUser();
 
     _authenticationStreamController.add(user);
-    _initCompleter.complete();
   }
 
   Future<void> _migrate() async {
@@ -107,14 +107,12 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   }
 
   Future<String?> _getStringFromPrefs(String key) async {
-    await _initCompleter.future;
     final prefs = await _coreLocalStorage.sharedPreferences;
 
     return prefs.getString(key);
   }
 
   Future<int?> _getIntFromPrefs(String key) async {
-    await _initCompleter.future;
     final prefs = await _coreLocalStorage.sharedPreferences;
 
     return prefs.getInt(key);
@@ -242,6 +240,13 @@ class AuthenticationLocalStorage extends AuthenticationApi {
       await _setStringToPrefs(activeDbKey, dbName);
       await _setStringToPrefs(activeApiKeyKey, apiKey);
     }
+  }
+
+  @override
+  Future<void> setActiveApiKey(String apiKey) async {
+    await _initCompleter.future;
+    final activeApiKeyKey = _keyMap['active_api_key_key']!;
+    await _setStringToPrefs(activeApiKeyKey, apiKey);
   }
 
   @override

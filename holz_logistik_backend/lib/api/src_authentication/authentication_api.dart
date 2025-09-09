@@ -30,6 +30,9 @@ abstract class AuthenticationApi {
   /// Sets the active [user]
   Future<void> setActiveUser(User user);
 
+  /// Sets the active [apiKey]
+  Future<void> setActiveApiKey(String apiKey);
+
   /// Sets the active [database]
   Future<void> setActiveDb(String database);
 
