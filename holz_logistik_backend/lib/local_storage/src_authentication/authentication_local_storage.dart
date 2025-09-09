@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:holz_logistik_backend/api/authentication_api.dart';
 import 'package:holz_logistik_backend/api/user_api.dart';
@@ -18,6 +19,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
 
   static const _versionKey = '__version_key__';
   static const _keysMapKey = '__keys_map__';
+  static bool _initialized = false;
 
   final CoreLocalStorage _coreLocalStorage;
   late final Map<String, String> _keyMap;
@@ -55,6 +57,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
     final user = await getActiveUser();
 
     _authenticationStreamController.add(user);
+    _initialized = true;
   }
 
   Future<void> _migrate() async {
@@ -104,12 +107,20 @@ class AuthenticationLocalStorage extends AuthenticationApi {
   }
 
   Future<String?> _getStringFromPrefs(String key) async {
+    while(!_initialized) {
+      sleep(const Duration(milliseconds: 100));
+    }
+
     final prefs = await _coreLocalStorage.sharedPreferences;
 
     return prefs.getString(key);
   }
 
   Future<int?> _getIntFromPrefs(String key) async {
+    while(!_initialized) {
+      sleep(const Duration(milliseconds: 100));
+    }
+    
     final prefs = await _coreLocalStorage.sharedPreferences;
 
     return prefs.getInt(key);
