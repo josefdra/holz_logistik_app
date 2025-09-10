@@ -16,9 +16,13 @@ class CoreLocalStorage {
   /// Private constructor
   CoreLocalStorage._internal();
 
+  static const _activeDbKey = '__active_db_key__';
+
   static final CoreLocalStorage _instance = CoreLocalStorage._internal();
-  static Database? _database;
+  static final Map<String, Database> _databases = {};
   static SharedPreferences? _sharedPrefs;
+
+  String? _currentDatabaseId;
 
   /// Map of table creation functions registered by feature packages
   final List<String> _tableCreationScripts = [];
@@ -27,18 +31,77 @@ class CoreLocalStorage {
   final List<FutureOr<void> Function(Database, int, int)> _migrationCallbacks =
       [];
 
+  /// Stream controller to notify about database switches
+  final StreamController<String> _databaseSwitchController =
+      StreamController<String>.broadcast();
+
+  /// Stream that notifies when database is switched
+  Stream<String> get onDatabaseSwitch => _databaseSwitchController.stream;
+
+  /// Get current database ID
+  String? get currentDatabaseId => _currentDatabaseId;
+
   /// Get the shared preferences instance, initializing if needed
   Future<SharedPreferences> get sharedPreferences async {
     if (_sharedPrefs != null) return _sharedPrefs!;
     _sharedPrefs = await SharedPreferences.getInstance();
     return _sharedPrefs!;
   }
- 
-  /// Get the database instance, initializing if needed
+
+  /// Get the current database instance, initializing if needed
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    if (_currentDatabaseId == null) {
+      final prefs = await sharedPreferences;
+      _currentDatabaseId = prefs.getString(_activeDbKey) ?? 'draexl';
+    }
+    if (_databases[_currentDatabaseId!] != null) {
+      return _databases[_currentDatabaseId!]!;
+    }
+
+    _databases[_currentDatabaseId!] = await _initDatabase(_currentDatabaseId!);
+    return _databases[_currentDatabaseId!]!;
+  }
+
+  /// Switch to a different database
+  /// [databaseId] - unique identifier for the database
+  /// [clearCaches] - whether to clear all in-memory caches (default: true)
+  Future<void> switchDatabase(
+    String databaseId, {
+    bool clearCaches = true,
+  }) async {
+    if (_currentDatabaseId == databaseId) {
+      return; // Already using this database
+    }
+
+    final previousDatabaseId = _currentDatabaseId;
+    _currentDatabaseId = databaseId;
+
+    // Initialize the new database if it doesn't exist
+    if (_databases[databaseId] == null) {
+      _databases[databaseId] = await _initDatabase(databaseId);
+    }
+
+    // Notify listeners about the database switch
+    _databaseSwitchController.add(databaseId);
+
+    print('Switched from database "$previousDatabaseId" to "$databaseId"');
+  }
+
+  /// Get list of available database IDs
+  List<String> getAvailableDatabases() {
+    return _databases.keys.toList();
+  }
+
+  /// Close a specific database
+  Future<void> closeDatabase(String databaseId) async {
+    if (_databases[databaseId] != null) {
+      await _databases[databaseId]!.close();
+      _databases.remove(databaseId);
+
+      if (_currentDatabaseId == databaseId) {
+        _currentDatabaseId = null;
+      }
+    }
   }
 
   /// Create tables when database is first created
@@ -55,9 +118,10 @@ class CoreLocalStorage {
     }
   }
 
-  /// Initialize the database
-  Future<Database> _initDatabase() async {
-    final path = join(await getDatabasesPath(), 'holz_logistik.db');
+  /// Initialize a database with the given ID
+  Future<Database> _initDatabase(String databaseId) async {
+    final dbName = databaseId == 'draexl' ? 'holz_logistik' : databaseId;
+    final path = join(await getDatabasesPath(), '$dbName.db');
 
     return openDatabase(
       path,
@@ -79,11 +143,20 @@ class CoreLocalStorage {
     _migrationCallbacks.add(migrationCallback);
   }
 
-  /// Close the database
+  /// Close all databases
+  Future<void> closeAll() async {
+    for (final db in _databases.values) {
+      await db.close();
+    }
+    _databases.clear();
+    _currentDatabaseId = null;
+    await _databaseSwitchController.close();
+  }
+
+  /// Close the current database
   Future<void> close() async {
-    if (_database != null) {
-      await _database!.close();
-      _database = null;
+    if (_currentDatabaseId != null) {
+      await closeDatabase(_currentDatabaseId!);
     }
   }
 

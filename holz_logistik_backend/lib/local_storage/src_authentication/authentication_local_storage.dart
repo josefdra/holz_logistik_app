@@ -236,10 +236,22 @@ class AuthenticationLocalStorage extends AuthenticationApi {
       final decoded = jsonDecode(dbToKeyMapJson) as Map<String, dynamic>;
       final dbToKeyMap = decoded.cast<String, String>();
       final apiKey = dbToKeyMap[dbName]!;
+      await _coreLocalStorage.switchDatabase(dbName);
 
       await _setStringToPrefs(activeDbKey, dbName);
       await _setStringToPrefs(activeApiKeyKey, apiKey);
     }
+  }
+
+  @override
+  Future<void> setNoActiveDb() async {
+    await _initCompleter.future;
+    final activeDbKey = _keyMap['active_db_key']!;
+    final activeApiKeyKey = _keyMap['active_api_key_key']!;
+    await _coreLocalStorage.switchDatabase('_');
+
+    await _setStringToPrefs(activeDbKey, '');
+    await _setStringToPrefs(activeApiKeyKey, '');
   }
 
   @override
@@ -265,6 +277,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
       final dbToKeyMap = decoded.cast<String, String>();
       dbToKeyMap[dbName] = apiKey;
       dbToKeyMapJson = jsonEncode(dbToKeyMap);
+      await _coreLocalStorage.switchDatabase(dbName);
 
       await _setStringToPrefs(activeDbKey, dbName);
       await _setStringToPrefs(activeApiKeyKey, apiKey);

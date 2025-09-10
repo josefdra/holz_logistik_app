@@ -36,6 +36,9 @@ abstract class AuthenticationApi {
   /// Sets the active [database]
   Future<void> setActiveDb(String database);
 
+  /// Sets the no active database
+  Future<void> setNoActiveDb();
+
   /// Adds a new database and activates it
   Future<void> addDb(String apiKey);
 

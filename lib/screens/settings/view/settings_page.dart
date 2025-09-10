@@ -113,6 +113,128 @@ class SettingsWidget extends StatelessWidget {
     );
   }
 
+  String _capitalizeFirst(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  Widget _buildDatabaseList(BuildContext context, SettingsState state) {
+    return FutureBuilder<List<String>>(
+      future: context.read<AuthenticationRepository>().databaseList,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(
+              child: Text(
+                'Keine Datenbanken verfügbar',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          );
+        }
+
+        final databases = snapshot.data!;
+
+        return FutureBuilder<String>(
+          future: context.read<AuthenticationRepository>().activeDb,
+          builder: (context, activeDbSnapshot) {
+            final activeDb = activeDbSnapshot.data ?? '';
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Verfügbare Datenbanken:',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: databases.map((database) {
+                      final isActive = database == activeDb;
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context
+                                .read<SettingsBloc>()
+                                .add(SettingsDatabaseChanged(database));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isActive
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.surface,
+                            foregroundColor: isActive
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                            elevation: isActive ? 4 : 1,
+                            side: BorderSide(
+                              color: isActive
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.outline,
+                              width: isActive ? 2 : 1,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _capitalizeFirst(database),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: isActive
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                              if (isActive)
+                                Icon(
+                                  Icons.check_circle,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  size: 20,
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsBloc, SettingsState>(
@@ -127,33 +249,37 @@ class SettingsWidget extends StatelessWidget {
 
         return CustomScaffold(
           admin: state.authenticatedUser.role == Role.admin,
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: state.authenticatedUser.name == ''
-                    ? Center(
-                        child: Text(
-                          'Nicht angemeldet',
-                          style: Theme.of(context).textTheme.headlineLarge,
+          body: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: state.authenticatedUser.name == ''
+                      ? Center(
+                          child: Text(
+                            'Nicht angemeldet',
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            state.authenticatedUser.name,
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
                         ),
-                      )
-                    : Center(
-                        child: Text(
-                          state.authenticatedUser.name,
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                      ),
-              ),
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: () => _showApiKeyDialog(context),
-                  icon: const Icon(Icons.key),
-                  label: const Text('Datenbank hinzufügen'),
                 ),
-              ),
-            ],
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showApiKeyDialog(context),
+                    icon: const Icon(Icons.key),
+                    label: const Text('Datenbank hinzufügen'),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildDatabaseList(context, state),
+              ],
+            ),
           ),
         );
       },

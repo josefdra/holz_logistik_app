@@ -52,11 +52,15 @@ class AuthenticationRepository {
   }
 
   /// Sets the active apiKey
-  void setActiveApiKey(String apiKey) =>
+  Future<void> setActiveApiKey(String apiKey) =>
       _authenticationApi.setActiveApiKey(apiKey);
 
   /// Sets the active database
-  void setActiveDb(String database) => _authenticationApi.setActiveDb(database);
+  Future<void> setActiveDb(String database) =>
+      _authenticationApi.setActiveDb(database);
+
+  /// Set no active database
+  Future<void> setNoActiveDb() => _authenticationApi.setNoActiveDb();
 
   /// Disposes any resources managed by the repository.
   void dispose() => _authenticationApi.close();

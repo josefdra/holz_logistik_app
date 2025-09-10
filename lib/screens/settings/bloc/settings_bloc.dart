@@ -19,6 +19,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<SettingsSubscriptionRequested>(_onSubscriptionRequested);
     on<SettingsApiKeyChanged>(_onApiKeyChanged);
     on<SettingsAuthenticationVerificationRequested>(_onVerificationRequested);
+    on<SettingsDatabaseChanged>(_onDatabaseChanged);
   }
 
   final AuthenticationRepository _authenticationRepository;
@@ -49,11 +50,23 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(state.copyWith(apiKey: event.apiKey));
   }
 
-  void _onVerificationRequested(
+  Future<void> _onVerificationRequested(
     SettingsAuthenticationVerificationRequested event,
     Emitter<SettingsState> emit,
-  ) {
-    _authenticationRepository.setActiveApiKey(state.apiKey);
+  ) async {
+    await _authenticationRepository.setNoActiveDb();
+    await _authenticationRepository.setActiveApiKey(state.apiKey);
+
+    if (_connectionRequest != null) {
+      _connectionRequest();
+    }
+  }
+
+  Future<void> _onDatabaseChanged(
+    SettingsDatabaseChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    await _authenticationRepository.setActiveDb(event.database);
 
     if (_connectionRequest != null) {
       _connectionRequest();

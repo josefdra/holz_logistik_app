@@ -22,6 +22,7 @@ class LocationLocalStorage extends LocationApi {
       ..registerMigration(_migrateLocationSawmillTable);
 
     _init();
+    _listenToDatabaseSwitches();
   }
 
   final CoreLocalStorage _coreLocalStorage;
@@ -39,6 +40,9 @@ class LocationLocalStorage extends LocationApi {
 
   static const _syncFromServerKey = '__location_sync_from_server_date_key__';
 
+  // Subscription to database switch events
+  StreamSubscription<String>? _databaseSwitchSubscription;
+
   /// Migration function for location table
   Future<void> _migrateLocationSawmillTable(
     Database db,
@@ -55,6 +59,27 @@ class LocationLocalStorage extends LocationApi {
     int newVersion,
   ) async {
     // Migration logic here if needed
+  }
+
+  /// Listen to database switch events and reload caches
+  void _listenToDatabaseSwitches() {
+    _databaseSwitchSubscription = _coreLocalStorage.onDatabaseSwitch.listen(
+      (newDatabaseId) async {
+        await _reloadCaches();
+      },
+    );
+  }
+
+  /// Reload all caches after database switch
+  Future<void> _reloadCaches() async {
+    try {
+      _activeLocationStreamController.add(const []);
+
+      final activeLocations = await _getLocationsByCondition(isDone: false);
+      _activeLocationStreamController.add(activeLocations);
+    } catch (e) {
+      _activeLocationStreamController.add(const []);
+    }
   }
 
   Future<List<String>> _getSawmillIds({
@@ -388,6 +413,7 @@ class LocationLocalStorage extends LocationApi {
   /// Close the both controllers
   @override
   Future<void> close() {
+    _databaseSwitchSubscription?.cancel();
     _activeLocationStreamController.close();
     return _locationUpdatesStreamController.close();
   }

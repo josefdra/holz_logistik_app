@@ -20,6 +20,7 @@ class ContractLocalStorage extends ContractApi {
       ..registerMigration(_migrateContractTable);
 
     _init();
+    _listenToDatabaseSwitches();
   }
 
   final CoreLocalStorage _coreLocalStorage;
@@ -37,6 +38,9 @@ class ContractLocalStorage extends ContractApi {
 
   static const _syncFromServerKey = '__contract_sync_from_server_date_key__';
 
+  // Subscription to database switch events
+  StreamSubscription<String>? _databaseSwitchSubscription;
+
   /// Migration function for contract table
   Future<void> _migrateContractTable(
     Database db,
@@ -44,6 +48,26 @@ class ContractLocalStorage extends ContractApi {
     int newVersion,
   ) async {
     // Migration logic here if needed
+  }
+
+  /// Listen to database switch events and reload caches
+  void _listenToDatabaseSwitches() {
+    _databaseSwitchSubscription = _coreLocalStorage.onDatabaseSwitch.listen(
+      (newDatabaseId) async {
+        await _reloadCaches();
+      },
+    );
+  }
+
+  /// Reload all caches after database switch
+  Future<void> _reloadCaches() async {
+    try {
+      _activeContractsStreamController.add(const []);
+      final activeContracts = await _getActiveContracts();
+      _activeContractsStreamController.add(activeContracts);
+    } catch (e) {
+      _activeContractsStreamController.add(const []);
+    }
   }
 
   Future<List<Contract>> _getActiveContracts() async {
@@ -274,6 +298,7 @@ class ContractLocalStorage extends ContractApi {
   /// Close the both controllers
   @override
   Future<void> close() {
+    _databaseSwitchSubscription?.cancel();
     _activeContractsStreamController.close();
     return _contractUpdatesStreamController.close();
   }

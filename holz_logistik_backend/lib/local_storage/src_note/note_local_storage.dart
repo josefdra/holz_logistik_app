@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/note_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/note_local_storage.dart';
@@ -18,6 +20,7 @@ class NoteLocalStorage extends NoteApi {
       ..registerMigration(_migrateNoteTable);
 
     _init();
+    _listenToDatabaseSwitches();
   }
 
   final CoreLocalStorage _coreLocalStorage;
@@ -29,6 +32,9 @@ class NoteLocalStorage extends NoteApi {
 
   static const _syncFromServerKey = '__note_sync_from_server_date_key__';
 
+  // Subscription to database switch events
+  StreamSubscription<String>? _databaseSwitchSubscription;
+
   /// Migration function for note table
   Future<void> _migrateNoteTable(
     Database db,
@@ -38,13 +44,39 @@ class NoteLocalStorage extends NoteApi {
     // Migration logic here if needed
   }
 
+  /// Listen to database switch events and reload caches
+  void _listenToDatabaseSwitches() {
+    _databaseSwitchSubscription = _coreLocalStorage.onDatabaseSwitch.listen(
+      (newDatabaseId) async {
+        await _reloadCaches();
+      },
+    );
+  }
+
+  /// Reload all caches after database switch
+  Future<void> _reloadCaches() async {
+    try {
+      _noteStreamController.add(const []);
+      final notes = await _getAllNotes();
+      _noteStreamController.add(notes);
+    } catch (e) {
+      _noteStreamController.add(const []);
+    }
+  }
+
   /// Initialization
   Future<void> _init() async {
+    final notes = await _getAllNotes();
+    _noteStreamController.add(notes);
+  }
+
+  /// Get all notes from current database
+  Future<List<Note>> _getAllNotes() async {
     final notesJson = await _coreLocalStorage.getAll(NoteTable.tableName);
     final notes = notesJson
         .map((note) => Note.fromJson(Map<String, dynamic>.from(note)))
         .toList();
-    _noteStreamController.add(notes);
+    return notes;
   }
 
   @override
@@ -156,6 +188,7 @@ class NoteLocalStorage extends NoteApi {
   /// Close the [_noteStreamController]
   @override
   Future<void> close() {
+    _databaseSwitchSubscription?.cancel();
     return _noteStreamController.close();
   }
 }

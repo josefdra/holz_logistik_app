@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/user_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/user_local_storage.dart';
@@ -18,6 +20,7 @@ class UserLocalStorage extends UserApi {
       ..registerMigration(_migrateUserTable);
 
     _init();
+    _listenToDatabaseSwitches();
   }
 
   final CoreLocalStorage _coreLocalStorage;
@@ -29,6 +32,9 @@ class UserLocalStorage extends UserApi {
 
   static const _syncFromServerKey = '__user_sync_from_server_date_key__';
 
+  // Subscription to database switch events
+  StreamSubscription<String>? _databaseSwitchSubscription;
+
   /// Migration function for user table
   Future<void> _migrateUserTable(
     Database db,
@@ -38,18 +44,43 @@ class UserLocalStorage extends UserApi {
     // Migration logic here if needed
   }
 
+  /// Listen to database switch events and reload caches
+  void _listenToDatabaseSwitches() {
+    _databaseSwitchSubscription = _coreLocalStorage.onDatabaseSwitch.listen(
+      (newDatabaseId) async {
+        await _reloadCaches();
+      },
+    );
+  }
+
+  /// Reload all caches after database switch
+  Future<void> _reloadCaches() async {
+    try {
+      _userStreamController.add(const {});
+      final users = await _getAllUsers();
+      _userStreamController.add(users);
+    } catch (e) {
+      _userStreamController.add(const {});
+    }
+  }
+
   /// Initialization
   Future<void> _init() async {
+    final users = await _getAllUsers();
+    _userStreamController.add(users);
+  }
+
+  /// Get all users from current database
+  Future<Map<String, User>> _getAllUsers() async {
     final usersJson = await _coreLocalStorage.getAll(UserTable.tableName);
     final users = <String, User>{};
 
     for (final userJson in usersJson) {
       final user = User.fromJson(userJson);
-
       users[user.id] = user;
     }
 
-    _userStreamController.add(users);
+    return users;
   }
 
   @override
@@ -155,6 +186,7 @@ class UserLocalStorage extends UserApi {
   /// Close the [_userStreamController]
   @override
   Future<void> close() {
+    _databaseSwitchSubscription?.cancel();
     return _userStreamController.close();
   }
 }

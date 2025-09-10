@@ -23,3 +23,12 @@ final class SettingsSubscriptionRequested extends SettingsEvent {
 final class SettingsAuthenticationVerificationRequested extends SettingsEvent {
   const SettingsAuthenticationVerificationRequested();
 }
+
+final class SettingsDatabaseChanged extends SettingsEvent {
+  const SettingsDatabaseChanged(this.database);
+
+  final String database;
+
+  @override
+  List<Object> get props => [database];
+}

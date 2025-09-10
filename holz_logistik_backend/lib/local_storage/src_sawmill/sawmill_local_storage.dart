@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:holz_logistik_backend/api/sawmill_api.dart';
 import 'package:holz_logistik_backend/local_storage/core_local_storage.dart';
 import 'package:holz_logistik_backend/local_storage/sawmill_local_storage.dart';
@@ -18,6 +20,7 @@ class SawmillLocalStorage extends SawmillApi {
       ..registerMigration(_migrateSawmillTable);
 
     _init();
+    _listenToDatabaseSwitches();
   }
 
   final CoreLocalStorage _coreLocalStorage;
@@ -31,6 +34,9 @@ class SawmillLocalStorage extends SawmillApi {
 
   static const _syncFromServerKey = '__sawmill_sync_from_server_date_key__';
 
+  // Subscription to database switch events
+  StreamSubscription<String>? _databaseSwitchSubscription;
+
   /// Migration function for sawmill table
   Future<void> _migrateSawmillTable(
     Database db,
@@ -40,8 +46,34 @@ class SawmillLocalStorage extends SawmillApi {
     // Migration logic here if needed
   }
 
+  /// Listen to database switch events and reload caches
+  void _listenToDatabaseSwitches() {
+    _databaseSwitchSubscription = _coreLocalStorage.onDatabaseSwitch.listen(
+      (newDatabaseId) async {
+        await _reloadCaches();
+      },
+    );
+  }
+
+  /// Reload all caches after database switch
+  Future<void> _reloadCaches() async {
+    try {
+      _sawmillStreamController.add(const {});
+      final sawmills = await _getAllSawmills();
+      _sawmillStreamController.add(sawmills);
+    } catch (e) {
+      _sawmillStreamController.add(const {});
+    }
+  }
+
   /// Initialization
   Future<void> _init() async {
+    final sawmills = await _getAllSawmills();
+    _sawmillStreamController.add(sawmills);
+  }
+
+  /// Get all sawmills from current database
+  Future<Map<String, Sawmill>> _getAllSawmills() async {
     final sawmillsJson = await _coreLocalStorage.getAll(SawmillTable.tableName);
 
     final sawmills = <String, Sawmill>{};
@@ -50,7 +82,7 @@ class SawmillLocalStorage extends SawmillApi {
       sawmills[sawmill.id] = sawmill;
     }
 
-    _sawmillStreamController.add(sawmills);
+    return sawmills;
   }
 
   @override
@@ -156,6 +188,7 @@ class SawmillLocalStorage extends SawmillApi {
   /// Close the [_sawmillStreamController]
   @override
   Future<void> close() {
+    _databaseSwitchSubscription?.cancel();
     return _sawmillStreamController.close();
   }
 }
