@@ -42,6 +42,7 @@ class ShipmentRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _shipmentApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -50,9 +51,13 @@ class ShipmentRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _shipmentApi.deleteShipment(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _shipmentApi.setSynced(id: data['id'] as String);
+      _shipmentApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final shipment = Shipment.fromJson(data);
       _shipmentApi.saveShipment(shipment, fromServer: true);
@@ -69,7 +74,12 @@ class ShipmentRepository {
       lastEdit: DateTime.now(),
     );
     _shipmentApi.saveShipment(updatedShipment);
-    return _shipmentSyncService.sendShipmentUpdate(updatedShipment.toJson());
+    final dbName = _shipmentApi.dbName;
+
+    return _shipmentSyncService.sendShipmentUpdate(
+      updatedShipment.toJson(),
+      dbName,
+    );
   }
 
   /// Deletes the `shipment` with the given id.
@@ -84,8 +94,9 @@ class ShipmentRepository {
       'locationId': locationId,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _shipmentApi.dbName;
 
-    return _shipmentSyncService.sendShipmentUpdate(data);
+    return _shipmentSyncService.sendShipmentUpdate(data, dbName);
   }
 
   /// Deletes all `shipment`s for a given locationId.

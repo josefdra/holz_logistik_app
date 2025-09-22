@@ -40,6 +40,9 @@ class PhotoLocalStorage extends PhotoApi {
   @override
   Stream<String> get photoUpdates => _photoUpdates;
 
+  @override
+  String get dbName => _coreLocalStorage.dbName;
+
   /// Provides the last sync date
   @override
   Future<DateTime> getLastSyncDate() =>
@@ -47,8 +50,8 @@ class PhotoLocalStorage extends PhotoApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -94,16 +97,24 @@ class PhotoLocalStorage extends PhotoApi {
   }
 
   /// Insert or Update a `photo` to the database based on [photoData]
-  Future<int> _insertOrUpdatePhoto(Map<String, dynamic> photoData) async {
+  Future<int> _insertOrUpdatePhoto(
+    Map<String, dynamic> photoData, {
+    String? dbName,
+  }) async {
     return _coreLocalStorage.insertOrUpdate(
       PhotoTable.tableName,
       photoData,
+      dbName: dbName,
     );
   }
 
   /// Insert or Update a [photo]
   @override
-  Future<int> savePhoto(Photo photo, {bool fromServer = false}) async {
+  Future<int> savePhoto(
+    Photo photo, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     final json = photo.toJson();
 
     if (fromServer) {
@@ -121,7 +132,7 @@ class PhotoLocalStorage extends PhotoApi {
       json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdatePhoto(json);
+    final result = await _insertOrUpdatePhoto(json, dbName: dbName);
 
     _photoUpdatesStreamController.add(photo.locationId);
 
@@ -129,8 +140,8 @@ class PhotoLocalStorage extends PhotoApi {
   }
 
   /// Delete a Photo from the database based on [id]
-  Future<int> _deletePhoto(String id) async {
-    return _coreLocalStorage.delete(PhotoTable.tableName, id);
+  Future<int> _deletePhoto(String id, String dbName) async {
+    return _coreLocalStorage.delete(PhotoTable.tableName, id, dbName);
   }
 
   /// Delete a Photo based on [id] and [locationId]
@@ -147,7 +158,7 @@ class PhotoLocalStorage extends PhotoApi {
     final photo = Photo.fromJson(resultList.first);
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
-      json['synced'] = 0;
+    json['synced'] = 0;
     await _insertOrUpdatePhoto(json);
 
     _photoUpdatesStreamController.add(photo.locationId);
@@ -157,7 +168,7 @@ class PhotoLocalStorage extends PhotoApi {
 
   /// Delete a Photo based on [id]
   @override
-  Future<int> deletePhoto({required String id}) async {
+  Future<int> deletePhoto({required String id, required String dbName}) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(PhotoTable.tableName, id);
 
@@ -166,7 +177,7 @@ class PhotoLocalStorage extends PhotoApi {
     final photo = Photo.fromJson(result.first);
     _photoUpdatesStreamController.add(photo.locationId);
 
-    await _deletePhoto(id);
+    await _deletePhoto(id, dbName);
     return 0;
   }
 
@@ -184,8 +195,8 @@ class PhotoLocalStorage extends PhotoApi {
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(PhotoTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(PhotoTable.tableName, id, dbName);
 
   /// Close the [_photoUpdatesStreamController]
   @override

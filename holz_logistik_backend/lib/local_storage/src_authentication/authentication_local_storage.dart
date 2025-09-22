@@ -208,7 +208,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
     if (dbToKeyMapJson != null) {
       final decoded = jsonDecode(dbToKeyMapJson) as Map<String, dynamic>;
       final dbToKeyMap = decoded.cast<String, String>();
-      return dbToKeyMap.keys.toList();
+      return dbToKeyMap.keys.toList().where((item) => item.isNotEmpty).toList();
     }
 
     return [];
@@ -249,6 +249,7 @@ class AuthenticationLocalStorage extends AuthenticationApi {
     final activeDbKey = _keyMap['active_db_key']!;
     final activeApiKeyKey = _keyMap['active_api_key_key']!;
     await _coreLocalStorage.switchDatabase('_');
+    await setActiveUser(User());
 
     await _setStringToPrefs(activeDbKey, '');
     await _setStringToPrefs(activeApiKeyKey, '');

@@ -61,8 +61,8 @@ class SawmillSyncService {
   }
 
   /// Send sawmill updates to server
-  Future<void> sendSawmillUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('sawmill_update', data);
+  Future<void> sendSawmillUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage('sawmill_update', data, dbName: dbName);
   }
 
   /// Dispose

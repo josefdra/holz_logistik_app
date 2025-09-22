@@ -74,9 +74,6 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final updatedErrors = Map<String, String?>.from(state.validationErrors)
       ..remove(event.fieldName);
 
-    final locationFinished = (state.currentQuantity <= event.quantity) &&
-        (state.currentPieceCount <= state.pieceCount);
-
     final double updatedCurrentQuantity =
         max(state.initialCurrentQuantity - event.quantity, 0);
 
@@ -88,7 +85,6 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         validationErrors: updatedErrors,
         quantity: event.quantity,
         currentQuantity: updatedCurrentQuantity,
-        locationFinished: locationFinished,
       ),
     );
   }
@@ -97,13 +93,9 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     ShipmentFormRestQuantityUpdate event,
     Emitter<ShipmentFormState> emit,
   ) {
-    final locationFinished =
-        (event.currentQuantity <= 0) && (state.currentPieceCount <= 0);
-
     emit(
       state.copyWith(
         currentQuantity: event.currentQuantity,
-        locationFinished: locationFinished,
       ),
     );
   }
@@ -148,9 +140,6 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     final updatedErrors = Map<String, String?>.from(state.validationErrors)
       ..remove(event.fieldName);
 
-    final locationFinished = (state.currentQuantity <= state.quantity) &&
-        (state.currentPieceCount <= event.pieceCount);
-
     final updatedCurrentPieceCount =
         max(state.initialCurrentPieceCount - event.pieceCount, 0);
 
@@ -162,7 +151,6 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
         validationErrors: updatedErrors,
         pieceCount: event.pieceCount,
         currentPieceCount: updatedCurrentPieceCount,
-        locationFinished: locationFinished,
       ),
     );
   }
@@ -171,13 +159,9 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
     ShipmentFormRestPieceCountUpdate event,
     Emitter<ShipmentFormState> emit,
   ) {
-    final locationFinished =
-        (state.currentQuantity <= 0) && (event.currentPieceCount <= 0);
-
     emit(
       state.copyWith(
         currentPieceCount: event.currentPieceCount,
-        locationFinished: locationFinished,
       ),
     );
   }
@@ -220,10 +204,6 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
 
     if (state.quantity == 0) {
       errors['quantity'] = 'Menge darf nicht 0 sein';
-    }
-
-    if (state.pieceCount == 0) {
-      errors['pieceCount'] = 'Stückzahl darf nicht 0 sein';
     }
 
     if (state.sawmillId.isEmpty || state.sawmillId == '') {

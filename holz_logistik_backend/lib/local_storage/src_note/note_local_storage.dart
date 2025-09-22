@@ -82,6 +82,9 @@ class NoteLocalStorage extends NoteApi {
   @override
   Stream<List<Note>> get notes => _notes;
 
+  @override
+  String get dbName => _coreLocalStorage.dbName;
+
   /// Provides the last sync date
   @override
   Future<DateTime> getLastSyncDate() =>
@@ -89,8 +92,8 @@ class NoteLocalStorage extends NoteApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -98,13 +101,24 @@ class NoteLocalStorage extends NoteApi {
       _coreLocalStorage.getUpdates(NoteTable.tableName);
 
   /// Insert or Update a `note` to the database based on [noteData]
-  Future<int> _insertOrUpdateNote(Map<String, dynamic> noteData) async {
-    return _coreLocalStorage.insertOrUpdate(NoteTable.tableName, noteData);
+  Future<int> _insertOrUpdateNote(
+    Map<String, dynamic> noteData, {
+    String? dbName,
+  }) async {
+    return _coreLocalStorage.insertOrUpdate(
+      NoteTable.tableName,
+      noteData,
+      dbName: dbName,
+    );
   }
 
   /// Insert or Update a [note]
   @override
-  Future<int> saveNote(Note note, {bool fromServer = false}) async {
+  Future<int> saveNote(
+    Note note, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     final json = note.toJson();
 
     if (fromServer) {
@@ -122,7 +136,7 @@ class NoteLocalStorage extends NoteApi {
       json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdateNote(json);
+    final result = await _insertOrUpdateNote(json, dbName: dbName);
     final notes = [..._noteStreamController.value];
     final noteIndex = notes.indexWhere((n) => n.id == note.id);
     if (noteIndex > -1) {
@@ -137,8 +151,8 @@ class NoteLocalStorage extends NoteApi {
   }
 
   /// Delete a Note from the database based on [id]
-  Future<void> _deleteNote(String id) async {
-    await _coreLocalStorage.delete(NoteTable.tableName, id);
+  Future<void> _deleteNote(String id, String dbName) async {
+    await _coreLocalStorage.delete(NoteTable.tableName, id, dbName);
   }
 
   /// Marks a Note as deleted based on [id]
@@ -164,13 +178,13 @@ class NoteLocalStorage extends NoteApi {
 
   /// Delete a Note based on [id]
   @override
-  Future<void> deleteNote({required String id}) async {
+  Future<void> deleteNote({required String id, required String dbName}) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(NoteTable.tableName, id);
 
     if (result.isEmpty) return Future<void>.value();
 
-    await _deleteNote(id);
+    await _deleteNote(id, dbName);
 
     final notes = [..._noteStreamController.value]
       ..removeWhere((n) => n.id == id);
@@ -182,8 +196,8 @@ class NoteLocalStorage extends NoteApi {
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(NoteTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(NoteTable.tableName, id, dbName);
 
   /// Close the [_noteStreamController]
   @override

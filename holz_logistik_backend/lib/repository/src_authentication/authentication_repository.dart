@@ -40,14 +40,14 @@ class AuthenticationRepository {
   Future<bool> get bannedStatus => _authenticationApi.bannedStatus;
 
   /// Handle updates from Server
-  void _handleAuthenticationUpdates(Map<String, dynamic> data) {
+  Future<void> _handleAuthenticationUpdates(Map<String, dynamic> data) async {
     if (data['authenticated'] == true || data['authenticated'] == 1) {
-      _authenticationApi
-        ..setActiveUser(User.fromJson(data))
-        ..addDb(data['apiKey'] as String);
+      await _authenticationApi.setActiveUser(User.fromJson(data));
+      await _authenticationApi.addDb(data['apiKey'] as String);
+      _authenticationSyncService.releaseLock();
     } else if (data.containsKey('bannedStatus')) {
       final bannedStatus = data['bannedStatus'] == 1;
-      _authenticationApi.setBannedStatus(bannedStatus: bannedStatus);
+      await _authenticationApi.setBannedStatus(bannedStatus: bannedStatus);
     }
   }
 

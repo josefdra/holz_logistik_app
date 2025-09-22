@@ -24,6 +24,9 @@ class CoreLocalStorage {
 
   String? _currentDatabaseId;
 
+  /// Mutex to prevent concurrent database operations during switches
+  Completer<void>? _currentOperation;
+
   /// Map of table creation functions registered by feature packages
   final List<String> _tableCreationScripts = [];
 
@@ -40,6 +43,25 @@ class CoreLocalStorage {
 
   /// Get current database ID
   String? get currentDatabaseId => _currentDatabaseId;
+
+  /// Gets active dbName for server sync
+  String get dbName => _currentDatabaseId ?? '';
+
+  /// Acquire lock for database operations
+  Future<void> _acquireLock() async {
+    while (_currentOperation != null) {
+      await _currentOperation!.future;
+    }
+    _currentOperation = Completer<void>();
+  }
+
+  /// Release lock after database operations
+  void _releaseLock() {
+    if (_currentOperation != null && !_currentOperation!.isCompleted) {
+      _currentOperation!.complete();
+      _currentOperation = null;
+    }
+  }
 
   /// Get the shared preferences instance, initializing if needed
   Future<SharedPreferences> get sharedPreferences async {
@@ -64,27 +86,21 @@ class CoreLocalStorage {
 
   /// Switch to a different database
   /// [databaseId] - unique identifier for the database
-  /// [clearCaches] - whether to clear all in-memory caches (default: true)
-  Future<void> switchDatabase(
-    String databaseId, {
-    bool clearCaches = true,
-  }) async {
-    if (_currentDatabaseId == databaseId) {
-      return; // Already using this database
+  Future<void> switchDatabase(String databaseId) async {
+    await _acquireLock();
+    try {
+      if (_currentDatabaseId == databaseId) {
+        return;
+      }
+      _currentDatabaseId = databaseId;
+
+      if (_databases[databaseId] == null) {
+        _databases[databaseId] = await _initDatabase(databaseId);
+      }
+      _databaseSwitchController.add(databaseId);
+    } finally {
+      _releaseLock();
     }
-
-    final previousDatabaseId = _currentDatabaseId;
-    _currentDatabaseId = databaseId;
-
-    // Initialize the new database if it doesn't exist
-    if (_databases[databaseId] == null) {
-      _databases[databaseId] = await _initDatabase(databaseId);
-    }
-
-    // Notify listeners about the database switch
-    _databaseSwitchController.add(databaseId);
-
-    print('Switched from database "$previousDatabaseId" to "$databaseId"');
   }
 
   /// Get list of available database IDs
@@ -94,13 +110,18 @@ class CoreLocalStorage {
 
   /// Close a specific database
   Future<void> closeDatabase(String databaseId) async {
-    if (_databases[databaseId] != null) {
-      await _databases[databaseId]!.close();
-      _databases.remove(databaseId);
+    await _acquireLock();
+    try {
+      if (_databases[databaseId] != null) {
+        await _databases[databaseId]!.close();
+        _databases.remove(databaseId);
 
-      if (_currentDatabaseId == databaseId) {
-        _currentDatabaseId = null;
+        if (_currentDatabaseId == databaseId) {
+          _currentDatabaseId = null;
+        }
       }
+    } finally {
+      _releaseLock();
     }
   }
 
@@ -125,7 +146,7 @@ class CoreLocalStorage {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -145,12 +166,17 @@ class CoreLocalStorage {
 
   /// Close all databases
   Future<void> closeAll() async {
-    for (final db in _databases.values) {
-      await db.close();
+    await _acquireLock();
+    try {
+      for (final db in _databases.values) {
+        await db.close();
+      }
+      _databases.clear();
+      _currentDatabaseId = null;
+      await _databaseSwitchController.close();
+    } finally {
+      _releaseLock();
     }
-    _databases.clear();
-    _currentDatabaseId = null;
-    await _databaseSwitchController.close();
   }
 
   /// Close the current database
@@ -162,11 +188,16 @@ class CoreLocalStorage {
 
   /// Gets all entities of [tableName]
   Future<List<Map<String, dynamic>>> getAll(String tableName) async {
-    final db = await database;
-    return db.query(
-      tableName,
-      where: 'deleted = 0',
-    );
+    await _acquireLock();
+    try {
+      final db = await database;
+      return db.query(
+        tableName,
+        where: 'deleted = 0',
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Gets entity of [tableName] by [id]
@@ -174,12 +205,17 @@ class CoreLocalStorage {
     String tableName,
     String id,
   ) async {
-    final db = await database;
-    return db.query(
-      tableName,
-      where: 'deleted = 0 AND id = ?',
-      whereArgs: [id],
-    );
+    await _acquireLock();
+    try {
+      final db = await database;
+      return db.query(
+        tableName,
+        where: 'deleted = 0 AND id = ?',
+        whereArgs: [id],
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Gets entity of [tableName] by [id]
@@ -187,12 +223,17 @@ class CoreLocalStorage {
     String tableName,
     String id,
   ) async {
-    final db = await database;
-    return db.query(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await _acquireLock();
+    try {
+      final db = await database;
+      return db.query(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Gets entities of table [tableName] based on [id] of [columnName]
@@ -201,94 +242,147 @@ class CoreLocalStorage {
     String columnName,
     String id,
   ) async {
-    final db = await database;
+    await _acquireLock();
+    try {
+      final db = await database;
 
-    return db.query(
-      tableName,
-      where: 'deleted = 0 AND $columnName = ?',
-      whereArgs: [id],
-    );
+      return db.query(
+        tableName,
+        where: 'deleted = 0 AND $columnName = ?',
+        whereArgs: [id],
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Inserts [data] into [tableName]
-  Future<int> insert(String tableName, Map<String, dynamic> data) async {
-    final db = await database;
-    return db.insert(
-      tableName,
-      data,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<int> insert(
+    String tableName,
+    Map<String, dynamic> data, {
+    String? dbName,
+  }) async {
+    await _acquireLock();
+    if (dbName != null && dbName != _currentDatabaseId) return 0;
+
+    try {
+      final db = await database;
+      return db.insert(
+        tableName,
+        data,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Updates entity of table [tableName] based on [data]
-  Future<int> update(String tableName, Map<String, dynamic> data) async {
-    final db = await database;
-    return db.update(
-      tableName,
-      data,
-      where: 'id = ?',
-      whereArgs: [data['id']],
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<int> update(
+    String tableName,
+    Map<String, dynamic> data, {
+    String? dbName,
+  }) async {
+    await _acquireLock();
+    if (dbName != null && dbName != _currentDatabaseId) return 0;
+
+    try {
+      final db = await database;
+      return db.update(
+        tableName,
+        data,
+        where: 'id = ?',
+        whereArgs: [data['id']],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Inserts or Updates entity of table [tableName] based on [data]
   Future<int> insertOrUpdate(
     String tableName,
-    Map<String, dynamic> data,
-  ) async {
-    final db = await database;
+    Map<String, dynamic> data, {
+    String? dbName,
+  }) async {
+    await _acquireLock();
+    if (dbName != null && dbName != _currentDatabaseId) return 0;
 
-    final List<Map<String, dynamic>> existing = await db.query(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [data['id']],
-    );
+    try {
+      final db = await database;
 
-    if (existing.isNotEmpty) {
-      final oldDate = existing.first['lastEdit'] as int;
-      final newDate = data['lastEdit'] as int;
+      final List<Map<String, dynamic>> existing = await db.query(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [data['id']],
+      );
 
-      if (oldDate > newDate) {
-        return 0;
+      if (existing.isNotEmpty) {
+        final oldDate = existing.first['lastEdit'] as int;
+        final newDate = data['lastEdit'] as int;
+
+        if (oldDate > newDate) {
+          return 0;
+        }
+
+        return update(tableName, data, dbName: dbName);
       }
 
-      return update(tableName, data);
+      return insert(tableName, data, dbName: dbName);
+    } finally {
+      _releaseLock();
     }
-
-    return insert(tableName, data);
   }
 
   /// Deletes entity of table [tableName] based on [id] of [columnName]
   Future<int> deleteByColumn(
     String tableName,
     String columnName,
-    String id,
-  ) async {
-    final db = await database;
+    String id, {
+    String? dbName,
+  }) async {
+    await _acquireLock();
+    if (dbName != null && dbName != _currentDatabaseId) return 0;
 
-    return db.delete(
-      tableName,
-      where: '$columnName = ?',
-      whereArgs: [id],
-    );
+    try {
+      final db = await database;
+
+      return db.delete(
+        tableName,
+        where: '$columnName = ?',
+        whereArgs: [id],
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Deletes entity of table [tableName] based on [id]
-  Future<int> delete(String tableName, String id) async {
-    final db = await database;
-    return db.delete(
-      tableName,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+  Future<int> delete(String tableName, String id, String dbName) async {
+    await _acquireLock();
+    if (dbName != _currentDatabaseId) return 0;
+
+    try {
+      final db = await database;
+      return db.delete(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Provides the last sync date
   Future<DateTime> getLastSyncDate(String key) async {
     final prefs = await sharedPreferences;
+    final accessKey = _currentDatabaseId == 'draexl'
+        ? key
+        : (key + (_currentDatabaseId ?? '_'));
 
-    final dateMillis = prefs.getInt(key);
+    final dateMillis = prefs.getInt(accessKey);
     final date = dateMillis != null
         ? DateTime.fromMillisecondsSinceEpoch(dateMillis, isUtc: true)
         : DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
@@ -297,64 +391,120 @@ class CoreLocalStorage {
   }
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(String key, DateTime date) async {
+  Future<void> setLastSyncDate(String dbName, String key, DateTime date) async {
+    if (dbName != _currentDatabaseId) return;
+
     final prefs = await sharedPreferences;
+    final accessKey = _currentDatabaseId == 'draexl'
+        ? key
+        : (key + (_currentDatabaseId ?? '_'));
     final dateInt = date.millisecondsSinceEpoch;
     final lastDate = await getLastSyncDate(key);
 
     if (dateInt > lastDate.millisecondsSinceEpoch) {
-      await prefs.setInt(key, dateInt);
+      await prefs.setInt(accessKey, dateInt);
     }
   }
 
   /// Gets unsynced updates
   Future<List<Map<String, dynamic>>> getUpdates(String tableName) async {
-    final db = await database;
+    await _acquireLock();
+    try {
+      final db = await database;
 
-    final result = await db.query(
-      tableName,
-      where: 'synced = 0 ORDER BY lastEdit ASC',
-    );
+      final result = await db.query(
+        tableName,
+        where: 'synced = 0 ORDER BY lastEdit ASC',
+      );
 
-    return result;
+      return result;
+    } finally {
+      _releaseLock();
+    }
   }
 
   /// Sets as synced
-  Future<void> setSynced(String tableName, String id) async {
-    final db = await database;
+  Future<void> setSynced(String tableName, String id, String dbName) async {
+    await _acquireLock();
+    if (dbName != _currentDatabaseId) return;
 
-    final result = await db.query(tableName, where: 'id = ?', whereArgs: [id]);
+    try {
+      final db = await database;
 
-    if (result.isNotEmpty) {
-      await db.update(
-        tableName,
-        {'synced': 1},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final result =
+          await db.query(tableName, where: 'id = ?', whereArgs: [id]);
+
+      if (result.isNotEmpty) {
+        await db.update(
+          tableName,
+          {'synced': 1},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+      }
+    } finally {
+      _releaseLock();
     }
   }
 
   /// Checks if server update is newer
   Future<bool> isNewer(String tableName, DateTime lastEdit, String id) async {
-    final db = await database;
+    await _acquireLock();
+    try {
+      final db = await database;
 
-    final result = await db.query(
-      tableName,
-      columns: ['lastEdit'],
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+      final result = await db.query(
+        tableName,
+        columns: ['lastEdit'],
+        where: 'id = ?',
+        whereArgs: [id],
+      );
 
-    var isNewer = false;
-    if (result.isNotEmpty) {
-      final oldLastEdit = result.first['lastEdit']! as int;
+      var isNewer = false;
+      if (result.isNotEmpty) {
+        final oldLastEdit = result.first['lastEdit']! as int;
 
-      if (oldLastEdit < lastEdit.millisecondsSinceEpoch) isNewer = true;
-    } else {
-      isNewer = true;
+        if (oldLastEdit < lastEdit.millisecondsSinceEpoch) isNewer = true;
+      } else {
+        isNewer = true;
+      }
+
+      return isNewer;
+    } finally {
+      _releaseLock();
     }
+  }
 
-    return isNewer;
+  /// Checks if the user should be updated
+  Future<bool> userNeedsUpdate(
+    String tableName,
+    DateTime lastEdit,
+    String id,
+    int role,
+  ) async {
+    await _acquireLock();
+    try {
+      final db = await database;
+
+      final result = await db.query(
+        tableName,
+        columns: ['lastEdit'],
+        where: 'id = ? AND role != ?',
+        whereArgs: [id, role],
+      );
+
+      var userNeedsUpdate = true;
+      if (result.isNotEmpty) {
+        final oldLastEdit = result.first['lastEdit']! as int;
+
+        if (oldLastEdit >= lastEdit.millisecondsSinceEpoch) {
+          userNeedsUpdate = false;
+        }
+      }
+
+      return userNeedsUpdate;
+    } finally {
+      _releaseLock();
+    }
   }
 }

@@ -33,6 +33,7 @@ class SawmillRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _sawmillApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -41,9 +42,13 @@ class SawmillRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _sawmillApi.deleteSawmill(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _sawmillApi.setSynced(id: data['id'] as String);
+      _sawmillApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final sawmill = Sawmill.fromJson(data);
       _sawmillApi.saveSawmill(sawmill, fromServer: true);
@@ -56,7 +61,9 @@ class SawmillRepository {
   Future<void> saveSawmill(Sawmill sawmill) {
     final s = sawmill.copyWith(lastEdit: DateTime.now());
     _sawmillApi.saveSawmill(s);
-    return _sawmillSyncService.sendSawmillUpdate(s.toJson());
+    final dbName = _sawmillApi.dbName;
+
+    return _sawmillSyncService.sendSawmillUpdate(s.toJson(), dbName);
   }
 
   /// Deletes the `sawmill` with the given id
@@ -67,8 +74,9 @@ class SawmillRepository {
       'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _sawmillApi.dbName;
 
-    return _sawmillSyncService.sendSawmillUpdate(data);
+    return _sawmillSyncService.sendSawmillUpdate(data, dbName);
   }
 
   /// Disposes any resources managed by the repository.

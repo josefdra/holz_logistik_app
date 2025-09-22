@@ -88,6 +88,9 @@ class SawmillLocalStorage extends SawmillApi {
   @override
   Stream<Map<String, Sawmill>> get sawmills => _sawmills;
 
+  @override
+  String get dbName => _coreLocalStorage.dbName;
+
   /// Provides the last sync date
   @override
   Future<DateTime> getLastSyncDate() =>
@@ -95,8 +98,8 @@ class SawmillLocalStorage extends SawmillApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -104,16 +107,24 @@ class SawmillLocalStorage extends SawmillApi {
       _coreLocalStorage.getUpdates(SawmillTable.tableName);
 
   /// Insert or Update a `sawmill` to the database based on [sawmillData]
-  Future<int> _insertOrUpdateSawmill(Map<String, dynamic> sawmillData) async {
+  Future<int> _insertOrUpdateSawmill(
+    Map<String, dynamic> sawmillData, {
+    String? dbName,
+  }) async {
     return _coreLocalStorage.insertOrUpdate(
       SawmillTable.tableName,
       sawmillData,
+      dbName: dbName,
     );
   }
 
   /// Insert or Update a [sawmill]
   @override
-  Future<int> saveSawmill(Sawmill sawmill, {bool fromServer = false}) async {
+  Future<int> saveSawmill(
+    Sawmill sawmill, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     final json = sawmill.toJson();
 
     if (fromServer) {
@@ -131,7 +142,7 @@ class SawmillLocalStorage extends SawmillApi {
       json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdateSawmill(json);
+    final result = await _insertOrUpdateSawmill(json, dbName: dbName);
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value);
 
     sawmills[sawmill.id] = sawmill;
@@ -141,8 +152,8 @@ class SawmillLocalStorage extends SawmillApi {
   }
 
   /// Delete a Sawmill from the database based on [id]
-  Future<void> _deleteSawmill(String id) async {
-    await _coreLocalStorage.delete(SawmillTable.tableName, id);
+  Future<void> _deleteSawmill(String id, String dbName) async {
+    await _coreLocalStorage.delete(SawmillTable.tableName, id, dbName);
   }
 
   /// Delete a Sawmill based on [id]
@@ -155,7 +166,7 @@ class SawmillLocalStorage extends SawmillApi {
 
     final json = Map<String, dynamic>.from(resultList.first);
     json['deleted'] = 1;
-      json['synced'] = 0;
+    json['synced'] = 0;
     await _insertOrUpdateSawmill(json);
 
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value)
@@ -166,13 +177,16 @@ class SawmillLocalStorage extends SawmillApi {
 
   /// Delete a Sawmill based on [id]
   @override
-  Future<void> deleteSawmill({required String id}) async {
+  Future<void> deleteSawmill({
+    required String id,
+    required String dbName,
+  }) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(SawmillTable.tableName, id);
 
     if (result.isEmpty) return Future<void>.value();
 
-    await _deleteSawmill(id);
+    await _deleteSawmill(id, dbName);
 
     final sawmills = Map<String, Sawmill>.from(_sawmillStreamController.value)
       ..removeWhere((key, _) => key == id);
@@ -182,8 +196,8 @@ class SawmillLocalStorage extends SawmillApi {
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(SawmillTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(SawmillTable.tableName, id, dbName);
 
   /// Close the [_sawmillStreamController]
   @override

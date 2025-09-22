@@ -68,6 +68,7 @@ class ContractLocalStorage extends ContractApi {
     } catch (e) {
       _activeContractsStreamController.add(const []);
     }
+    _contractUpdatesStreamController.add(Contract());
   }
 
   Future<List<Contract>> _getActiveContracts() async {
@@ -101,6 +102,9 @@ class ContractLocalStorage extends ContractApi {
   @override
   Stream<Contract> get contractUpdates => _contractUpdates;
 
+  @override
+  String get dbName => _coreLocalStorage.dbName;
+
   /// Provides the last sync date
   @override
   Future<DateTime> getLastSyncDate() =>
@@ -108,8 +112,8 @@ class ContractLocalStorage extends ContractApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -181,16 +185,24 @@ class ContractLocalStorage extends ContractApi {
   }
 
   /// Insert or Update a `contract` to the database based on [contractData]
-  Future<int> _insertOrUpdateContract(Map<String, dynamic> contractData) async {
+  Future<int> _insertOrUpdateContract(
+    Map<String, dynamic> contractData, {
+    String? dbName,
+  }) async {
     return _coreLocalStorage.insertOrUpdate(
       ContractTable.tableName,
       contractData,
+      dbName: dbName,
     );
   }
 
   /// Insert or Update a [contract]
   @override
-  Future<int> saveContract(Contract contract, {bool fromServer = false}) async {
+  Future<int> saveContract(
+    Contract contract, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     final json = contract.toJson();
 
     if (fromServer) {
@@ -208,7 +220,7 @@ class ContractLocalStorage extends ContractApi {
       json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdateContract(json);
+    final result = await _insertOrUpdateContract(json, dbName: dbName);
     final activeContracts =
         List<Contract>.from(_activeContractsStreamController.value);
 
@@ -230,8 +242,8 @@ class ContractLocalStorage extends ContractApi {
   }
 
   /// Delete a Contract from the database based on [id]
-  Future<int> _deleteContract(String id) async {
-    return _coreLocalStorage.delete(ContractTable.tableName, id);
+  Future<int> _deleteContract(String id, String dbName) async {
+    return _coreLocalStorage.delete(ContractTable.tableName, id, dbName);
   }
 
   /// Marks a Contract as deleted based on [id] and [done] status
@@ -268,13 +280,16 @@ class ContractLocalStorage extends ContractApi {
 
   /// Delete a Contract based on [id]
   @override
-  Future<int> deleteContract({required String id}) async {
+  Future<int> deleteContract({
+    required String id,
+    required String dbName,
+  }) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(ContractTable.tableName, id);
 
     if (result.isEmpty) return 0;
 
-    await _deleteContract(id);
+    await _deleteContract(id, dbName);
     final contract = Contract.fromJson(result.first);
 
     if (contract.done == false) {
@@ -292,8 +307,8 @@ class ContractLocalStorage extends ContractApi {
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(ContractTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(ContractTable.tableName, id, dbName);
 
   /// Close the both controllers
   @override

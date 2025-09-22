@@ -61,8 +61,8 @@ class PhotoSyncService {
   }
 
   /// Send photo updates to server
-  Future<void> sendPhotoUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('photo_update', data);
+  Future<void> sendPhotoUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage('photo_update', data, dbName: dbName);
   }
 
   /// Dispose

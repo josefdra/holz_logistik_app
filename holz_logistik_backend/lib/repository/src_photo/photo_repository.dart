@@ -37,6 +37,7 @@ class PhotoRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _photoApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -45,9 +46,13 @@ class PhotoRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _photoApi.deletePhoto(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _photoApi.setSynced(id: data['id'] as String);
+      _photoApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final photo = Photo.fromJson(data);
       _photoApi.savePhoto(photo, fromServer: true);
@@ -60,7 +65,9 @@ class PhotoRepository {
   Future<void> savePhoto(Photo photo) {
     final p = photo.copyWith(lastEdit: DateTime.now());
     _photoApi.savePhoto(p);
-    return _photoSyncService.sendPhotoUpdate(p.toJson());
+    final dbName = _photoApi.dbName;
+
+    return _photoSyncService.sendPhotoUpdate(p.toJson(), dbName);
   }
 
   /// Saves multiple [photos].
@@ -86,8 +93,10 @@ class PhotoRepository {
   }
 
   /// Deletes the `photo` with the given id.
-  Future<void> deletePhoto(
-      {required String id, required String locationId,}) async {
+  Future<void> deletePhoto({
+    required String id,
+    required String locationId,
+  }) async {
     await _photoApi.markPhotoDeleted(id: id, locationId: locationId);
     final data = {
       'id': id,
@@ -95,8 +104,9 @@ class PhotoRepository {
       'locationId': locationId,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _photoApi.dbName;
 
-    return _photoSyncService.sendPhotoUpdate(data);
+    return _photoSyncService.sendPhotoUpdate(data, dbName);
   }
 
   /// Deletes photos by location id.

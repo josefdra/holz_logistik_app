@@ -61,8 +61,12 @@ class LocationSyncService {
   }
 
   /// Send location updates to server
-  Future<void> sendLocationUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('location_update', data);
+  Future<void> sendLocationUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage(
+      'location_update',
+      data,
+      dbName: dbName,
+    );
   }
 
   /// Dispose

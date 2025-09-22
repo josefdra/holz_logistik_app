@@ -60,8 +60,8 @@ class UserSyncService {
   }
 
   /// Send user updates to server
-  Future<void> sendUserUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('user_update', data);
+  Future<void> sendUserUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage('user_update', data, dbName: dbName);
   }
 
   /// Dispose

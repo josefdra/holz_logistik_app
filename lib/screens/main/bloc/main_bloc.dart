@@ -38,7 +38,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   Future<void> _connect() async {
     final apiKey = await _authenticationRepository.apiKey;
     await _coreSyncService.connect(apiKey: apiKey);
-    await _userRepository.saveFutureUser(_authenticationRepository.currentUser);
   }
 
   Future<void> _onSubscriptionRequested(

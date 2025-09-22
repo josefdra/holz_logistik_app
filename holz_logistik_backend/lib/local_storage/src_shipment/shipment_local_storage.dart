@@ -17,6 +17,8 @@ class ShipmentLocalStorage extends ShipmentApi {
     _coreLocalStorage
       ..registerTable(ShipmentTable.createTable)
       ..registerMigration(_migrateShipmentTable);
+
+    _listenToDatabaseSwitches();
   }
 
   final CoreLocalStorage _coreLocalStorage;
@@ -27,6 +29,9 @@ class ShipmentLocalStorage extends ShipmentApi {
       _shipmentUpdatesStreamController.stream;
 
   static const _syncFromServerKey = '__shipment_sync_from_server_date_key__';
+
+  // Subscription to database switch events
+  StreamSubscription<String>? _databaseSwitchSubscription;
 
   /// Migration function for shipment table
   Future<void> _migrateShipmentTable(
@@ -42,8 +47,25 @@ class ShipmentLocalStorage extends ShipmentApi {
     }
   }
 
+  /// Listen to database switch events and reload caches
+  void _listenToDatabaseSwitches() {
+    _databaseSwitchSubscription = _coreLocalStorage.onDatabaseSwitch.listen(
+      (newDatabaseId) async {
+        await _reloadCaches();
+      },
+    );
+  }
+
+  /// Reload all caches after database switch
+  Future<void> _reloadCaches() async {
+    _shipmentUpdatesStreamController.add(Shipment());
+  }
+
   @override
   Stream<Shipment> get shipmentUpdates => _shipmentUpdates;
+
+  @override
+  String get dbName => _coreLocalStorage.dbName;
 
   /// Provides the last sync date
   @override
@@ -52,8 +74,8 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -116,16 +138,24 @@ class ShipmentLocalStorage extends ShipmentApi {
   }
 
   /// Insert or Update a `shipment` to the database based on [shipmentData]
-  Future<int> _insertOrUpdateShipment(Map<String, dynamic> shipmentData) async {
+  Future<int> _insertOrUpdateShipment(
+    Map<String, dynamic> shipmentData, {
+    String? dbName,
+  }) async {
     return _coreLocalStorage.insertOrUpdate(
       ShipmentTable.tableName,
       shipmentData,
+      dbName: dbName,
     );
   }
 
   /// Insert or Update a [shipment]
   @override
-  Future<int> saveShipment(Shipment shipment, {bool fromServer = false}) async {
+  Future<int> saveShipment(
+    Shipment shipment, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     final json = shipment.toJson();
 
     if (fromServer) {
@@ -143,7 +173,7 @@ class ShipmentLocalStorage extends ShipmentApi {
       json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdateShipment(json);
+    final result = await _insertOrUpdateShipment(json, dbName: dbName);
 
     _shipmentUpdatesStreamController.add(shipment);
 
@@ -151,8 +181,8 @@ class ShipmentLocalStorage extends ShipmentApi {
   }
 
   /// Delete a Shipment from the database based on [id]
-  Future<int> _deleteShipment(String id) async {
-    return _coreLocalStorage.delete(ShipmentTable.tableName, id);
+  Future<int> _deleteShipment(String id, String dbName) async {
+    return _coreLocalStorage.delete(ShipmentTable.tableName, id, dbName);
   }
 
   /// Marks a Shipment deleted based on [id] and [locationId]
@@ -178,7 +208,10 @@ class ShipmentLocalStorage extends ShipmentApi {
 
   /// Delete a Shipment based on [id]
   @override
-  Future<void> deleteShipment({required String id}) async {
+  Future<void> deleteShipment({
+    required String id,
+    required String dbName,
+  }) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(ShipmentTable.tableName, id);
 
@@ -186,18 +219,19 @@ class ShipmentLocalStorage extends ShipmentApi {
 
     final shipment = Shipment.fromJson(result.first);
 
-    await _deleteShipment(id);
+    await _deleteShipment(id, dbName);
     _shipmentUpdatesStreamController.add(shipment);
   }
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(ShipmentTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(ShipmentTable.tableName, id, dbName);
 
   /// Close the [_shipmentUpdatesStreamController]
   @override
   Future<void> close() {
+    _databaseSwitchSubscription?.cancel();
     _shipmentUpdatesStreamController.close();
     return Future.value();
   }

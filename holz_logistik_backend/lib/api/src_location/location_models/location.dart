@@ -48,6 +48,7 @@ class Location extends Equatable with LocationSortGettable {
     this.partieNr = '',
     DateTime? date,
     this.additionalInfo = '',
+    this.ownerInformation = '',
     this.initialQuantity = 0,
     this.initialOversizeQuantity = 0,
     this.initialPieceCount = 0,
@@ -73,6 +74,7 @@ class Location extends Equatable with LocationSortGettable {
         partieNr = location.partieNr,
         date = location.date,
         additionalInfo = location.additionalInfo,
+        ownerInformation = location.ownerInformation,
         initialQuantity = location.initialQuantity,
         initialOversizeQuantity = location.initialOversizeQuantity,
         initialPieceCount = location.initialPieceCount,
@@ -136,6 +138,11 @@ class Location extends Equatable with LocationSortGettable {
   /// Cannot be empty.
   final String additionalInfo;
 
+  /// The additional information of the `owner`.
+  ///
+  /// Cannot be empty.
+  final String ownerInformation;
+
   /// The initial quantity of the `location`.
   ///
   /// Cannot be empty.
@@ -194,6 +201,7 @@ class Location extends Equatable with LocationSortGettable {
     String? partieNr,
     DateTime? date,
     String? additionalInfo,
+    String? ownerInformation,
     double? initialQuantity,
     double? initialOversizeQuantity,
     int? initialPieceCount,
@@ -214,6 +222,7 @@ class Location extends Equatable with LocationSortGettable {
       partieNr: partieNr ?? this.partieNr,
       date: date ?? this.date,
       additionalInfo: additionalInfo ?? this.additionalInfo,
+      ownerInformation: ownerInformation ?? this.ownerInformation,
       initialQuantity: initialQuantity ?? this.initialQuantity,
       initialOversizeQuantity:
           initialOversizeQuantity ?? this.initialOversizeQuantity,
@@ -246,6 +255,7 @@ class Location extends Equatable with LocationSortGettable {
         date,
         additionalInfo,
         initialQuantity,
+        ownerInformation,
         initialOversizeQuantity,
         initialPieceCount,
         currentQuantity,

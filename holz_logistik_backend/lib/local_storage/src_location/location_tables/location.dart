@@ -34,6 +34,9 @@ class LocationTable {
   /// The column name for storing additional information of the location.
   static const String columnAdditionalInfo = 'additionalInfo';
 
+  /// The column name for storing additional information of the owner.
+  static const String columnOwnerInformation = 'ownerInformation';
+
   /// The column name for storing the initial quantity of the location.
   static const String columnInitialQuantity = 'initialQuantity';
 
@@ -73,6 +76,7 @@ class LocationTable {
       $columnPartieNr TEXT NOT NULL,
       $columnDate INTEGER NOT NULL,
       $columnAdditionalInfo TEXT NOT NULL,
+      $columnOwnerInformation TEXT,
       $columnInitialQuantity REAL NOT NULL,
       $columnInitialOversizeQuantity REAL NOT NULL,
       $columnInitialPieceCount INTEGER NOT NULL,

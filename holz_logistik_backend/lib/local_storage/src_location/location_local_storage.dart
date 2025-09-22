@@ -58,7 +58,12 @@ class LocationLocalStorage extends LocationApi {
     int oldVersion,
     int newVersion,
   ) async {
-    // Migration logic here if needed
+    if (oldVersion < 3 && newVersion >= 3) {
+      await db.execute('''
+      ALTER TABLE ${LocationTable.tableName} 
+      ADD COLUMN ${LocationTable.columnOwnerInformation} TEXT
+    ''');
+    }
   }
 
   /// Listen to database switch events and reload caches
@@ -80,6 +85,7 @@ class LocationLocalStorage extends LocationApi {
     } catch (e) {
       _activeLocationStreamController.add(const []);
     }
+    _locationUpdatesStreamController.add(Location());
   }
 
   Future<List<String>> _getSawmillIds({
@@ -157,6 +163,9 @@ class LocationLocalStorage extends LocationApi {
   @override
   Stream<Location> get locationUpdates => _locationUpdates;
 
+  @override
+  String get dbName => _coreLocalStorage.dbName;
+
   /// Provides the last sync date
   @override
   Future<DateTime> getLastSyncDate() =>
@@ -164,8 +173,8 @@ class LocationLocalStorage extends LocationApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -241,16 +250,21 @@ class LocationLocalStorage extends LocationApi {
 
   /// Insert a junction value to the database based on [junctionData]
   Future<int> _insertLocationSawmillJunction(
-    Map<String, dynamic> junctionData,
-  ) async {
+    Map<String, dynamic> junctionData, {
+    String? dbName,
+  }) async {
     return _coreLocalStorage.insert(
       LocationSawmillJunctionTable.tableName,
       junctionData,
+      dbName: dbName,
     );
   }
 
   /// Insert or Update a `location` to the database based on [locationData]
-  Future<int> _insertOrUpdateLocation(Map<String, dynamic> locationData) async {
+  Future<int> _insertOrUpdateLocation(
+    Map<String, dynamic> locationData, {
+    String? dbName,
+  }) async {
     final locationId = locationData['id'] as String;
 
     final oldLocation =
@@ -278,6 +292,7 @@ class LocationLocalStorage extends LocationApi {
       LocationSawmillJunctionTable.tableName,
       LocationSawmillJunctionTable.columnLocationId,
       locationId,
+      dbName: dbName,
     );
 
     for (final sawmillId in sawmillIds) {
@@ -286,7 +301,7 @@ class LocationLocalStorage extends LocationApi {
         LocationSawmillJunctionTable.columnSawmillId: sawmillId,
         LocationSawmillJunctionTable.columnIsOversize: 0,
       };
-      await _insertLocationSawmillJunction(junctionData);
+      await _insertLocationSawmillJunction(junctionData, dbName: dbName);
     }
 
     for (final oversizeSawmillId in oversizeSawmillIds) {
@@ -295,18 +310,23 @@ class LocationLocalStorage extends LocationApi {
         LocationSawmillJunctionTable.columnSawmillId: oversizeSawmillId,
         LocationSawmillJunctionTable.columnIsOversize: 1,
       };
-      await _insertLocationSawmillJunction(junctionData);
+      await _insertLocationSawmillJunction(junctionData, dbName: dbName);
     }
 
     return _coreLocalStorage.insertOrUpdate(
       LocationTable.tableName,
       locationData,
+      dbName: dbName,
     );
   }
 
   /// Insert or Update a [location]
   @override
-  Future<int> saveLocation(Location location, {bool fromServer = false}) async {
+  Future<int> saveLocation(
+    Location location, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     final json = location.toJson();
 
     if (fromServer) {
@@ -324,7 +344,7 @@ class LocationLocalStorage extends LocationApi {
       json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdateLocation(json);
+    final result = await _insertOrUpdateLocation(json, dbName: dbName);
     final activeLocations =
         List<Location>.from(_activeLocationStreamController.value);
 
@@ -346,8 +366,8 @@ class LocationLocalStorage extends LocationApi {
   }
 
   /// Delete a Location from the database based on [id]
-  Future<int> _deleteLocation(String id) async {
-    return _coreLocalStorage.delete(LocationTable.tableName, id);
+  Future<int> _deleteLocation(String id, String dbName) async {
+    return _coreLocalStorage.delete(LocationTable.tableName, id, dbName);
   }
 
   /// Marks a Location as deleted based on [id] and [done] status
@@ -383,13 +403,16 @@ class LocationLocalStorage extends LocationApi {
 
   /// Delete a Location based on [id]
   @override
-  Future<int> deleteLocation({required String id}) async {
+  Future<int> deleteLocation({
+    required String id,
+    required String dbName,
+  }) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(LocationTable.tableName, id);
 
     if (result.isEmpty) return 0;
 
-    await _deleteLocation(id);
+    await _deleteLocation(id, dbName);
     final location = Location.fromJson(result.first);
 
     if (location.done == false) {
@@ -407,8 +430,8 @@ class LocationLocalStorage extends LocationApi {
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(LocationTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(LocationTable.tableName, id, dbName);
 
   /// Close the both controllers
   @override

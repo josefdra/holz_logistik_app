@@ -52,6 +52,7 @@ class ContractRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _contractApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -60,9 +61,13 @@ class ContractRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _contractApi.deleteContract(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _contractApi.setSynced(id: data['id'] as String);
+      _contractApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final contract = Contract.fromJson(data);
       _contractApi.saveContract(contract, fromServer: true);
@@ -80,7 +85,12 @@ class ContractRepository {
       lastEdit: DateTime.now(),
     );
     _contractApi.saveContract(updatedContract);
-    return _contractSyncService.sendContractUpdate(updatedContract.toJson());
+    final dbName = _contractApi.dbName;
+
+    return _contractSyncService.sendContractUpdate(
+      updatedContract.toJson(),
+      dbName,
+    );
   }
 
   /// Deletes the `contract` with the given id.
@@ -91,8 +101,9 @@ class ContractRepository {
       'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _contractApi.dbName;
 
-    return _contractSyncService.sendContractUpdate(data);
+    return _contractSyncService.sendContractUpdate(data, dbName);
   }
 
   /// Disposes any resources managed by the repository.

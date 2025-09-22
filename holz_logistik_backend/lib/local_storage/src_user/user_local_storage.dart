@@ -86,6 +86,9 @@ class UserLocalStorage extends UserApi {
   @override
   Stream<Map<String, User>> get users => _users;
 
+  @override
+  String get dbName => _coreLocalStorage.dbName;
+
   /// Provides the last sync date
   @override
   Future<DateTime> getLastSyncDate() =>
@@ -93,8 +96,8 @@ class UserLocalStorage extends UserApi {
 
   /// Sets the last sync date
   @override
-  Future<void> setLastSyncDate(DateTime date) =>
-      _coreLocalStorage.setLastSyncDate(_syncFromServerKey, date);
+  Future<void> setLastSyncDate(String dbName, DateTime date) =>
+      _coreLocalStorage.setLastSyncDate(dbName, _syncFromServerKey, date);
 
   /// Gets unsynced updates
   @override
@@ -102,32 +105,44 @@ class UserLocalStorage extends UserApi {
       _coreLocalStorage.getUpdates(UserTable.tableName);
 
   /// Insert or Update a `user` to the database based on [userData]
-  Future<int> _insertOrUpdateUser(Map<String, dynamic> userData) async {
-    return _coreLocalStorage.insertOrUpdate(UserTable.tableName, userData);
+  Future<int> _insertOrUpdateUser(
+    Map<String, dynamic> userData, {
+    String? dbName,
+  }) async {
+    return _coreLocalStorage.insertOrUpdate(
+      UserTable.tableName,
+      userData,
+      dbName: dbName,
+    );
   }
 
   /// Insert or Update a [user]
   @override
-  Future<int> saveUser(User user, {bool fromServer = false}) async {
+  Future<int> saveUser(
+    User user, {
+    bool fromServer = false,
+    String? dbName,
+  }) async {
     if (user.name == '') return 0;
-    final json = user.toJson();
+    final userJson = user.toJson();
 
     if (fromServer) {
-      if (!(await _coreLocalStorage.isNewer(
-        UserTable.tableName,
-        user.lastEdit,
-        user.id,
-      ))) {
-        return 0;
-      }
-
-      json['synced'] = 1;
+      userJson['synced'] = 1;
     } else {
-      json['synced'] = 0;
-      json['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
+      userJson['synced'] = 0;
+      userJson['lastEdit'] = DateTime.now().toUtc().millisecondsSinceEpoch;
     }
 
-    final result = await _insertOrUpdateUser(json);
+    final doNotSkipUser = await _coreLocalStorage.userNeedsUpdate(
+      UserTable.tableName,
+      user.lastEdit,
+      user.id,
+      userJson['role'] as int,
+    );
+
+    if (!doNotSkipUser) return 0;
+
+    final result = await _insertOrUpdateUser(userJson, dbName: dbName);
     final users = Map<String, User>.from(_userStreamController.value);
 
     users[user.id] = user;
@@ -137,8 +152,8 @@ class UserLocalStorage extends UserApi {
   }
 
   /// Delete a User from the database based on [id]
-  Future<int> _deleteUser(String id) async {
-    return _coreLocalStorage.delete(UserTable.tableName, id);
+  Future<int> _deleteUser(String id, String dbName) async {
+    return _coreLocalStorage.delete(UserTable.tableName, id, dbName);
   }
 
   /// Marks a User deleted based on [id]
@@ -162,13 +177,13 @@ class UserLocalStorage extends UserApi {
 
   /// Delete a User based on [id]
   @override
-  Future<int> deleteUser({required String id}) async {
+  Future<int> deleteUser({required String id, required String dbName}) async {
     final result =
         await _coreLocalStorage.getByIdForDeletion(UserTable.tableName, id);
 
     if (result.isEmpty) return 0;
 
-    await _deleteUser(id);
+    await _deleteUser(id, dbName);
 
     final users = Map<String, User>.from(_userStreamController.value)
       ..removeWhere((key, _) => key == id);
@@ -180,8 +195,8 @@ class UserLocalStorage extends UserApi {
 
   /// Sets synced
   @override
-  Future<void> setSynced({required String id}) =>
-      _coreLocalStorage.setSynced(UserTable.tableName, id);
+  Future<void> setSynced({required String id, required String dbName}) =>
+      _coreLocalStorage.setSynced(UserTable.tableName, id, dbName);
 
   /// Close the [_userStreamController]
   @override

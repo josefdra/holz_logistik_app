@@ -35,6 +35,11 @@ class AuthenticationSyncService {
     }
   }
 
+  /// Releases the sync lock after database update
+  void releaseLock(){
+    _coreSyncService.releaseLock();
+  }
+
   /// Dispose
   void dispose() {
     _authenticationUpdateController.close();

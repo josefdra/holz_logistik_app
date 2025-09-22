@@ -61,8 +61,12 @@ class ContractSyncService {
   }
 
   /// Send contract updates to server
-  Future<void> sendContractUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('contract_update', data);
+  Future<void> sendContractUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage(
+      'contract_update',
+      data,
+      dbName: dbName,
+    );
   }
 
   /// Dispose

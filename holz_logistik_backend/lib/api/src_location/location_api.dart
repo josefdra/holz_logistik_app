@@ -13,18 +13,23 @@ abstract class LocationApi {
   /// Provides updates on finished locations.
   Stream<Location> get locationUpdates;
 
+  /// Gets the active database name
+  String get dbName;
+
   /// Provides the last sync date
   Future<DateTime> getLastSyncDate();
 
   /// Sets the last sync date
-  Future<void> setLastSyncDate(DateTime date);
+  Future<void> setLastSyncDate(String dbName, DateTime date);
 
   /// Gets updates
   Future<List<Map<String, dynamic>>> getUpdates();
 
   /// Provides finished locations.
   Future<List<Location>> getFinishedLocationsByDate(
-      DateTime start, DateTime end,);
+    DateTime start,
+    DateTime end,
+  );
 
   /// Get partieNr by id
   Future<String> getPartieNrById(String id);
@@ -35,16 +40,20 @@ abstract class LocationApi {
   /// Saves or updates a [location].
   ///
   /// If a [location] with the same id already exists, it will be updated.
-  Future<void> saveLocation(Location location, {bool fromServer = false});
+  Future<void> saveLocation(
+    Location location, {
+    bool fromServer = false,
+    String? dbName,
+  });
 
   /// Marks a `location` with the given [id] and [done] status as deleted.
   Future<void> markLocationDeleted({required String id, required bool done});
 
   /// Deletes the `location` with the given [id].
-  Future<void> deleteLocation({required String id});
+  Future<void> deleteLocation({required String id, required String dbName});
 
   /// Sets synced
-  Future<void> setSynced({required String id});
+  Future<void> setSynced({required String id, required String dbName});
 
   /// Closes the client and frees up any resources.
   Future<void> close();

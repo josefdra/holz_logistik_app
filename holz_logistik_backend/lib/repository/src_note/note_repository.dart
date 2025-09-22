@@ -33,6 +33,7 @@ class NoteRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _noteApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -41,9 +42,13 @@ class NoteRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _noteApi.deleteNote(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _noteApi.setSynced(id: data['id'] as String);
+      _noteApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final note = Note.fromJson(data);
       _noteApi.saveNote(note, fromServer: true);
@@ -56,7 +61,9 @@ class NoteRepository {
   Future<void> saveNote(Note note) {
     final n = note.copyWith(lastEdit: DateTime.now());
     _noteApi.saveNote(n);
-    return _noteSyncService.sendNoteUpdate(n.toJson());
+    final dbName = _noteApi.dbName;
+
+    return _noteSyncService.sendNoteUpdate(n.toJson(), dbName);
   }
 
   /// Deletes the `note` with the given id.
@@ -67,8 +74,9 @@ class NoteRepository {
       'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _noteApi.dbName;
 
-    return _noteSyncService.sendNoteUpdate(data);
+    return _noteSyncService.sendNoteUpdate(data, dbName);
   }
 
   /// Disposes any resources managed by the repository.

@@ -60,8 +60,8 @@ class NoteSyncService {
   }
 
   /// Send note updates to server
-  Future<void> sendNoteUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('note_update', data);
+  Future<void> sendNoteUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage('note_update', data, dbName: dbName);
   }
 
   /// Dispose

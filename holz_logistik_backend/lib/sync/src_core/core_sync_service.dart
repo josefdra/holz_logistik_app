@@ -22,6 +22,9 @@ class CoreSyncService {
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
 
+  /// Mutex to prevent concurrent sync operations during database switches
+  Completer<void>? _currentOperation;
+
   // Map to store message type to handler mappings
   final Map<String, MessageHandler> _messageHandlers = {};
 
@@ -82,6 +85,22 @@ class CoreSyncService {
     _pongTimeoutTimer?.cancel();
   }
 
+  /// Acquire lock for database update
+  Future<void> _acquireLock() async {
+    while (_currentOperation != null) {
+      await _currentOperation!.future;
+    }
+    _currentOperation = Completer<void>();
+  }
+
+  /// Release lock after database update
+  void releaseLock() {
+    if (_currentOperation != null && !_currentOperation!.isCompleted) {
+      _currentOperation!.complete();
+      _currentOperation = null;
+    }
+  }
+
   /// Sends data for all registered types
   Future<void> sendSyncData() async {
     for (final key in _dataGetters.keys) {
@@ -109,7 +128,7 @@ class CoreSyncService {
   }
 
   /// Handle incoming messages
-  void _handleMessage(dynamic rawMessage) {
+  Future<void> _handleMessage(dynamic rawMessage) async {
     if (kDebugMode) {
       print('RAW MESSAGE RECEIVED: $rawMessage');
     }
@@ -121,7 +140,7 @@ class CoreSyncService {
           : rawMessage as Map<String, dynamic>;
 
       final type = message['type'] as String;
-      final dynamic data = message['data'];
+      final data = message['data'] as Map<String, dynamic>?;
 
       if (type == 'pong') {
         _resetPongTimeout();
@@ -129,17 +148,21 @@ class CoreSyncService {
       } else if (type == 'authentication_response') {
         final messageHandler = _messageHandlers[type];
         if (messageHandler != null) {
+          await _acquireLock();
           messageHandler(data);
         }
-        sendSyncData();
+        await _acquireLock();
+        await sendSyncData();
+        releaseLock();
       } else if (type == 'sync_to_server_complete') {
-        sendSyncRequest();
+        await sendSyncRequest();
       } else if (type == 'sync_from_server_complete') {
         _startPingTimer();
         _connectionStreamController.add(ConnectionStatus.synced);
       } else {
         final messageHandler = _messageHandlers[type];
         if (messageHandler != null) {
+          if (data != null) data['dbName'] = message['dbName'];
           messageHandler(data);
         }
       }
@@ -184,12 +207,14 @@ class CoreSyncService {
   }
 
   /// Send a message through the WebSocket
-  Future<void> sendMessage(String type, dynamic data) async {
+  Future<void> sendMessage(String type, dynamic data, {String? dbName}) async {
     if (_channel != null) {
       try {
         final message = {
           'type': type,
           'data': data,
+          'dbName': dbName,
+          'version': 1,
           'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
         };
 

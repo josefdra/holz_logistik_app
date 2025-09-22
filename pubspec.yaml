@@ -1,6 +1,6 @@
 name: holz_logistik
 description: A logistics app for wood trading
-version: 1.2.5+5
+version: 1.2.6+6
 publish_to: none
 
 environment:

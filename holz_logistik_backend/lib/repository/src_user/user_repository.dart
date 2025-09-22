@@ -33,6 +33,7 @@ class UserRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _userApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -41,9 +42,13 @@ class UserRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _userApi.deleteUser(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _userApi.setSynced(id: data['id'] as String);
+      _userApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final user = User.fromJson(data);
       _userApi.saveUser(user, fromServer: true);
@@ -56,7 +61,9 @@ class UserRepository {
   Future<void> saveUser(User user) {
     final u = user.copyWith(lastEdit: DateTime.now());
     _userApi.saveUser(u);
-    return _userSyncService.sendUserUpdate(u.toJson());
+    final dbName = _userApi.dbName;
+
+    return _userSyncService.sendUserUpdate(u.toJson(), dbName);
   }
 
   /// Saves a future user.
@@ -73,8 +80,9 @@ class UserRepository {
       'deleted': 1,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _userApi.dbName;
 
-    return _userSyncService.sendUserUpdate(data);
+    return _userSyncService.sendUserUpdate(data, dbName);
   }
 
   /// Disposes any resources managed by the repository.

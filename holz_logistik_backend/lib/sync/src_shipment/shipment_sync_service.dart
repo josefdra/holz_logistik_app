@@ -61,8 +61,12 @@ class ShipmentSyncService {
   }
 
   /// Send shipment updates to server
-  Future<void> sendShipmentUpdate(Map<String, dynamic> data) {
-    return _coreSyncService.sendMessage('shipment_update', data);
+  Future<void> sendShipmentUpdate(Map<String, dynamic> data, String dbName) {
+    return _coreSyncService.sendMessage(
+      'shipment_update',
+      data,
+      dbName: dbName,
+    );
   }
 
   /// Dispose

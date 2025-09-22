@@ -51,6 +51,7 @@ class LocationRepository {
   void _handleServerUpdate(Map<String, dynamic> data) {
     if (data.containsKey('newSyncDate')) {
       _locationApi.setLastSyncDate(
+        data['dbName'] as String,
         DateTime.fromMillisecondsSinceEpoch(
           data['newSyncDate'] as int,
           isUtc: true,
@@ -59,9 +60,13 @@ class LocationRepository {
     } else if (data['deleted'] == true || data['deleted'] == 1) {
       _locationApi.deleteLocation(
         id: data['id'] as String,
+        dbName: data['dbName'] as String,
       );
     } else if (data['synced'] == true || data['synced'] == 1) {
-      _locationApi.setSynced(id: data['id'] as String);
+      _locationApi.setSynced(
+        id: data['id'] as String,
+        dbName: data['dbName'] as String,
+      );
     } else {
       final location = Location.fromJson(data);
       _locationApi.saveLocation(location, fromServer: true);
@@ -80,7 +85,12 @@ class LocationRepository {
       lastEdit: DateTime.now(),
     );
     _locationApi.saveLocation(updatedLocation);
-    return _locationSyncService.sendLocationUpdate(updatedLocation.toJson());
+    final dbName = _locationApi.dbName;
+
+    return _locationSyncService.sendLocationUpdate(
+      updatedLocation.toJson(),
+      dbName,
+    );
   }
 
   /// Deletes the `location` with the given id.
@@ -92,8 +102,9 @@ class LocationRepository {
       'done': done,
       'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
     };
+    final dbName = _locationApi.dbName;
 
-    return _locationSyncService.sendLocationUpdate(data);
+    return _locationSyncService.sendLocationUpdate(data, dbName);
   }
 
   /// Updates the values based on a shipment
@@ -123,7 +134,7 @@ class LocationRepository {
 
     final updatedLocationFinished = locationFinished
         ? locationFinished
-        : ((currentQuantity == 0) || currentPieceCount == 0);
+        : (currentQuantity == 0);
 
     final updatedLocation = location.copyWith(
       initialQuantity: updatedInitialQuantity,
