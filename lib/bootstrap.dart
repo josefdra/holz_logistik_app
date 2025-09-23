@@ -16,7 +16,7 @@ void bootstrap() {
     return true;
   };
 
-  const url = 'ws://217.154.70.67:4000/ws';
+  const url = 'ws://217.154.70.67:3000/ws';
   final coreLocalStorage = CoreLocalStorage();
   final coreSyncService = CoreSyncService(url: url);
 
