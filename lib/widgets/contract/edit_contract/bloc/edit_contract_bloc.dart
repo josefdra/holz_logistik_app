@@ -57,7 +57,11 @@ class EditContractBloc extends Bloc<EditContractEvent, EditContractState> {
     EditContractAvailableQuantityChanged event,
     Emitter<EditContractState> emit,
   ) {
-    emit(state.copyWith(availableQuantity: event.availableQuantity));
+    emit(
+      state.copyWith(
+        availableQuantity: event.availableQuantity,
+      ),
+    );
   }
 
   void _onAdditionalInfoChanged(

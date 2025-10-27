@@ -269,6 +269,10 @@ class ShipmentFormBloc extends Bloc<ShipmentFormEvent, ShipmentFormState> {
       await _contractRepository.saveContract(
         contract.copyWith(
           shippedQuantity: contract.shippedQuantity + shipment.quantity,
+          bookedQuantity: contract.bookedQuantity -
+              state.initialCurrentQuantity +
+              state.currentQuantity +
+              shipment.quantity,
         ),
       );
     } catch (e) {

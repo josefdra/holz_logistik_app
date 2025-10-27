@@ -16,7 +16,7 @@ class ShipmentsPage extends StatelessWidget {
           locationRepository: context.read<LocationRepository>(),
           userRepository: context.read<UserRepository>(),
           sawmillRepository: context.read<SawmillRepository>(),
-        contractRepository: context.read<ContractRepository>(),
+          contractRepository: context.read<ContractRepository>(),
         ),
         child: const ShipmentsPage(),
       ),
@@ -80,6 +80,7 @@ class ShipmentList extends StatelessWidget {
         IconButton(
           onPressed: () async {
             final pickedDateRange = await showDateRangePicker(
+              locale: const Locale('de', 'DE'),
               context: context,
               initialDateRange: DateTimeRange(
                 start: state.startDate,
@@ -149,8 +150,7 @@ class ShipmentList extends StatelessWidget {
           return ShipmentListTile(
             shipment: shipment,
             userName: state.users[shipment.userId]?.name ?? '',
-            sawmillName:
-                state.sawmills[shipment.sawmillId]?.name ?? '',
+            sawmillName: state.sawmills[shipment.sawmillId]?.name ?? '',
             partieNr: state.partieNr[shipment.locationId] ?? '',
             contractRepository: context.read<ContractRepository>(),
             onDeleted: () {

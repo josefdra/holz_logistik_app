@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:holz_logistik_backend/local_storage/local_storage.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
@@ -138,6 +139,59 @@ class CoreLocalStorage {
     for (final migration in _migrationCallbacks) {
       await migration(db, oldVersion, newVersion);
     }
+
+    if (oldVersion < 5 && newVersion >= 5) {
+      await _updateContractValues(db);
+    }
+  }
+
+  /// Update contract values during migration to version 5
+  Future<void> _updateContractValues(Database db) async {
+    final contractsJson = await db.query(
+      ContractTable.tableName,
+      where: 'deleted = 0',
+    );
+
+    for (final contractJson in contractsJson) {
+      final locationsJson = await db.query(
+        LocationTable.tableName,
+        where: '${LocationTable.columnContractId} = ? AND deleted = 0',
+        whereArgs: [contractJson[ContractTable.columnId]],
+      );
+
+      final shipmentsJson = await db.query(
+        ShipmentTable.tableName,
+        where: '${ShipmentTable.columnContractId} = ? AND deleted = 0',
+        whereArgs: [contractJson[ContractTable.columnId]],
+      );
+
+      double bookedQuantity = 0;
+      double shippedQuantity = 0;
+
+      for (final locationJson in locationsJson) {
+        bookedQuantity +=
+            locationJson[LocationTable.columnInitialQuantity]! as double;
+      }
+
+      for (final shipmentJson in shipmentsJson) {
+        shippedQuantity +=
+            shipmentJson[ShipmentTable.columnQuantity]! as double;
+      }
+
+      final updatedContract = Map<String, dynamic>.from(contractJson);
+      updatedContract[ContractTable.columnBookedQuantity] = bookedQuantity;
+      updatedContract[ContractTable.columnShippedQuantity] = shippedQuantity;
+      updatedContract[ContractTable.columnLastEdit] =
+          DateTime.now().toUtc().millisecondsSinceEpoch;
+      updatedContract['synced'] = 0;
+
+      await db.update(
+        ContractTable.tableName,
+        updatedContract,
+        where: '${ContractTable.columnId} = ?',
+        whereArgs: [updatedContract[ContractTable.columnId]],
+      );
+    }
   }
 
   /// Initialize a database with the given ID
@@ -147,7 +201,7 @@ class CoreLocalStorage {
 
     return openDatabase(
       path,
-      version: 3,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );

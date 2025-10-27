@@ -62,6 +62,7 @@ class FinishedContractsList extends StatelessWidget {
         IconButton(
           onPressed: () async {
             final pickedDateRange = await showDateRangePicker(
+              locale: const Locale('de', 'DE'),
               context: context,
               initialDateRange: DateTimeRange(
                 start: state.startDate,
