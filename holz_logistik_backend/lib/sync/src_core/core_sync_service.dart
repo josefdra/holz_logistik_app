@@ -214,7 +214,7 @@ class CoreSyncService {
           'type': type,
           'data': data,
           'dbName': dbName,
-          'version': 2,
+          'version': 1,
           'timestamp': DateTime.now().toUtc().millisecondsSinceEpoch,
         };
 

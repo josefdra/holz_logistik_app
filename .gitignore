@@ -112,3 +112,6 @@ app.*.map.json
 !.idea/codeStyles/
 !.idea/dictionaries/
 !.idea/runConfigurations/
+
+ressources/Output/
+ressources/VC_redist.x64.exe
