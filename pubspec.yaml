@@ -17,7 +17,7 @@ dependencies:
   flutter_image_slideshow: ^0.1.6
   flutter_localizations:
     sdk: flutter
-  flutter_map: ^8.1.1
+  flutter_map: ^8.2.2
   geolocator: ^14.0.0
   holz_logistik_backend:
     path: holz_logistik_backend
