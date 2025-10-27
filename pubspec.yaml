@@ -18,7 +18,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_map: ^8.1.1
-  geolocator: ^14.0.0
+  geolocator: ^14.0.2
   holz_logistik_backend:
     path: holz_logistik_backend
   image_picker: ^1.1.2
