@@ -89,6 +89,7 @@ class EditLocationView extends StatelessWidget {
               children: [
                 const _PartieNrField(),
                 const _AdditionalInfoField(),
+                if(state.isPrivileged) const _OwnerInfoField(),
                 const Row(
                   children: [
                     Expanded(
@@ -197,6 +198,37 @@ class _AdditionalInfoField extends StatelessWidget {
         context
             .read<EditLocationBloc>()
             .add(EditLocationAdditionalInfoChanged(value));
+      },
+    );
+  }
+}
+
+class _OwnerInfoField extends StatelessWidget {
+  const _OwnerInfoField();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<EditLocationBloc>().state;
+    final hintText = state.initialLocation?.ownerInformation ?? '';
+
+    return TextFormField(
+      key: const Key('editLocationView_ownerInformation_textFormField'),
+      initialValue: state.ownerInformation,
+      decoration: InputDecoration(
+        enabled: !state.status.isLoadingOrSuccess,
+        labelText: 'Private Info',
+        hintText: hintText,
+        border: const OutlineInputBorder(),
+      ),
+      maxLength: 300,
+      maxLines: 2,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(300),
+      ],
+      onChanged: (value) {
+        context
+            .read<EditLocationBloc>()
+            .add(EditLocationOwnerInformationChanged(value));
       },
     );
   }

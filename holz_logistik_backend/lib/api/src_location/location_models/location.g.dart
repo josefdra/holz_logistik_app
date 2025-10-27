@@ -22,6 +22,7 @@ Location _$LocationFromJson(Map<String, dynamic> json) => Location(
       date: _$JsonConverterFromJson<int, DateTime>(
           json['date'], const DateTimeConverter().fromJson),
       additionalInfo: json['additionalInfo'] as String? ?? '',
+      ownerInformation: json['ownerInformation'] as String? ?? '',
       initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? 0,
       initialOversizeQuantity:
           (json['initialOversizeQuantity'] as num?)?.toDouble() ?? 0,
@@ -51,6 +52,7 @@ Map<String, dynamic> _$LocationToJson(Location instance) => <String, dynamic>{
       'partieNr': instance.partieNr,
       'date': const DateTimeConverter().toJson(instance.date),
       'additionalInfo': instance.additionalInfo,
+      'ownerInformation': instance.ownerInformation,
       'initialQuantity': instance.initialQuantity,
       'initialOversizeQuantity': instance.initialOversizeQuantity,
       'initialPieceCount': instance.initialPieceCount,

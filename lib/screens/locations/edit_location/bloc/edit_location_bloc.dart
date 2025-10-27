@@ -30,6 +30,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
             newMarkerPosition: newMarkerPosition,
             partieNr: initialLocation?.partieNr ?? '',
             additionalInfo: initialLocation?.additionalInfo ?? '',
+            ownerInformation: initialLocation?.ownerInformation ?? '',
             date: initialLocation?.date,
             initialQuantity: initialLocation?.initialQuantity ?? 0.0,
             initialOversizeQuantity:
@@ -44,6 +45,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     on<EditLocationInit>(_onInit);
     on<EditLocationPartieNrChanged>(_onPartieNrChanged);
     on<EditLocationAdditionalInfoChanged>(_onAdditionalInfoChanged);
+    on<EditLocationOwnerInformationChanged>(_onOwnerInformationChanged);
     on<EditLocationDateChanged>(_onDateChanged);
     on<EditLocationInitialQuantityChanged>(_onInitialQuantityChanged);
     on<EditLocationInitialOversizeQuantityChanged>(
@@ -128,6 +130,13 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
     Emitter<EditLocationState> emit,
   ) {
     emit(state.copyWith(additionalInfo: event.additionalInfo));
+  }
+
+  void _onOwnerInformationChanged(
+    EditLocationOwnerInformationChanged event,
+    Emitter<EditLocationState> emit,
+  ) {
+    emit(state.copyWith(ownerInformation: event.ownerInformation));
   }
 
   void _onDateChanged(
@@ -432,6 +441,7 @@ class EditLocationBloc extends Bloc<EditLocationEvent, EditLocationState> {
       lastEdit: DateTime.now(),
       partieNr: state.partieNr,
       additionalInfo: state.additionalInfo,
+      ownerInformation: state.ownerInformation,
       date: state.date,
       initialQuantity: state.initialQuantity,
       initialOversizeQuantity: state.initialOversizeQuantity,

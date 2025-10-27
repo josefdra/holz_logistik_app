@@ -114,7 +114,11 @@ class SettingsWidget extends StatelessWidget {
   }
 
   String _capitalizeFirst(String text) {
-    if (text.isEmpty) return text;
+    if (text.isEmpty) {
+      return text;
+    } else if (text == 'weber') {
+      return 'Ligtura';
+    }
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 

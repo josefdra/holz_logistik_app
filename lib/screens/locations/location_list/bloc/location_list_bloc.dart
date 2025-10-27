@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:holz_logistik/models/general/general.dart';
+import 'package:holz_logistik/models/locations/location_list_sort.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 import 'package:stream_transform/stream_transform.dart';
 
@@ -31,6 +32,7 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
         const Duration(milliseconds: 300),
       ),
     );
+    on<LocationListSortChanged>(_onSortChanged);
   }
 
   final LocationRepository _locationRepository;
@@ -74,10 +76,12 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
               .isNotEmpty;
     }
 
+    final sortedLocations = _sortLocations(event.locations, state.sort);
+
     emit(
       state.copyWith(
         status: LocationListStatus.success,
-        locations: event.locations,
+        locations: sortedLocations,
         contractNames: contractNames,
       ),
     );
@@ -132,6 +136,39 @@ class LocationListBloc extends Bloc<LocationListEvent, LocationListState> {
     emit(
       state.copyWith(
         searchQuery: SearchQuery(searchQuery: event.searchQuery),
+      ),
+    );
+  }
+
+  List<Location> _sortLocations(
+    List<Location> locations,
+    LocationListSort sort,
+  ) {
+    final sortedList = List<Location>.from(locations);
+
+    switch (sort) {
+      case LocationListSort.partieNrUp:
+        sortedList.sort((a, b) => a.partieNr.compareTo(b.partieNr));
+      case LocationListSort.partieNrDown:
+        sortedList.sort((a, b) => b.partieNr.compareTo(a.partieNr));
+      case LocationListSort.dateUp:
+        sortedList.sort((a, b) => a.date.compareTo(b.date));
+      case LocationListSort.dateDown:
+        sortedList.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return sortedList;
+  }
+
+  void _onSortChanged(
+    LocationListSortChanged event,
+    Emitter<LocationListState> emit,
+  ) {
+    final sortedLocations = _sortLocations(state.locations, event.sort);
+    emit(
+      state.copyWith(
+        sort: event.sort,
+        locations: sortedLocations,
       ),
     );
   }

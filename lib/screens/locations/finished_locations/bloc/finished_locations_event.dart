@@ -42,3 +42,21 @@ final class FinishedLocationsLocationDeleted extends FinishedLocationsEvent {
   @override
   List<Object> get props => [location];
 }
+
+class FinishedLocationListSearchQueryChanged extends FinishedLocationsEvent {
+  const FinishedLocationListSearchQueryChanged(this.searchQuery);
+
+  final String searchQuery;
+
+  @override
+  List<Object> get props => [searchQuery];
+}
+
+class FinishedLocationListSortChanged extends FinishedLocationsEvent {
+  const FinishedLocationListSortChanged(this.sort);
+
+  final LocationListSort sort;
+
+  @override
+  List<Object> get props => [sort];
+}

@@ -325,8 +325,30 @@ class LocationDetailsView extends StatelessWidget {
         Text('Datum: ${state.location.date.day}.'
             '${state.location.date.month}.'
             '${state.location.date.year}'),
-        const SizedBox(height: 10),
-        Text(state.location.additionalInfo),
+        if (state.location.additionalInfo != '') const SizedBox(height: 10),
+        if (state.location.additionalInfo != '')
+          const Text(
+            'Allgemeine Info:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        if (state.location.additionalInfo != '')
+          Text(state.location.additionalInfo),
+        if (state.user.role.isPrivileged &&
+            state.location.ownerInformation != '')
+          const SizedBox(height: 10),
+        if (state.user.role.isPrivileged &&
+            state.location.ownerInformation != '')
+          const Text(
+            'Private Info:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        if (state.user.role.isPrivileged &&
+            state.location.ownerInformation != '')
+          Text(state.location.ownerInformation),
       ],
     );
   }

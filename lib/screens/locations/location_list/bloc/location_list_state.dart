@@ -16,6 +16,7 @@ final class LocationListState extends Equatable {
     this.photos = const {},
     this.contractNames = const {},
     this.searchQuery = const SearchQuery<Location>(),
+    this.sort = LocationListSort.dateUp,
   });
 
   final LocationListStatus status;
@@ -23,6 +24,7 @@ final class LocationListState extends Equatable {
   final Map<String, Photo> photos;
   final Map<String, String> contractNames;
   final SearchQuery<Location> searchQuery;
+  final LocationListSort sort;
 
   Iterable<Location> get searchQueryedLocations =>
       searchQuery.applyAll(locations);
@@ -33,14 +35,15 @@ final class LocationListState extends Equatable {
     Map<String, Photo>? photos,
     Map<String, String>? contractNames,
     SearchQuery<Location>? searchQuery,
+    LocationListSort? sort,
   }) {
     return LocationListState(
       status: status ?? this.status,
-      locations:
-          locations != null ? sortByDateInverse(locations) : this.locations,
+      locations: locations ?? this.locations,
       photos: photos ?? this.photos,
       contractNames: contractNames ?? this.contractNames,
       searchQuery: searchQuery ?? this.searchQuery,
+      sort: sort ?? this.sort,
     );
   }
 
@@ -51,5 +54,6 @@ final class LocationListState extends Equatable {
         photos,
         contractNames,
         searchQuery,
+        sort,
       ];
 }

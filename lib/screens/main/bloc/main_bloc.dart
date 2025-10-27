@@ -13,10 +13,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   MainBloc({
     required AuthenticationRepository authenticationRepository,
     required CoreSyncService coreSyncService,
-    required UserRepository userRepository,
   })  : _authenticationRepository = authenticationRepository,
         _coreSyncService = coreSyncService,
-        _userRepository = userRepository,
         super(const MainState()) {
     on<MainSubscriptionRequested>(_onSubscriptionRequested);
     on<MainApiKeyChanged>(_onApiKeyChanged);
@@ -28,7 +26,6 @@ class MainBloc extends Bloc<MainEvent, MainState> {
 
   final AuthenticationRepository _authenticationRepository;
   final CoreSyncService _coreSyncService;
-  final UserRepository _userRepository;
 
   late final StreamSubscription<ConnectionStatus>?
       _connectionUpdatesSubscription;

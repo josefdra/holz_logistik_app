@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/models/locations/location_list_sort.dart';
 import 'package:holz_logistik/screens/locations/finished_locations/finished_locations.dart';
 import 'package:holz_logistik/screens/locations/location_list/location_list.dart';
+import 'package:holz_logistik/widgets/locations/location_list_sort_button.dart';
 import 'package:holz_logistik/widgets/locations/location_widgets.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
@@ -88,16 +90,33 @@ class LocationList extends StatelessWidget {
       },
       child: Column(
         children: [
-          TextField(
-            decoration: const InputDecoration(
-              hintText: 'Standort suchen',
-              prefixIcon: Icon(Icons.search),
-            ),
-            onChanged: (value) {
-              context.read<LocationListBloc>().add(
-                    LocationListSearchQueryChanged(value),
-                  );
-            },
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Standort suchen',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (value) {
+                    context.read<LocationListBloc>().add(
+                          LocationListSearchQueryChanged(value),
+                        );
+                  },
+                ),
+              ),
+              LocationListSortButton(
+                activeSort:
+                    context.select((LocationListBloc bloc) => bloc.state.sort),
+                onSelected: (LocationListSort sort) {
+                  context.read<LocationListBloc>().add(
+                        LocationListSortChanged(
+                          sort,
+                        ),
+                      );
+                },
+              ),
+            ],
           ),
           Expanded(
             child: BlocBuilder<LocationListBloc, LocationListState>(

@@ -16,6 +16,7 @@ final class EditLocationState extends Equatable {
     this.newMarkerPosition,
     this.partieNr = '',
     this.additionalInfo = '',
+    this.ownerInformation = '',
     this.initialQuantity = 0.0,
     this.initialOversizeQuantity = 0.0,
     this.initialPieceCount = 0,
@@ -43,6 +44,7 @@ final class EditLocationState extends Equatable {
   final LatLng? newMarkerPosition;
   final String partieNr;
   final String additionalInfo;
+  final String ownerInformation;
   final double initialQuantity;
   final double initialOversizeQuantity;
   final int initialPieceCount;
@@ -68,6 +70,7 @@ final class EditLocationState extends Equatable {
     LatLng? newMarkerPosition,
     String? partieNr,
     String? additionalInfo,
+    String? ownerInformation,
     double? initialQuantity,
     double? initialOversizeQuantity,
     int? initialPieceCount,
@@ -91,6 +94,7 @@ final class EditLocationState extends Equatable {
       newMarkerPosition: newMarkerPosition ?? this.newMarkerPosition,
       partieNr: partieNr ?? this.partieNr,
       additionalInfo: additionalInfo ?? this.additionalInfo,
+      ownerInformation: ownerInformation ?? this.ownerInformation,
       initialQuantity: initialQuantity ?? this.initialQuantity,
       initialOversizeQuantity:
           initialOversizeQuantity ?? this.initialOversizeQuantity,
@@ -120,6 +124,7 @@ final class EditLocationState extends Equatable {
         newMarkerPosition,
         partieNr,
         additionalInfo,
+        ownerInformation,
         initialQuantity,
         initialOversizeQuantity,
         initialPieceCount,

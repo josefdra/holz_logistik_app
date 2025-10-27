@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/models/locations/location_list_sort.dart';
 import 'package:holz_logistik/models/models.dart';
+import 'package:holz_logistik/screens/locations/location_list/location_list.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
 part 'finished_locations_event.dart';
@@ -23,6 +25,13 @@ class FinishedLocationsBloc
     on<FinishedLocationsDateChanged>(_onDateChanged);
     on<FinishedLocationsAutomaticDate>(_onAutomaticDate);
     on<FinishedLocationsLocationDeleted>(_onLocationDeleted);
+    on<FinishedLocationListSearchQueryChanged>(
+      _onSearchQueryChanged,
+      transformer: debounce(
+        const Duration(milliseconds: 300),
+      ),
+    );
+    on<FinishedLocationListSortChanged>(_onSortChanged);
 
     _dateCheckTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       _checkDateChange();
@@ -70,6 +79,7 @@ class FinishedLocationsBloc
       state.startDate,
       state.endDate,
     );
+    final sortedLocations = _sortLocations(locations, state.sort);
 
     final contractNames = <String, String>{};
 
@@ -82,7 +92,7 @@ class FinishedLocationsBloc
     emit(
       state.copyWith(
         status: FinishedLocationsStatus.success,
-        locations: locations,
+        locations: sortedLocations,
         contractNames: contractNames,
       ),
     );
@@ -93,7 +103,7 @@ class FinishedLocationsBloc
     Emitter<FinishedLocationsState> emit,
   ) async {
     final endDate = DateTime.now().copyWith(hour: 23, minute: 59, second: 59);
-    final startDate = endDate.subtract(const Duration(days: 32));
+    final startDate = endDate.subtract(const Duration(days: 365));
 
     emit(
       state.copyWith(
@@ -139,6 +149,50 @@ class FinishedLocationsBloc
     );
 
     emit(state.copyWith(status: FinishedLocationsStatus.success));
+  }
+
+  void _onSearchQueryChanged(
+    FinishedLocationListSearchQueryChanged event,
+    Emitter<FinishedLocationsState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        searchQuery: SearchQuery(searchQuery: event.searchQuery),
+      ),
+    );
+  }
+
+  List<Location> _sortLocations(
+    List<Location> locations,
+    LocationListSort sort,
+  ) {
+    final sortedList = List<Location>.from(locations);
+
+    switch (sort) {
+      case LocationListSort.partieNrUp:
+        sortedList.sort((a, b) => a.partieNr.compareTo(b.partieNr));
+      case LocationListSort.partieNrDown:
+        sortedList.sort((a, b) => b.partieNr.compareTo(a.partieNr));
+      case LocationListSort.dateUp:
+        sortedList.sort((a, b) => a.date.compareTo(b.date));
+      case LocationListSort.dateDown:
+        sortedList.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return sortedList;
+  }
+
+  void _onSortChanged(
+    FinishedLocationListSortChanged event,
+    Emitter<FinishedLocationsState> emit,
+  ) {
+    final sortedLocations = _sortLocations(state.locations, event.sort);
+    emit(
+      state.copyWith(
+        sort: event.sort,
+        locations: sortedLocations,
+      ),
+    );
   }
 
   @override

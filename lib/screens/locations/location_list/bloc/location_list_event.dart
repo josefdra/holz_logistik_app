@@ -45,3 +45,12 @@ class LocationListSearchQueryChanged extends LocationListEvent {
   @override
   List<Object> get props => [searchQuery];
 }
+
+class LocationListSortChanged extends LocationListEvent {
+  const LocationListSortChanged(this.sort);
+
+  final LocationListSort sort;
+
+  @override
+  List<Object> get props => [sort];
+}

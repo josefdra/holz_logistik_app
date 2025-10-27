@@ -41,6 +41,15 @@ final class EditLocationAdditionalInfoChanged extends EditLocationEvent {
   List<Object> get props => [additionalInfo];
 }
 
+final class EditLocationOwnerInformationChanged extends EditLocationEvent {
+  const EditLocationOwnerInformationChanged(this.ownerInformation);
+
+  final String ownerInformation;
+
+  @override
+  List<Object> get props => [ownerInformation];
+}
+
 final class EditLocationInitialQuantityChanged extends EditLocationEvent {
   const EditLocationInitialQuantityChanged(this.initialQuantity, {
     this.fieldName = 'initialQuantity',

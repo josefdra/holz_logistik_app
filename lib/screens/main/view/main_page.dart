@@ -21,7 +21,6 @@ class MainPage extends StatelessWidget {
       create: (_) => MainBloc(
         authenticationRepository: context.read<AuthenticationRepository>(),
         coreSyncService: coreSyncService,
-        userRepository: context.read<UserRepository>(),
       )..add(const MainSubscriptionRequested()),
       child: const MainView(),
     );

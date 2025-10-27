@@ -10,12 +10,14 @@ final class FinishedLocationsState extends Equatable {
     DateTime? endDate,
     DateTime? startDate,
     this.customDate = false,
+    this.searchQuery = const SearchQuery<Location>(),
+    this.sort = LocationListSort.dateDown,
   })  : endDate = endDate ??
             DateTime.now().copyWith(hour: 23, minute: 59, second: 59),
         startDate = startDate ??
             DateTime.now()
                 .copyWith(hour: 23, minute: 59, second: 59)
-                .subtract(const Duration(days: 32));
+                .subtract(const Duration(days: 365));
 
   final FinishedLocationsStatus status;
   final List<Location> locations;
@@ -23,6 +25,11 @@ final class FinishedLocationsState extends Equatable {
   final DateTime endDate;
   final DateTime startDate;
   final bool customDate;
+  final SearchQuery<Location> searchQuery;
+  final LocationListSort sort;
+
+  Iterable<Location> get searchQueryedLocations =>
+      searchQuery.applyAll(locations);
 
   FinishedLocationsState copyWith({
     FinishedLocationsStatus? status,
@@ -31,14 +38,18 @@ final class FinishedLocationsState extends Equatable {
     DateTime? endDate,
     DateTime? startDate,
     bool? customDate,
+    SearchQuery<Location>? searchQuery,
+    LocationListSort? sort,
   }) {
     return FinishedLocationsState(
       status: status ?? this.status,
-      locations: locations != null ? sortByDate(locations) : this.locations,
+      locations: locations ?? this.locations,
       contractNames: contractNames ?? this.contractNames,
       endDate: endDate ?? this.endDate,
       startDate: startDate ?? this.startDate,
       customDate: customDate ?? this.customDate,
+      searchQuery: searchQuery ?? this.searchQuery,
+      sort: sort ?? this.sort,
     );
   }
 
@@ -50,5 +61,7 @@ final class FinishedLocationsState extends Equatable {
         endDate,
         startDate,
         customDate,
+        searchQuery,
+        sort,
       ];
 }

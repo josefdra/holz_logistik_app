@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:holz_logistik/models/locations/location_list_sort.dart';
 import 'package:holz_logistik/screens/locations/finished_locations/finished_locations.dart';
+import 'package:holz_logistik/widgets/locations/location_list_sort_button.dart';
 import 'package:holz_logistik/widgets/locations/location_widgets.dart';
 import 'package:holz_logistik_backend/repository/repository.dart';
 
@@ -45,6 +47,33 @@ class FinishedLocationsList extends StatelessWidget {
         return Column(
           children: [
             _buildDatePickerRow(context, state),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Standort suchen',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (value) {
+                      context.read<FinishedLocationsBloc>().add(
+                            FinishedLocationListSearchQueryChanged(value),
+                          );
+                    },
+                  ),
+                ),
+                LocationListSortButton(
+                  activeSort: state.sort,
+                  onSelected: (LocationListSort sort) {
+                    context.read<FinishedLocationsBloc>().add(
+                          FinishedLocationListSortChanged(
+                            sort,
+                          ),
+                        );
+                  },
+                ),
+              ],
+            ),
             Expanded(
               child: _buildContent(context, state),
             ),
@@ -128,9 +157,9 @@ class FinishedLocationsList extends StatelessWidget {
       controller: context.read<FinishedLocationsBloc>().scrollController,
       child: ListView.builder(
         controller: context.read<FinishedLocationsBloc>().scrollController,
-        itemCount: state.locations.length,
+        itemCount: state.searchQueryedLocations.length,
         itemBuilder: (_, index) {
-          final location = state.locations.elementAt(index);
+          final location = state.searchQueryedLocations.elementAt(index);
           return LocationListTile(
             location: location,
             contractName: state.contractNames[location.contractId] ?? '',
