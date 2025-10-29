@@ -25,5 +25,13 @@ Future<void> startNavigation(Location loc) async {
       'maps:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}',
     );
     await launchUrl(url);
+  } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    final url = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}',
+    );
+    
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
 }
